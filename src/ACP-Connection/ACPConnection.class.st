@@ -135,22 +135,23 @@ ACPConnection >> sendNotification: method params: params [
 { #category : 'read loop' }
 ACPConnection >> startReadLoop [
 
-	self readProcess: [
-		[ self isClosed not ] whileTrue: [
+	self readProcess: ([self readLoop] forkAt: Processor lowIOPriority named: 'ACP readLoop')
+]
+
+{ #category : 'read loop' }
+ACPConnection >> readLoop [
+
+	[ self isClosed not ] whileTrue: [
 			| message |
 			message := self transport readMessage.
 			message
-				ifNil: [
-					self handleConnectionClosed.
-					^ self ]
+				ifNil: [ self handleConnectionClosed ]
 				ifNotNil: [
 					[ self processMessage: message ]
 						on: Error
 						do: [ :e |
 							(message includesKey: 'id') ifTrue: [
-								self sendErrorResponseForId: (message at: 'id') error: e ] ] ] ] ]
-		forkAt: Processor lowIOPriority
-		named: 'ACP readLoop'
+								self sendErrorResponseForId: (message at: 'id') error: e ] ] ] ]
 ]
 
 { #category : 'read loop' }
