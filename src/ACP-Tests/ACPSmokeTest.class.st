@@ -5,26 +5,36 @@ Class {
 		'client',
 		'handler'
 	],
+	#classVars : [
+		'AgentPath'
+	],
 	#category : 'ACP-Tests'
 }
+
+{ #category : 'class initialization' }
+ACPSmokeTest class >> initialize [
+
+	AgentPath := nil
+]
 
 { #category : 'accessing' }
 ACPSmokeTest class >> agentPath [
 
-	^ '/home/ume/git/typescript-sdk/src/examples/agent.ts'
+	"^ '/<path to typescript sdk sample agent>/typescript-sdk/src/examples/agent.ts'"
+	^ AgentPath
 ]
 
-{ #category : 'testing' }
-ACPSmokeTest class >> isAbstract [
-	"Skip in automated test runs — requires external agent process"
+{ #category : 'accessing' }
+ACPSmokeTest class >> agentPath: aString [
 
-	^ true
+	AgentPath := aString
 ]
 
 { #category : 'running' }
 ACPSmokeTest >> setUp [
 
 	super setUp.
+	self class agentPath ifNil: [ ^ self ].
 	handler := ACPSmokeHandler new.
 	client := ACPClient new.
 	client handler: handler.
@@ -39,6 +49,7 @@ ACPSmokeTest >> setUp [
 { #category : 'running' }
 ACPSmokeTest >> tearDown [
 
+	client ifNil: [ ^ self ].
 	client disconnect.
 	super tearDown
 ]
@@ -48,6 +59,9 @@ ACPSmokeTest >> testFullProtocolFlow [
 	"Test initialize → newSession → prompt against the TypeScript example agent."
 
 	| initResult sessionResult promptResult sessionId |
+	self class agentPath ifNil: [
+		^ self skip: 'Agent path not set. Please set ACPSmokeTest class variable AgentPath to the path of the TypeScript example agent.'
+	].
 	client connect.
 
 	"Step 1: Initialize"
