@@ -32,9 +32,10 @@ ACPTestTransport class >> inbox: anInbox outbox: anOutbox [
 
 { #category : 'operations' }
 ACPTestTransport >> close [
+	"Signal EOF to the peer by putting nil into outbox (which is the peer's inbox)."
 
 	isClosed := true.
-	inbox nextPut: nil
+	outbox nextPut: nil
 ]
 
 { #category : 'initialization' }

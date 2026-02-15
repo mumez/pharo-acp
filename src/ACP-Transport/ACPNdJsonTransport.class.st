@@ -5,7 +5,9 @@ Class {
 		'writeStream',
 		'readStream',
 		'writeMutex',
-		'isClosed'
+		'isClosed',
+		'readBuffer',
+		'pollDelay'
 	],
 	#category : 'ACP-Transport'
 }
@@ -40,7 +42,9 @@ ACPNdJsonTransport >> initialize [
 
 	super initialize.
 	writeMutex := Mutex new.
-	isClosed := false
+	isClosed := false.
+	readBuffer := ''.
+	pollDelay := 500
 ]
 
 { #category : 'testing' }
@@ -49,13 +53,54 @@ ACPNdJsonTransport >> isClosed [
 	^ isClosed
 ]
 
+{ #category : 'accessing' }
+ACPNdJsonTransport >> pollDelay [
+
+	^ pollDelay
+]
+
+{ #category : 'accessing' }
+ACPNdJsonTransport >> pollDelay: anInteger [
+	"Set the polling interval in milliseconds for non-blocking reads."
+
+	pollDelay := anInteger
+]
+
+{ #category : 'private' }
+ACPNdJsonTransport >> readLine [
+	"Read one LF-terminated line from the stream, polling with delay for non-blocking pipes.
+	 Return the line content (without LF), or nil on EOF."
+
+	| lfIndex chunk line |
+	[
+		lfIndex := readBuffer indexOf: Character lf.
+		lfIndex > 0 ifTrue: [
+			line := readBuffer copyFrom: 1 to: lfIndex - 1.
+			readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
+			^ line ].
+		[ chunk := readStream upToEnd ]
+			on: Error
+			do: [ :e | ^ nil ].
+		(chunk isNil or: [ chunk isEmpty ])
+			ifTrue: [
+				readStream atEnd
+					ifTrue: [
+						readBuffer ifEmpty: [ ^ nil ].
+						line := readBuffer.
+						readBuffer := ''.
+						^ line ]
+					ifFalse: [ (Delay forMilliseconds: pollDelay) wait ] ]
+			ifFalse: [ readBuffer := readBuffer , chunk ]
+	] repeat
+]
+
 { #category : 'operations' }
 ACPNdJsonTransport >> readMessage [
+	"Poll non-blocking read stream until a complete JSON line is available.
+	 Return parsed Dictionary, or nil on EOF or parse error."
 
 	| line |
-	[ line := self readStream upTo: Character lf ]
-		on: Error
-		do: [ :e | ^ nil ].
+	line := self readLine.
 	line ifNil: [ ^ nil ].
 	line ifEmpty: [ ^ nil ].
 	[ ^ STONJSON fromString: line ]

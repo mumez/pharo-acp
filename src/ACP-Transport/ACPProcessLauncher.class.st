@@ -68,8 +68,6 @@ ACPProcessLauncher >> launch [
 	process := OSSUnixSubprocess new
 		command: command;
 		arguments: arguments;
-		defaultWriteStreamCreationBlock: [
-			OSSVMProcess vmProcess systemAccessor makeBlockingPipe ];
 		redirectStdin;
 		redirectStdout;
 		redirectStderr;
@@ -116,8 +114,9 @@ ACPProcessLauncher >> stdinStream [
 
 { #category : 'accessing' }
 ACPProcessLauncher >> stdoutStream [
+	"Return the stdout OSSPipe. Non-blocking by default."
 
-	^ self process stdoutStream reader
+	^ self process stdoutStream
 ]
 
 { #category : 'operations' }

@@ -169,20 +169,37 @@ ACPConnection >> processMessage: message [
 
 { #category : 'private' }
 ACPConnection >> handleIncomingRequest: message [
+	"Dispatch incoming request via JRPCMessageProcessor using object API.
+	 Params are wrapped in an array for JRPCBlockHandler compatibility."
 
-	| jsonString responseJson |
-	jsonString := STONJSON toString: message.
-	responseJson := self messageProcessor handleJSON: jsonString.
-	(responseJson isNil or: [ responseJson isEmpty ]) ifTrue: [ ^ self ].
-	self transport writeMessage: (STONJSON fromString: responseJson)
+	| request response responseDict |
+	request := JRPCRequestObject new
+		method: (message at: 'method');
+		id: (message at: 'id');
+		params: { message at: 'params' ifAbsent: [ Dictionary new ] };
+		yourself.
+	response := self messageProcessor handleJRPCRequestObject: request.
+	responseDict := Dictionary new.
+	responseDict at: 'jsonrpc' put: '2.0'.
+	responseDict at: 'id' put: response id.
+	response isError
+		ifTrue: [ responseDict at: 'error' put: {
+			'code' -> response error code.
+			'message' -> response error message } asDictionary ]
+		ifFalse: [ responseDict at: 'result' put: response result ].
+	self transport writeMessage: responseDict
 ]
 
 { #category : 'private' }
 ACPConnection >> handleIncomingNotification: message [
+	"Dispatch incoming notification via JRPCMessageProcessor using object API."
 
-	| jsonString |
-	jsonString := STONJSON toString: message.
-	self messageProcessor handleJSON: jsonString
+	| notification |
+	notification := JRPCNotificationObject new
+		method: (message at: 'method');
+		params: { message at: 'params' ifAbsent: [ Dictionary new ] };
+		yourself.
+	self messageProcessor handleJRPCNotificationObject: notification
 ]
 
 { #category : 'private' }
