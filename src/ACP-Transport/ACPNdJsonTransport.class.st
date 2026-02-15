@@ -44,7 +44,7 @@ ACPNdJsonTransport >> initialize [
 	writeMutex := Mutex new.
 	isClosed := false.
 	readBuffer := ''.
-	pollDelay := 500
+	pollDelay := 500 milliSeconds
 ]
 
 { #category : 'testing' }
@@ -60,10 +60,9 @@ ACPNdJsonTransport >> pollDelay [
 ]
 
 { #category : 'accessing' }
-ACPNdJsonTransport >> pollDelay: anInteger [
-	"Set the polling interval in milliseconds for non-blocking reads."
+ACPNdJsonTransport >> pollDelay: aDuration [
 
-	pollDelay := anInteger
+	pollDelay := aDuration
 ]
 
 { #category : 'private' }
@@ -89,7 +88,7 @@ ACPNdJsonTransport >> readLine [
 						line := readBuffer.
 						readBuffer := ''.
 						^ line ]
-					ifFalse: [ (Delay forMilliseconds: pollDelay) wait ] ]
+					ifFalse: [ self pollDelay wait ] ]
 			ifFalse: [ readBuffer := readBuffer , chunk ]
 	] repeat
 ]
