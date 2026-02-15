@@ -7,17 +7,20 @@ Class {
 		'writeMutex',
 		'isClosed',
 		'readBuffer',
-		'pollDelay'
+		'pollDelay',
+		'useAtEnd'
 	],
 	#category : 'ACP-Transport'
 }
 
 { #category : 'instance creation' }
 ACPNdJsonTransport class >> on: anACPProcessLauncher [
+	"OSSPipe atEnd is unreliable for non-blocking pipes — disable it."
 
 	^ self new
 		  writeStream: anACPProcessLauncher stdinStream;
 		  readStream: anACPProcessLauncher stdoutStream;
+		  useAtEnd: false;
 		  yourself
 ]
 
@@ -44,7 +47,8 @@ ACPNdJsonTransport >> initialize [
 	writeMutex := Mutex new.
 	isClosed := false.
 	readBuffer := ''.
-	pollDelay := 500 milliSeconds
+	pollDelay := 500 milliSeconds.
+	useAtEnd := true
 ]
 
 { #category : 'testing' }
@@ -66,9 +70,18 @@ ACPNdJsonTransport >> pollDelay: aDuration [
 ]
 
 { #category : 'private' }
+ACPNdJsonTransport >> isAtEnd [
+	"Check if the stream has reached EOF.
+	 When useAtEnd is false (OSSPipe), only isClosed is checked because
+	 OSSPipe atEnd unreliably returns true when no data is available yet."
+
+	^ self isClosed or: [ useAtEnd and: [ readStream atEnd ] ]
+]
+
+{ #category : 'private' }
 ACPNdJsonTransport >> readLine [
 	"Read one LF-terminated line from the stream, polling with delay for non-blocking pipes.
-	 Return the line content (without LF), or nil on EOF."
+	 Return the line content (without LF), or nil on EOF/closed."
 
 	| lfIndex chunk line |
 	[
@@ -82,13 +95,12 @@ ACPNdJsonTransport >> readLine [
 			do: [ :e | ^ nil ].
 		(chunk isNil or: [ chunk isEmpty ])
 			ifTrue: [
-				readStream atEnd
-					ifTrue: [
-						readBuffer ifEmpty: [ ^ nil ].
-						line := readBuffer.
-						readBuffer := ''.
-						^ line ]
-					ifFalse: [ self pollDelay wait ] ]
+				self isAtEnd ifTrue: [
+					readBuffer ifEmpty: [ ^ nil ].
+					line := readBuffer.
+					readBuffer := ''.
+					^ line ].
+				self pollDelay wait ]
 			ifFalse: [ readBuffer := readBuffer , chunk ]
 	] repeat
 ]
@@ -96,15 +108,25 @@ ACPNdJsonTransport >> readLine [
 { #category : 'operations' }
 ACPNdJsonTransport >> readMessage [
 	"Poll non-blocking read stream until a complete JSON line is available.
-	 Return parsed Dictionary, or nil on EOF or parse error."
+	 Return parsed Dictionary, or nil when closed.
+	 Empty lines are skipped (common in ndjson streams)."
 
 	| line |
-	line := self readLine.
-	line ifNil: [ ^ nil ].
-	line ifEmpty: [ ^ nil ].
-	[ ^ STONJSON fromString: line ]
-		on: Error
-		do: [ :e | ^ nil ]
+	[
+		line := self readLine.
+		line ifNil: [ ^ nil ].
+		line ifEmpty: [ "skip empty lines, read next" ]
+			ifNotEmpty: [
+				[ ^ STONJSON fromString: line ]
+					on: Error
+					do: [ :e | ^ nil ] ]
+	] repeat
+]
+
+{ #category : 'accessing' }
+ACPNdJsonTransport >> useAtEnd: aBoolean [
+
+	useAtEnd := aBoolean
 ]
 
 { #category : 'accessing' }
