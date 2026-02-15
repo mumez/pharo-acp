@@ -45,7 +45,13 @@ ACPClient >> connection: anObject [
 { #category : 'accessing' }
 ACPClient >> handler [
 
-	^ handler
+	^ handler ifNil: [ handler := self defaultHandler ]
+]
+
+{ #category : 'defaults' }
+ACPClient >> defaultHandler [
+
+	^ ACPTranscriptHandler new
 ]
 
 { #category : 'accessing' }
