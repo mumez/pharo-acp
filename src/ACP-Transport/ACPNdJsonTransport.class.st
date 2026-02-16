@@ -36,7 +36,7 @@ ACPNdJsonTransport class >> writeStream: aWriteStream readStream: aReadStream [
 { #category : 'operations' }
 ACPNdJsonTransport >> close [
 
-	isClosed := true.
+	self isClosed: true.
 	self writeStream close
 ]
 
@@ -49,6 +49,12 @@ ACPNdJsonTransport >> initialize [
 	readBuffer := ''.
 	pollDelay := 500 milliSeconds.
 	useAtEnd := true
+]
+
+{ #category : 'private - accessing' }
+ACPNdJsonTransport >> isClosed: aBoolean [
+
+	isClosed := aBoolean
 ]
 
 { #category : 'testing' }
@@ -75,7 +81,7 @@ ACPNdJsonTransport >> isAtEnd [
 	 When useAtEnd is false (OSSPipe), only isClosed is checked because
 	 OSSPipe atEnd unreliably returns true when no data is available yet."
 
-	^ self isClosed or: [ useAtEnd and: [ readStream atEnd ] ]
+	^ self isClosed or: [ self useAtEnd and: [ self readStream atEnd ] ]
 ]
 
 { #category : 'private' }
@@ -85,23 +91,23 @@ ACPNdJsonTransport >> readLine [
 
 	| lfIndex chunk line |
 	[
-		lfIndex := readBuffer indexOf: Character lf.
+		lfIndex := self readBuffer indexOf: Character lf.
 		lfIndex > 0 ifTrue: [
-			line := readBuffer copyFrom: 1 to: lfIndex - 1.
-			readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
+			line := self readBuffer copyFrom: 1 to: lfIndex - 1.
+			self readBuffer: (self readBuffer copyFrom: lfIndex + 1 to: self readBuffer size).
 			^ line ].
-		[ chunk := readStream upToEnd ]
+		[ chunk := self readStream upToEnd ]
 			on: Error
 			do: [ :e | ^ nil ].
 		(chunk isNil or: [ chunk isEmpty ])
 			ifTrue: [
 				self isAtEnd ifTrue: [
-					readBuffer ifEmpty: [ ^ nil ].
-					line := readBuffer.
-					readBuffer := ''.
+					self readBuffer ifEmpty: [ ^ nil ].
+					line := self readBuffer.
+					self readBuffer: ''.
 					^ line ].
 				self pollDelay wait ]
-			ifFalse: [ readBuffer := readBuffer , chunk ]
+			ifFalse: [ self readBuffer: (self readBuffer , chunk) ]
 	] repeat
 ]
 
@@ -123,10 +129,34 @@ ACPNdJsonTransport >> readMessage [
 	] repeat
 ]
 
+{ #category : 'private - accessing' }
+ACPNdJsonTransport >> readBuffer [
+
+	^ readBuffer
+]
+
+{ #category : 'private - accessing' }
+ACPNdJsonTransport >> readBuffer: aString [
+
+	readBuffer := aString
+]
+
+{ #category : 'accessing' }
+ACPNdJsonTransport >> useAtEnd [
+
+	^ useAtEnd
+]
+
 { #category : 'accessing' }
 ACPNdJsonTransport >> useAtEnd: aBoolean [
 
 	useAtEnd := aBoolean
+]
+
+{ #category : 'private - accessing' }
+ACPNdJsonTransport >> writeMutex [
+
+	^ writeMutex
 ]
 
 { #category : 'accessing' }
@@ -145,7 +175,7 @@ ACPNdJsonTransport >> readStream: aStream [
 ACPNdJsonTransport >> writeMessage: aDictionary [
 
 	self isClosed ifTrue: [ ACPError transportIsClosed signal ].
-	writeMutex critical: [
+	self writeMutex critical: [
 		self writeStream
 			nextPutAll: (STONJSON toString: aDictionary);
 			nextPut: Character lf;
