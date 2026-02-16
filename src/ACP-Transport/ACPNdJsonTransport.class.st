@@ -91,23 +91,23 @@ ACPNdJsonTransport >> readLine [
 
 	| lfIndex chunk line |
 	[
-		lfIndex := self readBuffer indexOf: Character lf.
+		lfIndex := readBuffer indexOf: Character lf.
 		lfIndex > 0 ifTrue: [
-			line := self readBuffer copyFrom: 1 to: lfIndex - 1.
-			self readBuffer: (self readBuffer copyFrom: lfIndex + 1 to: self readBuffer size).
+			line := readBuffer copyFrom: 1 to: lfIndex - 1.
+			readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
 			^ line ].
 		[ chunk := self readStream upToEnd ]
 			on: Error
 			do: [ :e | ^ nil ].
-		(chunk isNil or: [ chunk isEmpty ])
+		chunk isEmptyOrNil
 			ifTrue: [
 				self isAtEnd ifTrue: [
-					self readBuffer ifEmpty: [ ^ nil ].
-					line := self readBuffer.
-					self readBuffer: ''.
+					readBuffer ifEmpty: [ ^ nil ].
+					line := readBuffer.
+					readBuffer := ''.
 					^ line ].
 				self pollDelay wait ]
-			ifFalse: [ self readBuffer: (self readBuffer , chunk) ]
+			ifFalse: [ readBuffer := readBuffer , chunk ]
 	] repeat
 ]
 
@@ -127,18 +127,6 @@ ACPNdJsonTransport >> readMessage [
 					on: Error
 					do: [ :e | ^ nil ] ]
 	] repeat
-]
-
-{ #category : 'private - accessing' }
-ACPNdJsonTransport >> readBuffer [
-
-	^ readBuffer
-]
-
-{ #category : 'private - accessing' }
-ACPNdJsonTransport >> readBuffer: aString [
-
-	readBuffer := aString
 ]
 
 { #category : 'accessing' }
