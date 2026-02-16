@@ -8,7 +8,7 @@ References the [ACP TypeScript SDK](https://github.com/agentclientprotocol/types
 
 ## Requirements
 
-- Pharo 12+ (Unix/macOS — OSSubprocess does not support Windows)
+- Pharo 12+ (For Windows, use WSL since OSSubprocess does not support Windows)
 
 ## Installation
 
@@ -32,7 +32,7 @@ Metacello new
 
 ```smalltalk
 client := ACPClient new.
-client agentCommand: '/usr/bin/env' arguments: #('gemini' '--mode' 'acp').
+client agentCommand: '/usr/bin/env' arguments: #('gemini' '--experimental-acp').
 client connect.
 
 [
