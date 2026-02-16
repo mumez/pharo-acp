@@ -61,6 +61,14 @@ ACPClientConnection >> handler: anObject [
 { #category : 'initialization' }
 ACPClientConnection >> registerHandlers [
 
+	self registerSessionHandlers.
+	self registerFileHandlers.
+	self registerTerminalHandlers
+]
+
+{ #category : 'initialization' }
+ACPClientConnection >> registerSessionHandlers [
+
 	| processor |
 	processor := self connection messageProcessor.
 
@@ -70,16 +78,29 @@ ACPClientConnection >> registerHandlers [
 
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodRequestPermission
-			 block: [ :params | self handler requestPermission: params ]).
+			 block: [ :params | self handler requestPermission: params ])
+]
 
-	"Optional handlers"
+{ #category : 'initialization' }
+ACPClientConnection >> registerFileHandlers [
+
+	| processor |
+	processor := self connection messageProcessor.
+
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodReadTextFile
 			 block: [ :params | self handler readTextFile: params ]).
 
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodWriteTextFile
-			 block: [ :params | self handler writeTextFile: params ]).
+			 block: [ :params | self handler writeTextFile: params ])
+]
+
+{ #category : 'initialization' }
+ACPClientConnection >> registerTerminalHandlers [
+
+	| processor |
+	processor := self connection messageProcessor.
 
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodTerminalCreate
