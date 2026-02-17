@@ -124,68 +124,85 @@ ACPClientConnection >> registerTerminalHandlers [
 ]
 
 { #category : 'api' }
-ACPClientConnection >> authenticate: aDictionary [
+ACPClientConnection >> authenticate: anAuthenticateRequestOrDictionary [
 
-	^ self connection sendRequest: ACPMethodAuthenticate params: aDictionary
+	^ self connection
+		  sendRequest: ACPMethodAuthenticate
+		  params: anAuthenticateRequestOrDictionary asDictionary
 ]
 
 { #category : 'api' }
-ACPClientConnection >> cancel: aDictionary [
+ACPClientConnection >> cancel: aCancelNotificationOrDictionary [
 
-	^ self connection sendRequest: ACPMethodSessionCancel params: aDictionary
+	^ self connection
+		  sendRequest: ACPMethodSessionCancel
+		  params: aCancelNotificationOrDictionary asDictionary
 ]
 
 { #category : 'api' }
-ACPClientConnection >> initialize: capabilities [
+ACPClientConnection >> initialize: anInitializeRequestOrDictionary [
 
-	| result |
+	| params result |
+	params := anInitializeRequestOrDictionary asDictionary.
 	result := self connection
 		          sendRequest: ACPMethodInitialize
 		          params: {
-				          ('capabilities' -> capabilities).
+				          ('capabilities' -> params).
 				          ('protocolVersion' -> ACPProtocolVersion) } asDictionary.
-	self agentInfo: (result at: 'agent' ifAbsent: [ Dictionary new ]).
-	^ result
+	self agentInfo: (ACPInitializeResponse fromDictionary: result).
+	^ self agentInfo
 ]
 
 { #category : 'api' }
-ACPClientConnection >> loadSession: aDictionary [
+ACPClientConnection >> loadSession: aLoadSessionRequestOrDictionary [
 
-	^ self connection sendRequest: ACPMethodSessionLoad params: aDictionary
+	| result |
+	result := self connection
+		          sendRequest: ACPMethodSessionLoad
+		          params: aLoadSessionRequestOrDictionary asDictionary.
+	^ ACPLoadSessionResponse fromDictionary: result
 ]
 
 { #category : 'api' }
-ACPClientConnection >> newSession: aDictionary [
+ACPClientConnection >> newSession: aNewSessionRequestOrDictionary [
 
-	^ self connection sendRequest: ACPMethodSessionNew params: aDictionary
+	| result |
+	result := self connection
+		          sendRequest: ACPMethodSessionNew
+		          params: aNewSessionRequestOrDictionary asDictionary.
+	^ ACPNewSessionResponse fromDictionary: result
 ]
 
 { #category : 'api' }
-ACPClientConnection >> prompt: aDictionary [
+ACPClientConnection >> prompt: aPromptRequestOrDictionary [
 
-	^ self connection sendRequest: ACPMethodSessionPrompt params: aDictionary
+	| result |
+	result := self connection
+		          sendRequest: ACPMethodSessionPrompt
+		          params: aPromptRequestOrDictionary asDictionary.
+	^ ACPPromptResponse fromDictionary: result
 ]
 
 { #category : 'api' }
-ACPClientConnection >> setSessionConfigOption: aDictionary [
+ACPClientConnection >> setSessionConfigOption: aSetSessionConfigOptionRequestOrDictionary [
 
 	^ self connection
 		  sendRequest: ACPMethodSessionSetConfigOption
-		  params: aDictionary
+		  params: aSetSessionConfigOptionRequestOrDictionary asDictionary
 ]
 
 { #category : 'api' }
-ACPClientConnection >> setSessionMode: aDictionary [
+ACPClientConnection >> setSessionMode: aSetSessionModeRequestOrDictionary [
 
 	^ self connection
 		  sendRequest: ACPMethodSessionSetMode
-		  params: aDictionary
+		  params: aSetSessionModeRequestOrDictionary asDictionary
 ]
 
 { #category : 'api' }
-ACPClientConnection >> setSessionModel: aDictionary [
+ACPClientConnection >> setSessionModel: aSetSessionModelRequestOrDictionary [
 
 	^ self connection
 		  sendRequest: ACPMethodSessionSetModel
-		  params: aDictionary
+		  params: aSetSessionModelRequestOrDictionary asDictionary
 ]
