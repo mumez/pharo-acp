@@ -59,7 +59,7 @@ client connect.
         params prompt: {
             { 'type' -> 'text'. 'text' -> 'Hello!' } asDictionary } ].
 
-    Transcript show: 'Stop reason: ', (result at: 'stopReason'); cr.
+    Transcript show: 'Stop reason: ', result stopReason; cr.
 ] ensure: [ client disconnect ].
 ```
 
