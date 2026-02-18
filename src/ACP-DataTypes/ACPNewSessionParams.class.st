@@ -1,8 +1,7 @@
 Class {
-	#name : 'ACPLoadSessionRequest',
+	#name : 'ACPNewSessionParams',
 	#superclass : 'ACPOptions',
 	#instVars : [
-		'sessionId',
 		'cwd',
 		'mcpServers'
 	],
@@ -10,11 +9,10 @@ Class {
 }
 
 { #category : 'converting' }
-ACPLoadSessionRequest >> asDictionary [
+ACPNewSessionParams >> asDictionary [
 
 	| dict |
 	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
 	self cwd ifNotNil: [ :v | dict at: 'cwd' put: v ].
 	self mcpServers ifNotNil: [ :v | dict at: 'mcpServers' put: v ].
 	self extraPropertiesOn: dict.
@@ -22,37 +20,25 @@ ACPLoadSessionRequest >> asDictionary [
 ]
 
 { #category : 'accessing' }
-ACPLoadSessionRequest >> cwd [
+ACPNewSessionParams >> cwd [
 
 	^ cwd
 ]
 
 { #category : 'accessing' }
-ACPLoadSessionRequest >> cwd: aString [
+ACPNewSessionParams >> cwd: aString [
 
 	cwd := aString
 ]
 
 { #category : 'accessing' }
-ACPLoadSessionRequest >> mcpServers [
+ACPNewSessionParams >> mcpServers [
 
 	^ mcpServers
 ]
 
 { #category : 'accessing' }
-ACPLoadSessionRequest >> mcpServers: anArray [
+ACPNewSessionParams >> mcpServers: anArray [
 
 	mcpServers := anArray
-]
-
-{ #category : 'accessing' }
-ACPLoadSessionRequest >> sessionId [
-
-	^ sessionId
-]
-
-{ #category : 'accessing' }
-ACPLoadSessionRequest >> sessionId: aString [
-
-	sessionId := aString
 ]

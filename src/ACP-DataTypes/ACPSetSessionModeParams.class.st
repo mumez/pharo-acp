@@ -1,5 +1,5 @@
 Class {
-	#name : 'ACPSetSessionModeRequest',
+	#name : 'ACPSetSessionModeParams',
 	#superclass : 'ACPOptions',
 	#instVars : [
 		'sessionId',
@@ -9,7 +9,7 @@ Class {
 }
 
 { #category : 'converting' }
-ACPSetSessionModeRequest >> asDictionary [
+ACPSetSessionModeParams >> asDictionary [
 
 	| dict |
 	dict := Dictionary new.
@@ -20,25 +20,25 @@ ACPSetSessionModeRequest >> asDictionary [
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModeRequest >> modeId [
+ACPSetSessionModeParams >> modeId [
 
 	^ modeId
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModeRequest >> modeId: aString [
+ACPSetSessionModeParams >> modeId: aString [
 
 	modeId := aString
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModeRequest >> sessionId [
+ACPSetSessionModeParams >> sessionId [
 
 	^ sessionId
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModeRequest >> sessionId: aString [
+ACPSetSessionModeParams >> sessionId: aString [
 
 	sessionId := aString
 ]

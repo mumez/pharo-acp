@@ -1,5 +1,5 @@
 Class {
-	#name : 'ACPSetSessionConfigOptionRequest',
+	#name : 'ACPSetSessionConfigOptionParams',
 	#superclass : 'ACPOptions',
 	#instVars : [
 		'sessionId',
@@ -10,7 +10,7 @@ Class {
 }
 
 { #category : 'converting' }
-ACPSetSessionConfigOptionRequest >> asDictionary [
+ACPSetSessionConfigOptionParams >> asDictionary [
 
 	| dict |
 	dict := Dictionary new.
@@ -22,37 +22,37 @@ ACPSetSessionConfigOptionRequest >> asDictionary [
 ]
 
 { #category : 'accessing' }
-ACPSetSessionConfigOptionRequest >> configId [
+ACPSetSessionConfigOptionParams >> configId [
 
 	^ configId
 ]
 
 { #category : 'accessing' }
-ACPSetSessionConfigOptionRequest >> configId: aString [
+ACPSetSessionConfigOptionParams >> configId: aString [
 
 	configId := aString
 ]
 
 { #category : 'accessing' }
-ACPSetSessionConfigOptionRequest >> sessionId [
+ACPSetSessionConfigOptionParams >> sessionId [
 
 	^ sessionId
 ]
 
 { #category : 'accessing' }
-ACPSetSessionConfigOptionRequest >> sessionId: aString [
+ACPSetSessionConfigOptionParams >> sessionId: aString [
 
 	sessionId := aString
 ]
 
 { #category : 'accessing' }
-ACPSetSessionConfigOptionRequest >> value [
+ACPSetSessionConfigOptionParams >> value [
 
 	^ value
 ]
 
 { #category : 'accessing' }
-ACPSetSessionConfigOptionRequest >> value: aString [
+ACPSetSessionConfigOptionParams >> value: aString [
 
 	value := aString
 ]

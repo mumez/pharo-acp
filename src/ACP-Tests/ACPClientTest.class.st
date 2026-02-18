@@ -4,8 +4,7 @@ Class {
 	#instVars : [
 		'client'
 	],
-	#category : 'ACP-Tests',
-	#package : 'ACP-Tests'
+	#category : 'ACP-Tests'
 }
 
 { #category : 'running' }
@@ -38,4 +37,25 @@ ACPClientTest >> testDisconnectStopsProcess [
 	client connect.
 	client disconnect.
 	self deny: client processLauncher isRunning
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testInitializeWithCapabilitiesRemoved [
+
+	self deny: (client respondsTo: #initializeWithCapabilities:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToInitializeBy [
+
+	self assert: (client respondsTo: #initializeBy:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToBuilderMethods [
+
+	self assert: (client respondsTo: #initializeBy:).
+	self assert: (client respondsTo: #newSessionBy:).
+	self assert: (client respondsTo: #promptBy:).
+	self assert: (client respondsTo: #cancelBy:)
 ]

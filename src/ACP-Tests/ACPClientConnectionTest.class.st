@@ -34,14 +34,45 @@ ACPClientConnectionTest >> testInitializeSendsCorrectRequest [
 
 	| request |
 	[
-	clientConnection initialize: { ('foo' -> 'bar') } asDictionary ]
+	clientConnection initialize: (ACPInitializeParams buildBy: [ :p |
+			 p capabilities terminal: true ]) ]
 		forkAt: Processor userBackgroundPriority.
 	request := agentTransport readMessage.
 	self assert: (request at: 'method') equals: 'initialize'.
 	self
-		assert: ((request at: 'params') at: 'capabilities')
-		equals: { ('foo' -> 'bar') } asDictionary.
+		assert: ((request at: 'params') at: 'protocolVersion')
+		equals: 1.
+	self
+		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
+		equals: true
+]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testInitializeWithRawDictionary [
+
+	| request |
+	[
+	clientConnection initialize:
+		{ ('protocolVersion' -> 1). ('capabilities' -> { ('terminal' -> true) } asDictionary) } asDictionary ]
+		forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'initialize'.
 	self assert: ((request at: 'params') at: 'protocolVersion') equals: 1
+]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testInitializeBySendsCorrectRequest [
+
+	| request |
+	[
+	clientConnection initializeBy: [ :p |
+		p capabilities terminal: true ] ]
+		forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'initialize'.
+	self
+		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
+		equals: true
 ]
 
 { #category : 'tests' }

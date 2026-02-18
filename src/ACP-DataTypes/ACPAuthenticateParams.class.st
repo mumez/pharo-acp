@@ -1,30 +1,30 @@
 Class {
-	#name : 'ACPCancelNotification',
+	#name : 'ACPAuthenticateParams',
 	#superclass : 'ACPOptions',
 	#instVars : [
-		'sessionId'
+		'methodId'
 	],
 	#category : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }
-ACPCancelNotification >> asDictionary [
+ACPAuthenticateParams >> asDictionary [
 
 	| dict |
 	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
+	self methodId ifNotNil: [ :v | dict at: 'methodId' put: v ].
 	self extraPropertiesOn: dict.
 	^ dict
 ]
 
 { #category : 'accessing' }
-ACPCancelNotification >> sessionId [
+ACPAuthenticateParams >> methodId [
 
-	^ sessionId
+	^ methodId
 ]
 
 { #category : 'accessing' }
-ACPCancelNotification >> sessionId: aString [
+ACPAuthenticateParams >> methodId: aString [
 
-	sessionId := aString
+	methodId := aString
 ]

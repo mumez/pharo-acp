@@ -7,6 +7,15 @@ Class {
 	#category : 'ACP-DataTypes'
 }
 
+{ #category : 'instance creation' }
+ACPOptions class >> buildBy: aBlock [
+
+	| instance |
+	instance := self new.
+	aBlock value: instance.
+	^ instance
+]
+
 { #category : 'converting' }
 ACPOptions >> asDictionary [
 

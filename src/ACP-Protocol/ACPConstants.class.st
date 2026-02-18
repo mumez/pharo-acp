@@ -28,6 +28,12 @@ Class {
 	#category : 'ACP-Protocol'
 }
 
+{ #category : 'accessing' }
+ACPConstants class >> protocolVersion [
+
+	^ ACPProtocolVersion
+]
+
 { #category : 'class initialization' }
 ACPConstants class >> initialize [
 

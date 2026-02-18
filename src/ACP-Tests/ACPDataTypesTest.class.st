@@ -8,7 +8,7 @@ Class {
 ACPDataTypesTest >> testOptionsEmptyAsDictionary [
 
 	| opts |
-	opts := ACPNewSessionRequest new.
+	opts := ACPNewSessionParams new.
 	self assert: opts asDictionary isEmpty
 ]
 
@@ -16,7 +16,7 @@ ACPDataTypesTest >> testOptionsEmptyAsDictionary [
 ACPDataTypesTest >> testExtraPropertiesOn [
 
 	| opts dict |
-	opts := ACPNewSessionRequest new.
+	opts := ACPNewSessionParams new.
 	opts cwd: '/tmp'.
 	opts extraProperties at: '_meta' put: 'test'.
 	dict := opts asDictionary.
@@ -24,11 +24,31 @@ ACPDataTypesTest >> testExtraPropertiesOn [
 	self assert: (dict at: '_meta') equals: 'test'
 ]
 
-{ #category : 'tests - leaf options' }
-ACPDataTypesTest >> testNewSessionRequestAsDictionary [
+{ #category : 'tests - base' }
+ACPDataTypesTest >> testBuildBy [
 
 	| opts dict |
-	opts := ACPNewSessionRequest new.
+	opts := ACPNewSessionParams buildBy: [ :p |
+		        p cwd: '/tmp'.
+		        p mcpServers: #() ].
+	dict := opts asDictionary.
+	self assert: (dict at: 'cwd') equals: '/tmp'.
+	self assert: (dict at: 'mcpServers') equals: #()
+]
+
+{ #category : 'tests - base' }
+ACPDataTypesTest >> testBuildByEmptyBlock [
+
+	| opts |
+	opts := ACPNewSessionParams buildBy: [ :p | ].
+	self assert: opts asDictionary isEmpty
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testNewSessionParamsAsDictionary [
+
+	| opts dict |
+	opts := ACPNewSessionParams new.
 	opts cwd: '/home/user/project'.
 	opts mcpServers: #().
 	dict := opts asDictionary.
@@ -37,10 +57,10 @@ ACPDataTypesTest >> testNewSessionRequestAsDictionary [
 ]
 
 { #category : 'tests - leaf options' }
-ACPDataTypesTest >> testNewSessionRequestOmitsNilFields [
+ACPDataTypesTest >> testNewSessionParamsOmitsNilFields [
 
 	| opts dict |
-	opts := ACPNewSessionRequest new.
+	opts := ACPNewSessionParams new.
 	opts cwd: '/tmp'.
 	dict := opts asDictionary.
 	self assert: (dict includesKey: 'cwd').
@@ -48,11 +68,11 @@ ACPDataTypesTest >> testNewSessionRequestOmitsNilFields [
 ]
 
 { #category : 'tests - leaf options' }
-ACPDataTypesTest >> testPromptRequestAsDictionary [
+ACPDataTypesTest >> testPromptParamsAsDictionary [
 
 	| opts dict prompt |
 	prompt := { { 'type' -> 'text'. 'text' -> 'Hello' } asDictionary }.
-	opts := ACPPromptRequest new.
+	opts := ACPPromptParams new.
 	opts sessionId: 'abc-123'.
 	opts prompt: prompt.
 	dict := opts asDictionary.
@@ -61,20 +81,20 @@ ACPDataTypesTest >> testPromptRequestAsDictionary [
 ]
 
 { #category : 'tests - leaf options' }
-ACPDataTypesTest >> testAuthenticateRequestAsDictionary [
+ACPDataTypesTest >> testAuthenticateParamsAsDictionary [
 
 	| opts dict |
-	opts := ACPAuthenticateRequest new.
+	opts := ACPAuthenticateParams new.
 	opts methodId: 'oauth'.
 	dict := opts asDictionary.
 	self assert: (dict at: 'methodId') equals: 'oauth'
 ]
 
 { #category : 'tests - leaf options' }
-ACPDataTypesTest >> testSetSessionModeRequestAsDictionary [
+ACPDataTypesTest >> testSetSessionModeParamsAsDictionary [
 
 	| opts dict |
-	opts := ACPSetSessionModeRequest new.
+	opts := ACPSetSessionModeParams new.
 	opts sessionId: 'abc'.
 	opts modeId: 'plan'.
 	dict := opts asDictionary.
@@ -83,10 +103,10 @@ ACPDataTypesTest >> testSetSessionModeRequestAsDictionary [
 ]
 
 { #category : 'tests - leaf options' }
-ACPDataTypesTest >> testCancelNotificationAsDictionary [
+ACPDataTypesTest >> testCancelParamsAsDictionary [
 
 	| opts dict |
-	opts := ACPCancelNotification new.
+	opts := ACPCancelParams new.
 	opts sessionId: 'abc-123'.
 	dict := opts asDictionary.
 	self assert: (dict at: 'sessionId') equals: 'abc-123'
@@ -104,33 +124,66 @@ ACPDataTypesTest >> testFileSystemCapabilityAsDictionary [
 ]
 
 { #category : 'tests - composite options' }
-ACPDataTypesTest >> testInitializeRequestLazyInit [
+ACPDataTypesTest >> testInitializeParamsDefaultProtocolVersion [
 
-	| req |
-	req := ACPInitializeRequest new.
-	self assert: req clientCapabilities class equals: ACPClientCapabilities.
-	self assert: req clientInfo class equals: ACPImplementation
+	| params dict |
+	params := ACPInitializeParams new.
+	dict := params asDictionary.
+	self assert: (dict at: 'protocolVersion') equals: 1
 ]
 
 { #category : 'tests - composite options' }
-ACPDataTypesTest >> testInitializeRequestEmptyChildOmitted [
+ACPDataTypesTest >> testInitializeParamsExplicitProtocolVersion [
 
-	| req dict |
-	req := ACPInitializeRequest new.
-	req clientCapabilities. "trigger lazy init but don't set anything"
-	dict := req asDictionary.
-	self deny: (dict includesKey: 'clientCapabilities')
+	| params dict |
+	params := ACPInitializeParams new.
+	params protocolVersion: 2.
+	dict := params asDictionary.
+	self assert: (dict at: 'protocolVersion') equals: 2
 ]
 
 { #category : 'tests - composite options' }
-ACPDataTypesTest >> testInitializeRequestNonEmptyChildIncluded [
+ACPDataTypesTest >> testInitializeParamsLazyInit [
 
-	| req dict |
-	req := ACPInitializeRequest new.
-	req clientCapabilities terminal: true.
-	dict := req asDictionary.
-	self assert: (dict includesKey: 'clientCapabilities').
-	self assert: ((dict at: 'clientCapabilities') at: 'terminal') equals: true
+	| params |
+	params := ACPInitializeParams new.
+	self assert: params capabilities class equals: ACPClientCapabilities.
+	self assert: params clientInfo class equals: ACPImplementation
+]
+
+{ #category : 'tests - composite options' }
+ACPDataTypesTest >> testInitializeParamsEmptyChildOmitted [
+
+	| params dict |
+	params := ACPInitializeParams new.
+	params capabilities. "trigger lazy init but don't set anything"
+	dict := params asDictionary.
+	self deny: (dict includesKey: 'capabilities').
+	self assert: (dict at: 'protocolVersion') equals: 1
+]
+
+{ #category : 'tests - composite options' }
+ACPDataTypesTest >> testInitializeParamsNonEmptyChildIncluded [
+
+	| params dict |
+	params := ACPInitializeParams new.
+	params capabilities terminal: true.
+	dict := params asDictionary.
+	self assert: (dict includesKey: 'capabilities').
+	self assert: ((dict at: 'capabilities') at: 'terminal') equals: true.
+	self assert: (dict at: 'protocolVersion') equals: 1
+]
+
+{ #category : 'tests - composite options' }
+ACPDataTypesTest >> testInitializeParamsBuildByNested [
+
+	| params dict |
+	params := ACPInitializeParams buildBy: [ :p |
+		          p capabilities terminal: true.
+		          p clientInfo name: 'pharo-acp'; version: '0.1.0' ].
+	dict := params asDictionary.
+	self assert: ((dict at: 'capabilities') at: 'terminal') equals: true.
+	self assert: ((dict at: 'clientInfo') at: 'name') equals: 'pharo-acp'
 ]
 
 { #category : 'tests - composite options' }

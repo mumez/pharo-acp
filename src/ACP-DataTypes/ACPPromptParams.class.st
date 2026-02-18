@@ -1,44 +1,44 @@
 Class {
-	#name : 'ACPSetSessionModelRequest',
+	#name : 'ACPPromptParams',
 	#superclass : 'ACPOptions',
 	#instVars : [
 		'sessionId',
-		'modelId'
+		'prompt'
 	],
 	#category : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }
-ACPSetSessionModelRequest >> asDictionary [
+ACPPromptParams >> asDictionary [
 
 	| dict |
 	dict := Dictionary new.
 	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
-	self modelId ifNotNil: [ :v | dict at: 'modelId' put: v ].
+	self prompt ifNotNil: [ :v | dict at: 'prompt' put: v ].
 	self extraPropertiesOn: dict.
 	^ dict
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModelRequest >> modelId [
+ACPPromptParams >> prompt [
 
-	^ modelId
+	^ prompt
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModelRequest >> modelId: aString [
+ACPPromptParams >> prompt: anArray [
 
-	modelId := aString
+	prompt := anArray
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModelRequest >> sessionId [
+ACPPromptParams >> sessionId [
 
 	^ sessionId
 ]
 
 { #category : 'accessing' }
-ACPSetSessionModelRequest >> sessionId: aString [
+ACPPromptParams >> sessionId: aString [
 
 	sessionId := aString
 ]
