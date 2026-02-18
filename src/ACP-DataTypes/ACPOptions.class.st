@@ -37,6 +37,6 @@ ACPOptions >> extraProperties: aDictionary [
 { #category : 'converting' }
 ACPOptions >> extraPropertiesOn: aDictionary [
 
-	^ aDictionary addAll: self extraProperties; yourself
+	aDictionary at: '_meta' put: self extraProperties
 ]
 
