@@ -47,19 +47,17 @@ client connect.
 
 [
     "Initialize"
-    client initializeWithCapabilities: Dictionary new.
+    client initializeBy: [ :params | "uses default protocolVersion and capabilities" ].
 
     "Create session"
-    session := client clientConnection newSession: {
-        'cwd' -> FileSystem workingDirectory fullName.
-        'mcpServers' -> #() } asDictionary.
+    session := client newSessionBy: [ :params |
+        params cwd: FileSystem workingDirectory fullName ].
 
     "Send prompt (blocks until agent responds)"
-    result := client prompt: {
-        'sessionId' -> (session at: 'sessionId').
-        'prompt' -> {
-            { 'type' -> 'text'. 'text' -> 'Hello!' } asDictionary
-        } } asDictionary.
+    result := client promptBy: [ :params |
+        params sessionId: (session at: 'sessionId').
+        params prompt: {
+            { 'type' -> 'text'. 'text' -> 'Hello!' } asDictionary } ].
 
     Transcript show: 'Stop reason: ', (result at: 'stopReason'); cr.
 ] ensure: [ client disconnect ].
