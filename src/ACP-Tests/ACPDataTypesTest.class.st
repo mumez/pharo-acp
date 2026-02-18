@@ -5,11 +5,13 @@ Class {
 }
 
 { #category : 'tests - base' }
-ACPDataTypesTest >> testOptionsEmptyAsDictionary [
+ACPDataTypesTest >> testNewSessionParamsIncludesMandatoryMcpServersByDefault [
 
-	| opts |
+	| opts dict |
 	opts := ACPNewSessionParams new.
-	self assert: opts asDictionary isEmpty
+	dict := opts asDictionary.
+	self assert: dict size equals: 1.
+	self assert: (dict at: 'mcpServers') equals: #()
 ]
 
 { #category : 'tests - base' }
@@ -40,9 +42,11 @@ ACPDataTypesTest >> testBuildBy [
 { #category : 'tests - base' }
 ACPDataTypesTest >> testBuildByEmptyBlock [
 
-	| opts |
+	| opts dict |
 	opts := ACPNewSessionParams buildBy: [ :p | ].
-	self assert: opts asDictionary isEmpty
+	dict := opts asDictionary.
+	self assert: dict size equals: 1.
+	self assert: (dict at: 'mcpServers') equals: #()
 ]
 
 { #category : 'tests - leaf options' }
@@ -65,7 +69,7 @@ ACPDataTypesTest >> testNewSessionParamsOmitsNilFields [
 	opts cwd: '/tmp'.
 	dict := opts asDictionary.
 	self assert: (dict includesKey: 'cwd').
-	self deny: (dict includesKey: 'mcpServers')
+	self assert: (dict includesKey: 'mcpServers')
 ]
 
 { #category : 'tests - leaf options' }
