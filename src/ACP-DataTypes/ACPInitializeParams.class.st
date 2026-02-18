@@ -14,7 +14,7 @@ ACPInitializeParams >> asDictionary [
 
 	| dict |
 	dict := Dictionary new.
-	dict at: 'protocolVersion' put: (self protocolVersion ifNil: [ ACPConstants protocolVersion ]).
+	dict at: 'protocolVersion' put: self protocolVersion.
 	self capabilities asDictionary ifNotEmpty: [ :v | dict at: 'capabilities' put: v ].
 	self clientInfo asDictionary ifNotEmpty: [ :v | dict at: 'clientInfo' put: v ].
 	self extraPropertiesOn: dict.
@@ -48,7 +48,7 @@ ACPInitializeParams >> clientInfo: anObject [
 { #category : 'accessing' }
 ACPInitializeParams >> protocolVersion [
 
-	^ protocolVersion
+	^ protocolVersion ifNil: [ protocolVersion := ACPConstants protocolVersion ]
 ]
 
 { #category : 'accessing' }
