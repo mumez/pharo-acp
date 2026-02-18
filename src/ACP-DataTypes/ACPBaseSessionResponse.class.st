@@ -21,3 +21,9 @@ ACPBaseSessionResponse >> modes [
 
 	^ self rawDictionary at: 'modes' ifAbsent: []
 ]
+
+{ #category : 'accessing' }
+ACPBaseSessionResponse >> sessionId [
+
+	^ self rawDictionary at: 'sessionId' ifAbsent: []
+]

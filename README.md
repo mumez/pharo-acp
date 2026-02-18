@@ -55,7 +55,7 @@ client connect.
 
     "Send prompt (blocks until agent responds)"
     result := client promptBy: [ :params |
-        params sessionId: (session at: 'sessionId').
+        params sessionId: session sessionId.
         params prompt: {
             { 'type' -> 'text'. 'text' -> 'Hello!' } asDictionary } ].
 
