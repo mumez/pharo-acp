@@ -33,8 +33,8 @@ ACPNewSessionParams >> cwd: aString [
 
 { #category : 'accessing' }
 ACPNewSessionParams >> mcpServers [
-
-	^ mcpServers
+	"required: set default value"
+	^ mcpServers ifNil: [ mcpServers := #() ]
 ]
 
 { #category : 'accessing' }
