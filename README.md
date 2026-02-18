@@ -2,7 +2,7 @@
 
 ACP (Agent Client Protocol) client library for Pharo Smalltalk.
 
-Enables Pharo to communicate with ACP-compatible coding agents (Gemini CLI, Open Code, etc.) over JSON-RPC 2.0 via stdio.
+Enables Pharo to communicate with ACP-compatible coding agents ([Gemini CLI](https://github.com/google-gemini/gemini-cli), [OpenCode](https://opencode.ai/), etc.) over JSON-RPC 2.0 via stdio.
 
 References the [ACP TypeScript SDK](https://github.com/agentclientprotocol/typescript-sdk).
 
