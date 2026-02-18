@@ -15,13 +15,14 @@ ACPDataTypesTest >> testOptionsEmptyAsDictionary [
 { #category : 'tests - base' }
 ACPDataTypesTest >> testExtraPropertiesOn [
 
-	| opts dict |
+	| opts dict props |
 	opts := ACPNewSessionParams new.
 	opts cwd: '/tmp'.
-	opts extraProperties at: '_meta' put: 'test'.
+	props := { ('foo' -> 'bar') } asDictionary.
+	opts extraProperties: props.
 	dict := opts asDictionary.
 	self assert: (dict at: 'cwd') equals: '/tmp'.
-	self assert: (dict at: '_meta') equals: 'test'
+	self assert: ((dict at: '_meta') at: 'foo') equals: 'bar'
 ]
 
 { #category : 'tests - base' }

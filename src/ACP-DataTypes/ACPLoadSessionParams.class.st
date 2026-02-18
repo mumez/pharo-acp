@@ -35,8 +35,8 @@ ACPLoadSessionParams >> cwd: aString [
 
 { #category : 'accessing' }
 ACPLoadSessionParams >> mcpServers [
-
-	^ mcpServers
+	"required: set default value"
+	^ mcpServers ifNil: [ mcpServers := #() ]
 ]
 
 { #category : 'accessing' }
