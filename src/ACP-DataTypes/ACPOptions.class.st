@@ -40,5 +40,7 @@ ACPOptions >> extraPropertiesOn: aDictionary [
 	self extraProperties ifNotEmpty: [:props |
 		aDictionary at: '_meta' put: props.
 	]
+	.
+	^ aDictionary
 ]
 
