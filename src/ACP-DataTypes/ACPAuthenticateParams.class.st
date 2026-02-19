@@ -1,10 +1,11 @@
 Class {
 	#name : 'ACPAuthenticateParams',
-	#superclass : 'ACPOptions',
+	#superclass : 'ACPParams',
 	#instVars : [
 		'methodId'
 	],
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }

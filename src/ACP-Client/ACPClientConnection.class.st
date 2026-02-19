@@ -4,12 +4,13 @@ Class {
 	#instVars : [
 		'connection',
 		'handler',
-		'initializeResponse'
+		'agentInfo'
 	],
 	#pools : [
 		'ACPConstants'
 	],
-	#category : 'ACP-Client'
+	#category : 'ACP-Client',
+	#package : 'ACP-Client'
 }
 
 { #category : 'instance creation' }
@@ -25,19 +26,13 @@ ACPClientConnection class >> on: aConnection handler: aHandler [
 { #category : 'accessing' }
 ACPClientConnection >> agentInfo [
 
-	^ self initializeResponse ifNotNil: [ :resp | resp agentInfo ]
+	^ agentInfo
 ]
 
 { #category : 'accessing' }
-ACPClientConnection >> initializeResponse [
+ACPClientConnection >> agentInfo: anObject [
 
-	^ initializeResponse
-]
-
-{ #category : 'accessing' }
-ACPClientConnection >> initializeResponse: anObject [
-
-	initializeResponse := anObject
+	agentInfo := anObject
 ]
 
 { #category : 'api' }
@@ -98,8 +93,8 @@ ACPClientConnection >> initialize: aParamsOrDictionary [
 	| request result |
 	request := ACPRequest initialize: aParamsOrDictionary.
 	result := self connection sendRequest: request method params: request params.
-	self initializeResponse: (ACPInitializeResponse fromDictionary: result).
-	^ self initializeResponse
+	self agentInfo: (ACPInitializeResponse fromDictionary: result).
+	^ self agentInfo
 ]
 
 { #category : 'api - builder' }

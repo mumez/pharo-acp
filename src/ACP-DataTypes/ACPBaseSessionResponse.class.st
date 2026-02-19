@@ -1,29 +1,30 @@
 Class {
 	#name : 'ACPBaseSessionResponse',
-	#superclass : 'ACPResult',
-	#category : 'ACP-DataTypes'
+	#superclass : 'ACPReturnValues',
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> configOptions [
 
-	^ self rawDictionary at: 'configOptions' ifAbsent: []
+	^ self rawValues at: 'configOptions' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> models [
 
-	^ self rawDictionary at: 'models' ifAbsent: []
+	^ self rawValues at: 'models' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> modes [
 
-	^ self rawDictionary at: 'modes' ifAbsent: []
+	^ self rawValues at: 'modes' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> sessionId [
 
-	^ self rawDictionary at: 'sessionId' ifAbsent: []
+	^ self rawValues at: 'sessionId' ifAbsent: []
 ]

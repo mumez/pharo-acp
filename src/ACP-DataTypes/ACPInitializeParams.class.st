@@ -1,12 +1,13 @@
 Class {
 	#name : 'ACPInitializeParams',
-	#superclass : 'ACPOptions',
+	#superclass : 'ACPParams',
 	#instVars : [
 		'protocolVersion',
 		'capabilities',
 		'clientInfo'
 	],
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }

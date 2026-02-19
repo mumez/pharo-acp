@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'client'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
 
 { #category : 'running' }
@@ -46,16 +47,16 @@ ACPClientTest >> testInitializeWithCapabilitiesRemoved [
 ]
 
 { #category : 'tests' }
-ACPClientTest >> testRespondsToInitializeBy [
-
-	self assert: (client respondsTo: #initializeBy:)
-]
-
-{ #category : 'tests' }
 ACPClientTest >> testRespondsToBuilderMethods [
 
 	self assert: (client respondsTo: #initializeBy:).
 	self assert: (client respondsTo: #newSessionBy:).
 	self assert: (client respondsTo: #promptBy:).
 	self assert: (client respondsTo: #cancelBy:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToInitializeBy [
+
+	self assert: (client respondsTo: #initializeBy:)
 ]

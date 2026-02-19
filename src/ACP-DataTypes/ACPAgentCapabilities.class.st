@@ -1,29 +1,30 @@
 Class {
 	#name : 'ACPAgentCapabilities',
-	#superclass : 'ACPResult',
-	#category : 'ACP-DataTypes'
+	#superclass : 'ACPReturnValues',
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'accessing' }
 ACPAgentCapabilities >> loadSession [
 
-	^ self rawDictionary at: 'loadSession' ifAbsent: []
+	^ self rawValues at: 'loadSession' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPAgentCapabilities >> mcpCapabilities [
 
-	^ self rawDictionary at: 'mcpCapabilities' ifAbsent: []
+	^ self rawValues at: 'mcpCapabilities' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPAgentCapabilities >> promptCapabilities [
 
-	^ self rawDictionary at: 'promptCapabilities' ifAbsent: []
+	^ self rawValues at: 'promptCapabilities' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPAgentCapabilities >> sessionCapabilities [
 
-	^ self rawDictionary at: 'sessionCapabilities' ifAbsent: []
+	^ self rawValues at: 'sessionCapabilities' ifAbsent: []
 ]

@@ -7,7 +7,8 @@ Class {
 		'error',
 		'isResolved'
 	],
-	#category : 'ACP-Connection'
+	#category : 'ACP-Connection',
+	#package : 'ACP-Connection'
 }
 
 { #category : 'accessing' }
@@ -22,6 +23,14 @@ ACPPendingRequest >> error: anObject [
 	error := anObject
 ]
 
+{ #category : 'initialization' }
+ACPPendingRequest >> initialize [
+
+	super initialize.
+	semaphore := Semaphore new.
+	isResolved := false
+]
+
 { #category : 'testing' }
 ACPPendingRequest >> isResolved [
 
@@ -32,6 +41,22 @@ ACPPendingRequest >> isResolved [
 ACPPendingRequest >> isResolved: aBoolean [
 
 	isResolved := aBoolean
+]
+
+{ #category : 'actions' }
+ACPPendingRequest >> rejectWith: anErrorDictionary [
+
+	self error: anErrorDictionary.
+	self isResolved: true.
+	self semaphore signal
+]
+
+{ #category : 'actions' }
+ACPPendingRequest >> resolveWith: aResult [
+
+	self result: aResult.
+	self isResolved: true.
+	self semaphore signal
 ]
 
 { #category : 'accessing' }
@@ -50,30 +75,6 @@ ACPPendingRequest >> result: anObject [
 ACPPendingRequest >> semaphore [
 
 	^ semaphore
-]
-
-{ #category : 'initialization' }
-ACPPendingRequest >> initialize [
-
-	super initialize.
-	semaphore := Semaphore new.
-	isResolved := false
-]
-
-{ #category : 'actions' }
-ACPPendingRequest >> rejectWith: anErrorDictionary [
-
-	self error: anErrorDictionary.
-	self isResolved: true.
-	self semaphore signal
-]
-
-{ #category : 'actions' }
-ACPPendingRequest >> resolveWith: aResult [
-
-	self result: aResult.
-	self isResolved: true.
-	self semaphore signal
 ]
 
 { #category : 'actions' }

@@ -6,8 +6,18 @@ Class {
 		'outbox',
 		'isClosed'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
+
+{ #category : 'instance creation' }
+ACPTestTransport class >> inbox: anInbox outbox: anOutbox [
+
+	^ self new
+		  inbox: anInbox;
+		  outbox: anOutbox;
+		  yourself
+]
 
 { #category : 'instance creation' }
 ACPTestTransport class >> loopbackPair [
@@ -21,15 +31,6 @@ ACPTestTransport class >> loopbackPair [
 	^ { clientTransport. agentTransport }
 ]
 
-{ #category : 'instance creation' }
-ACPTestTransport class >> inbox: anInbox outbox: anOutbox [
-
-	^ self new
-		  inbox: anInbox;
-		  outbox: anOutbox;
-		  yourself
-]
-
 { #category : 'operations' }
 ACPTestTransport >> close [
 	"Signal EOF to the peer by putting nil into outbox (which is the peer's inbox)."
@@ -38,17 +39,17 @@ ACPTestTransport >> close [
 	outbox nextPut: nil
 ]
 
+{ #category : 'accessing' }
+ACPTestTransport >> inbox: aSharedQueue [
+
+	inbox := aSharedQueue
+]
+
 { #category : 'initialization' }
 ACPTestTransport >> initialize [
 
 	super initialize.
 	isClosed := false
-]
-
-{ #category : 'accessing' }
-ACPTestTransport >> inbox: aSharedQueue [
-
-	inbox := aSharedQueue
 ]
 
 { #category : 'testing' }

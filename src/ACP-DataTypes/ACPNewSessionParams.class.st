@@ -1,11 +1,12 @@
 Class {
 	#name : 'ACPNewSessionParams',
-	#superclass : 'ACPOptions',
+	#superclass : 'ACPParams',
 	#instVars : [
 		'cwd',
 		'mcpServers'
 	],
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }

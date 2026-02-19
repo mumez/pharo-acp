@@ -8,14 +8,9 @@ Class {
 	#classVars : [
 		'AgentPath'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
-
-{ #category : 'class initialization' }
-ACPSmokeTest class >> initialize [
-
-	AgentPath := nil
-]
 
 { #category : 'accessing' }
 ACPSmokeTest class >> agentPath [
@@ -28,6 +23,12 @@ ACPSmokeTest class >> agentPath [
 ACPSmokeTest class >> agentPath: aString [
 
 	AgentPath := aString
+]
+
+{ #category : 'class initialization' }
+ACPSmokeTest class >> initialize [
+
+	AgentPath := nil
 ]
 
 { #category : 'running' }

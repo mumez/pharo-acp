@@ -1,12 +1,13 @@
 Class {
 	#name : 'ACPSetSessionConfigOptionParams',
-	#superclass : 'ACPOptions',
+	#superclass : 'ACPParams',
 	#instVars : [
 		'sessionId',
 		'configId',
 		'value'
 	],
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }

@@ -1,29 +1,30 @@
 Class {
 	#name : 'ACPInitializeResponse',
-	#superclass : 'ACPResult',
-	#category : 'ACP-DataTypes'
+	#superclass : 'ACPReturnValues',
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'accessing' }
 ACPInitializeResponse >> agentCapabilities [
 
-	^ self rawDictionary at: 'agentCapabilities' ifAbsent: []
+	^ self rawValues at: 'agentCapabilities' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPInitializeResponse >> agentInfo [
 
-	^ self rawDictionary at: 'agentInfo' ifAbsent: []
+	^ self rawValues at: 'agentInfo' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPInitializeResponse >> authMethods [
 
-	^ self rawDictionary at: 'authMethods' ifAbsent: []
+	^ self rawValues at: 'authMethods' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPInitializeResponse >> protocolVersion [
 
-	^ self rawDictionary at: 'protocolVersion' ifAbsent: []
+	^ self rawValues at: 'protocolVersion' ifAbsent: []
 ]

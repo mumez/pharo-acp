@@ -7,7 +7,8 @@ Class {
 		'handler',
 		'connection'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
 
 { #category : 'running' }
@@ -27,6 +28,21 @@ ACPClientConnectionTest >> tearDown [
 
 	connection ifNotNil: [ :c | c close ].
 	super tearDown
+]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testInitializeBySendsCorrectRequest [
+
+	| request |
+	[
+	clientConnection initializeBy: [ :p |
+		p capabilities terminal: true ] ]
+		forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'initialize'.
+	self
+		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
+		equals: true
 ]
 
 { #category : 'tests' }
@@ -61,18 +77,23 @@ ACPClientConnectionTest >> testInitializeWithRawDictionary [
 ]
 
 { #category : 'tests' }
-ACPClientConnectionTest >> testInitializeBySendsCorrectRequest [
+ACPClientConnectionTest >> testRequestPermissionIsDelegatedToHandler [
 
-	| request |
-	[
-	clientConnection initializeBy: [ :p |
-		p capabilities terminal: true ] ]
-		forkAt: Processor userBackgroundPriority.
-	request := agentTransport readMessage.
-	self assert: (request at: 'method') equals: 'initialize'.
-	self
-		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
-		equals: true
+	| response sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> 1).
+			('method' -> 'session/request_permission').
+			('params' -> { ('tool' -> 'ls') } asDictionary) } asDictionary.
+
+	[ response := agentTransport readMessage. sem signal ] fork.
+	sem wait.
+
+	self assert: handler permissionRequest notNil.
+	self assert: (handler permissionRequest at: 'tool') equals: 'ls'.
+	self assert: ((response at: 'result') at: 'allow') equals: true
 ]
 
 { #category : 'tests' }
@@ -96,24 +117,4 @@ ACPClientConnectionTest >> testSessionUpdateIsDelegatedToHandler [
 	self
 		assert: (handler lastUpdate at: 'state')
 		equals: 'running'
-]
-
-{ #category : 'tests' }
-ACPClientConnectionTest >> testRequestPermissionIsDelegatedToHandler [
-
-	| response sem |
-	sem := Semaphore new.
-	connection startReadLoop.
-	agentTransport writeMessage: {
-			('jsonrpc' -> '2.0').
-			('id' -> 1).
-			('method' -> 'session/request_permission').
-			('params' -> { ('tool' -> 'ls') } asDictionary) } asDictionary.
-
-	[ response := agentTransport readMessage. sem signal ] fork.
-	sem wait.
-
-	self assert: handler permissionRequest notNil.
-	self assert: (handler permissionRequest at: 'tool') equals: 'ls'.
-	self assert: ((response at: 'result') at: 'allow') equals: true
 ]

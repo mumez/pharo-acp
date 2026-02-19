@@ -8,7 +8,8 @@ Class {
 	#pools : [
 		'ACPConstants'
 	],
-	#category : 'ACP-Protocol'
+	#category : 'ACP-Protocol',
+	#package : 'ACP-Protocol'
 }
 
 { #category : 'instance creation' }

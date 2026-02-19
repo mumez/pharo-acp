@@ -10,7 +10,8 @@ Class {
 		'pollDelay',
 		'useAtEnd'
 	],
-	#category : 'ACP-Transport'
+	#category : 'ACP-Transport',
+	#package : 'ACP-Transport'
 }
 
 { #category : 'instance creation' }
@@ -51,16 +52,25 @@ ACPNdJsonTransport >> initialize [
 	useAtEnd := true
 ]
 
-{ #category : 'private - accessing' }
-ACPNdJsonTransport >> isClosed: aBoolean [
+{ #category : 'private' }
+ACPNdJsonTransport >> isAtEnd [
+	"Check if the stream has reached EOF.
+	 When useAtEnd is false (OSSPipe), only isClosed is checked because
+	 OSSPipe atEnd unreliably returns true when no data is available yet."
 
-	isClosed := aBoolean
+	^ self isClosed or: [ self useAtEnd and: [ self readStream atEnd ] ]
 ]
 
 { #category : 'testing' }
 ACPNdJsonTransport >> isClosed [
 
 	^ isClosed
+]
+
+{ #category : 'private - accessing' }
+ACPNdJsonTransport >> isClosed: aBoolean [
+
+	isClosed := aBoolean
 ]
 
 { #category : 'accessing' }
@@ -73,15 +83,6 @@ ACPNdJsonTransport >> pollDelay [
 ACPNdJsonTransport >> pollDelay: aDuration [
 
 	pollDelay := aDuration
-]
-
-{ #category : 'private' }
-ACPNdJsonTransport >> isAtEnd [
-	"Check if the stream has reached EOF.
-	 When useAtEnd is false (OSSPipe), only isClosed is checked because
-	 OSSPipe atEnd unreliably returns true when no data is available yet."
-
-	^ self isClosed or: [ self useAtEnd and: [ self readStream atEnd ] ]
 ]
 
 { #category : 'private' }
@@ -130,24 +131,6 @@ ACPNdJsonTransport >> readMessage [
 ]
 
 { #category : 'accessing' }
-ACPNdJsonTransport >> useAtEnd [
-
-	^ useAtEnd
-]
-
-{ #category : 'accessing' }
-ACPNdJsonTransport >> useAtEnd: aBoolean [
-
-	useAtEnd := aBoolean
-]
-
-{ #category : 'private - accessing' }
-ACPNdJsonTransport >> writeMutex [
-
-	^ writeMutex
-]
-
-{ #category : 'accessing' }
 ACPNdJsonTransport >> readStream [
 
 	^ readStream
@@ -159,6 +142,18 @@ ACPNdJsonTransport >> readStream: aStream [
 	readStream := aStream
 ]
 
+{ #category : 'accessing' }
+ACPNdJsonTransport >> useAtEnd [
+
+	^ useAtEnd
+]
+
+{ #category : 'accessing' }
+ACPNdJsonTransport >> useAtEnd: aBoolean [
+
+	useAtEnd := aBoolean
+]
+
 { #category : 'operations' }
 ACPNdJsonTransport >> writeMessage: aDictionary [
 
@@ -168,6 +163,12 @@ ACPNdJsonTransport >> writeMessage: aDictionary [
 			nextPutAll: (STONJSON toString: aDictionary);
 			nextPut: Character lf;
 			flush ]
+]
+
+{ #category : 'private - accessing' }
+ACPNdJsonTransport >> writeMutex [
+
+	^ writeMutex
 ]
 
 { #category : 'accessing' }

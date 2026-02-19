@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'launcher'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
 
 { #category : 'running' }
@@ -19,6 +20,45 @@ ACPProcessLauncherTest >> tearDown [
 
 	launcher isRunning ifTrue: [ launcher terminate ].
 	super tearDown
+]
+
+{ #category : 'tests - arguments' }
+ACPProcessLauncherTest >> testArgumentsDefaultToEmpty [
+
+	self assert: launcher arguments equals: #()
+]
+
+{ #category : 'tests - environment' }
+ACPProcessLauncherTest >> testCustomEnvironmentVariable [
+	"Verify custom env vars are passed to child process."
+
+	| output process |
+	launcher command: '/bin/sh'.
+	launcher arguments: #('-c' 'echo $ACP_TEST_VAR').
+	launcher environmentAt: 'ACP_TEST_VAR' put: 'test_value'.
+	launcher launch.
+	process := launcher process.
+	process waitForExit.
+	output := process stdoutStream upToEnd.
+	self assert: (output trimRight) equals: 'test_value'
+]
+
+{ #category : 'tests - exit' }
+ACPProcessLauncherTest >> testExitStatusOfFailedCommand [
+
+	launcher command: '/bin/false'.
+	launcher launch.
+	launcher terminate.
+	self assert: launcher exitStatus equals: 1
+]
+
+{ #category : 'tests - exit' }
+ACPProcessLauncherTest >> testExitStatusOfSuccessfulCommand [
+
+	launcher command: '/bin/true'.
+	launcher launch.
+	launcher terminate.
+	self assert: launcher exitStatus equals: 0
 ]
 
 { #category : 'tests - lifecycle' }
@@ -36,36 +76,13 @@ ACPProcessLauncherTest >> testLaunchStartsProcess [
 ]
 
 { #category : 'tests - lifecycle' }
-ACPProcessLauncherTest >> testTerminateStopsProcess [
+ACPProcessLauncherTest >> testRelaunchTerminatesPreviousProcess [
 
 	launcher command: '/bin/cat'.
 	launcher launch.
-	launcher terminate.
-	self deny: launcher isRunning
-]
-
-{ #category : 'tests - exit' }
-ACPProcessLauncherTest >> testExitStatusOfSuccessfulCommand [
-
-	launcher command: '/bin/true'.
+	self assert: launcher isRunning.
 	launcher launch.
-	launcher terminate.
-	self assert: launcher exitStatus equals: 0
-]
-
-{ #category : 'tests - exit' }
-ACPProcessLauncherTest >> testExitStatusOfFailedCommand [
-
-	launcher command: '/bin/false'.
-	launcher launch.
-	launcher terminate.
-	self assert: launcher exitStatus equals: 1
-]
-
-{ #category : 'tests - arguments' }
-ACPProcessLauncherTest >> testArgumentsDefaultToEmpty [
-
-	self assert: launcher arguments equals: #()
+	self assert: launcher isRunning
 ]
 
 { #category : 'tests - arguments' }
@@ -89,16 +106,6 @@ ACPProcessLauncherTest >> testSetWorkingDirectory [
 	self assert: launcher workingDirectory equals: '/tmp'
 ]
 
-{ #category : 'tests - lifecycle' }
-ACPProcessLauncherTest >> testRelaunchTerminatesPreviousProcess [
-
-	launcher command: '/bin/cat'.
-	launcher launch.
-	self assert: launcher isRunning.
-	launcher launch.
-	self assert: launcher isRunning
-]
-
 { #category : 'tests - io' }
 ACPProcessLauncherTest >> testStdinStdoutWithEcho [
 	"Use echo via sh to test stdout reading after process exits (no blocking)."
@@ -113,17 +120,11 @@ ACPProcessLauncherTest >> testStdinStdoutWithEcho [
 	self assert: (output trimRight) equals: 'hello'
 ]
 
-{ #category : 'tests - environment' }
-ACPProcessLauncherTest >> testCustomEnvironmentVariable [
-	"Verify custom env vars are passed to child process."
+{ #category : 'tests - lifecycle' }
+ACPProcessLauncherTest >> testTerminateStopsProcess [
 
-	| output process |
-	launcher command: '/bin/sh'.
-	launcher arguments: #('-c' 'echo $ACP_TEST_VAR').
-	launcher environmentAt: 'ACP_TEST_VAR' put: 'test_value'.
+	launcher command: '/bin/cat'.
 	launcher launch.
-	process := launcher process.
-	process waitForExit.
-	output := process stdoutStream upToEnd.
-	self assert: (output trimRight) equals: 'test_value'
+	launcher terminate.
+	self deny: launcher isRunning
 ]

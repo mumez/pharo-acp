@@ -1,17 +1,18 @@
 Class {
 	#name : 'ACPPromptResponse',
-	#superclass : 'ACPResult',
-	#category : 'ACP-DataTypes'
+	#superclass : 'ACPReturnValues',
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'accessing' }
 ACPPromptResponse >> stopReason [
 
-	^ self rawDictionary at: 'stopReason' ifAbsent: []
+	^ self rawValues at: 'stopReason' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPPromptResponse >> usage [
 
-	^ self rawDictionary at: 'usage' ifAbsent: []
+	^ self rawValues at: 'usage' ifAbsent: []
 ]

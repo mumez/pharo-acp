@@ -1,12 +1,13 @@
 Class {
 	#name : 'ACPImplementation',
-	#superclass : 'ACPOptions',
+	#superclass : 'ACPParams',
 	#instVars : [
 		'name',
 		'version',
 		'title'
 	],
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'instance creation' }

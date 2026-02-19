@@ -8,7 +8,8 @@ Class {
 		'transport',
 		'handler'
 	],
-	#category : 'ACP-Client'
+	#category : 'ACP-Client',
+	#package : 'ACP-Client'
 }
 
 { #category : 'accessing' }

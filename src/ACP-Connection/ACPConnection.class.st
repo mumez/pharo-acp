@@ -10,7 +10,8 @@ Class {
 		'isClosed',
 		'closeSemaphore'
 	],
-	#category : 'ACP-Connection'
+	#category : 'ACP-Connection',
+	#package : 'ACP-Connection'
 }
 
 { #category : 'instance creation' }
@@ -21,150 +22,43 @@ ACPConnection class >> on: anACPNdJsonTransport [
 		  yourself
 ]
 
+{ #category : 'operations' }
+ACPConnection >> close [
+
+	self isClosed: true.
+	self transport ifNotNil: [ :t | t close ].
+	self readProcess ifNotNil: [ :p | p terminate ]
+]
+
 { #category : 'accessing' }
 ACPConnection >> closeSemaphore [
 
 	^ closeSemaphore
 ]
 
-{ #category : 'accessing' }
-ACPConnection >> id [
+{ #category : 'private' }
+ACPConnection >> handleConnectionClosed [
 
-	^ id
-]
-
-{ #category : 'accessing' }
-ACPConnection >> id: anInteger [
-
-	id := anInteger
-]
-
-{ #category : 'testing' }
-ACPConnection >> isClosed [
-
-	^ isClosed
-]
-
-{ #category : 'accessing' }
-ACPConnection >> isClosed: aBoolean [
-
-	isClosed := aBoolean
-]
-
-{ #category : 'accessing' }
-ACPConnection >> messageProcessor [
-
-	^ messageProcessor
-]
-
-{ #category : 'accessing' }
-ACPConnection >> pendingRequests [
-
-	^ pendingRequests
-]
-
-{ #category : 'accessing' }
-ACPConnection >> readProcess [
-
-	^ readProcess
-]
-
-{ #category : 'accessing' }
-ACPConnection >> readProcess: aProcess [
-
-	readProcess := aProcess
-]
-
-{ #category : 'accessing' }
-ACPConnection >> transport [
-
-	^ transport
-]
-
-{ #category : 'accessing' }
-ACPConnection >> transport: anACPNdJsonTransport [
-
-	transport := anACPNdJsonTransport
-]
-
-{ #category : 'initialization' }
-ACPConnection >> initialize [
-
-	super initialize.
-	pendingRequests := Dictionary new.
-	id := 0.
-	isClosed := false.
-	closeSemaphore := Semaphore new.
-	messageProcessor := JRPCMessageProcessor new
+	self isClosed: true.
+	self pendingRequests valuesDo: [ :pending |
+		pending rejectWith: {
+			'code' -> -32000.
+			'message' -> 'Connection closed'
+		} asDictionary ].
+	self pendingRequests removeAll.
+	self closeSemaphore signal
 ]
 
 { #category : 'private' }
-ACPConnection >> nextId [
+ACPConnection >> handleIncomingNotification: message [
+	"Dispatch incoming notification via JRPCMessageProcessor using object API."
 
-	self id: self id + 1.
-	^ self id
-]
-
-{ #category : 'sending' }
-ACPConnection >> sendRequest: method params: params [
-
-	| requestId pending |
-	requestId := self nextId.
-	pending := ACPPendingRequest new.
-	self pendingRequests at: requestId put: pending.
-	self transport writeMessage: {
-		'jsonrpc' -> '2.0'.
-		'id' -> requestId.
-		'method' -> method.
-		'params' -> params
-	} asDictionary.
-	^ [ pending wait ]
-		  ensure: [ self pendingRequests removeKey: requestId ifAbsent: [  ] ]
-]
-
-{ #category : 'sending' }
-ACPConnection >> sendNotification: method params: params [
-
-	self transport writeMessage: {
-		'jsonrpc' -> '2.0'.
-		'method' -> method.
-		'params' -> params
-	} asDictionary
-]
-
-{ #category : 'read loop' }
-ACPConnection >> startReadLoop [
-
-	self readProcess: ([self readLoop] forkAt: Processor lowIOPriority named: 'ACP readLoop')
-]
-
-{ #category : 'read loop' }
-ACPConnection >> readLoop [
-
-	[ self isClosed not ] whileTrue: [
-			| message |
-			message := self transport readMessage.
-			message
-				ifNil: [ self handleConnectionClosed ]
-				ifNotNil: [
-					[ self processMessage: message ]
-						on: Error
-						do: [ :e |
-							(message includesKey: 'id') ifTrue: [
-								self sendErrorResponseForId: (message at: 'id') error: e ] ] ] ]
-]
-
-{ #category : 'read loop' }
-ACPConnection >> processMessage: message [
-
-	(message includesKey: 'method')
-		ifTrue: [
-			(message includesKey: 'id')
-				ifTrue: [ self handleIncomingRequest: message ]
-				ifFalse: [ self handleIncomingNotification: message ] ]
-		ifFalse: [
-			(message includesKey: 'id')
-				ifTrue: [ self handleResponse: message ] ]
+	| notification |
+	notification := JRPCNotificationObject new
+		method: (message at: 'method');
+		params: { message at: 'params' ifAbsent: [ Dictionary new ] };
+		yourself.
+	self messageProcessor handleJRPCNotificationObject: notification
 ]
 
 { #category : 'private' }
@@ -191,18 +85,6 @@ ACPConnection >> handleIncomingRequest: message [
 ]
 
 { #category : 'private' }
-ACPConnection >> handleIncomingNotification: message [
-	"Dispatch incoming notification via JRPCMessageProcessor using object API."
-
-	| notification |
-	notification := JRPCNotificationObject new
-		method: (message at: 'method');
-		params: { message at: 'params' ifAbsent: [ Dictionary new ] };
-		yourself.
-	self messageProcessor handleJRPCNotificationObject: notification
-]
-
-{ #category : 'private' }
 ACPConnection >> handleResponse: message [
 
 	| responseId pending |
@@ -215,17 +97,99 @@ ACPConnection >> handleResponse: message [
 				ifTrue: [ pending rejectWith: (message at: 'error') ] ]
 ]
 
-{ #category : 'private' }
-ACPConnection >> handleConnectionClosed [
+{ #category : 'accessing' }
+ACPConnection >> id [
 
-	self isClosed: true.
-	self pendingRequests valuesDo: [ :pending |
-		pending rejectWith: {
-			'code' -> -32000.
-			'message' -> 'Connection closed'
-		} asDictionary ].
-	self pendingRequests removeAll.
-	self closeSemaphore signal
+	^ id
+]
+
+{ #category : 'accessing' }
+ACPConnection >> id: anInteger [
+
+	id := anInteger
+]
+
+{ #category : 'initialization' }
+ACPConnection >> initialize [
+
+	super initialize.
+	pendingRequests := Dictionary new.
+	id := 0.
+	isClosed := false.
+	closeSemaphore := Semaphore new.
+	messageProcessor := JRPCMessageProcessor new
+]
+
+{ #category : 'testing' }
+ACPConnection >> isClosed [
+
+	^ isClosed
+]
+
+{ #category : 'accessing' }
+ACPConnection >> isClosed: aBoolean [
+
+	isClosed := aBoolean
+]
+
+{ #category : 'accessing' }
+ACPConnection >> messageProcessor [
+
+	^ messageProcessor
+]
+
+{ #category : 'private' }
+ACPConnection >> nextId [
+
+	self id: self id + 1.
+	^ self id
+]
+
+{ #category : 'accessing' }
+ACPConnection >> pendingRequests [
+
+	^ pendingRequests
+]
+
+{ #category : 'read loop' }
+ACPConnection >> processMessage: message [
+
+	(message includesKey: 'method')
+		ifTrue: [
+			(message includesKey: 'id')
+				ifTrue: [ self handleIncomingRequest: message ]
+				ifFalse: [ self handleIncomingNotification: message ] ]
+		ifFalse: [
+			(message includesKey: 'id')
+				ifTrue: [ self handleResponse: message ] ]
+]
+
+{ #category : 'read loop' }
+ACPConnection >> readLoop [
+
+	[ self isClosed not ] whileTrue: [
+			| message |
+			message := self transport readMessage.
+			message
+				ifNil: [ self handleConnectionClosed ]
+				ifNotNil: [
+					[ self processMessage: message ]
+						on: Error
+						do: [ :e |
+							(message includesKey: 'id') ifTrue: [
+								self sendErrorResponseForId: (message at: 'id') error: e ] ] ] ]
+]
+
+{ #category : 'accessing' }
+ACPConnection >> readProcess [
+
+	^ readProcess
+]
+
+{ #category : 'accessing' }
+ACPConnection >> readProcess: aProcess [
+
+	readProcess := aProcess
 ]
 
 { #category : 'private' }
@@ -241,12 +205,49 @@ ACPConnection >> sendErrorResponseForId: anId error: anError [
 	} asDictionary
 ]
 
-{ #category : 'operations' }
-ACPConnection >> close [
+{ #category : 'sending' }
+ACPConnection >> sendNotification: method params: params [
 
-	self isClosed: true.
-	self transport ifNotNil: [ :t | t close ].
-	self readProcess ifNotNil: [ :p | p terminate ]
+	self transport writeMessage: {
+		'jsonrpc' -> '2.0'.
+		'method' -> method.
+		'params' -> params
+	} asDictionary
+]
+
+{ #category : 'sending' }
+ACPConnection >> sendRequest: method params: params [
+
+	| requestId pending |
+	requestId := self nextId.
+	pending := ACPPendingRequest new.
+	self pendingRequests at: requestId put: pending.
+	self transport writeMessage: {
+		'jsonrpc' -> '2.0'.
+		'id' -> requestId.
+		'method' -> method.
+		'params' -> params
+	} asDictionary.
+	^ [ pending wait ]
+		  ensure: [ self pendingRequests removeKey: requestId ifAbsent: [  ] ]
+]
+
+{ #category : 'read loop' }
+ACPConnection >> startReadLoop [
+
+	self readProcess: ([self readLoop] forkAt: Processor lowIOPriority named: 'ACP readLoop')
+]
+
+{ #category : 'accessing' }
+ACPConnection >> transport [
+
+	^ transport
+]
+
+{ #category : 'accessing' }
+ACPConnection >> transport: anACPNdJsonTransport [
+
+	transport := anACPNdJsonTransport
 ]
 
 { #category : 'operations' }

@@ -8,7 +8,8 @@ Class {
 		'envVariables',
 		'process'
 	],
-	#category : 'ACP-Transport'
+	#category : 'ACP-Transport',
+	#package : 'ACP-Transport'
 }
 
 { #category : 'accessing' }
@@ -33,6 +34,15 @@ ACPProcessLauncher >> command [
 ACPProcessLauncher >> command: aString [
 
 	command := aString
+]
+
+{ #category : 'private' }
+ACPProcessLauncher >> ensureByteString: aString [
+	"Convert a potentially WideString to a ByteString with UTF-8 encoding.
+	OSSubprocess memCopy requires ByteString (responds to tfPointerAddress)."
+
+	aString isWideString ifFalse: [ ^ aString ].
+	^ aString utf8Encoded asString
 ]
 
 { #category : 'accessing' }
@@ -82,15 +92,6 @@ ACPProcessLauncher >> launch [
 ACPProcessLauncher >> process [
 
 	^ process
-]
-
-{ #category : 'private' }
-ACPProcessLauncher >> ensureByteString: aString [
-	"Convert a potentially WideString to a ByteString with UTF-8 encoding.
-	OSSubprocess memCopy requires ByteString (responds to tfPointerAddress)."
-
-	aString isWideString ifFalse: [ ^ aString ].
-	^ aString utf8Encoded asString
 ]
 
 { #category : 'private' }

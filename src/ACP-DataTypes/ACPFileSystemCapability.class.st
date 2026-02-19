@@ -1,11 +1,12 @@
 Class {
 	#name : 'ACPFileSystemCapability',
-	#superclass : 'ACPOptions',
+	#superclass : 'ACPParams',
 	#instVars : [
 		'readTextFile',
 		'writeTextFile'
 	],
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'converting' }

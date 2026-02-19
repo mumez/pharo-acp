@@ -6,19 +6,9 @@ Class {
 		'writeStream',
 		'transport'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
-
-{ #category : 'running' }
-ACPNdJsonTransportTest >> setUp [
-
-	super setUp.
-	readStream := ReadWriteStream on: String new.
-	writeStream := ReadWriteStream on: String new.
-	transport := ACPNdJsonTransport
-		writeStream: writeStream
-		readStream: readStream
-]
 
 { #category : 'helpers' }
 ACPNdJsonTransportTest >> feedLine: aString [
@@ -33,57 +23,28 @@ ACPNdJsonTransportTest >> feedLine: aString [
 	readStream position: pos
 ]
 
-{ #category : 'helpers' }
-ACPNdJsonTransportTest >> writtenOutput [
-	"Return the content written to writeStream."
+{ #category : 'running' }
+ACPNdJsonTransportTest >> setUp [
 
-	^ writeStream contents
+	super setUp.
+	readStream := ReadWriteStream on: String new.
+	writeStream := ReadWriteStream on: String new.
+	transport := ACPNdJsonTransport
+		writeStream: writeStream
+		readStream: readStream
 ]
 
-{ #category : 'tests - writing' }
-ACPNdJsonTransportTest >> testWriteMessageProducesNdjson [
-
-	| dict output |
-	dict := Dictionary new
-		at: 'jsonrpc' put: '2.0';
-		at: 'method' put: 'initialize';
-		yourself.
-	transport writeMessage: dict.
-	output := self writtenOutput.
-	self assert: (output endsWith: String lf).
-	self
-		assert: (STONJSON fromString: (output trimRight))
-		equals: dict
-]
-
-{ #category : 'tests - writing' }
-ACPNdJsonTransportTest >> testWriteMultipleMessages [
-
-	transport writeMessage: { 'id' -> 1 } asDictionary.
-	transport writeMessage: { 'id' -> 2 } asDictionary.
-	self
-		assert: (self writtenOutput lines size)
-		equals: 2
-]
-
-{ #category : 'tests - writing' }
-ACPNdJsonTransportTest >> testWriteMessageWithJapanese [
-
-	| dict output parsed |
-	dict := { 'text' -> 'こんにちは世界' } asDictionary.
-	transport writeMessage: dict.
-	output := self writtenOutput trimRight.
-	parsed := STONJSON fromString: output.
-	self assert: (parsed at: 'text') equals: 'こんにちは世界'
-]
-
-{ #category : 'tests - writing' }
-ACPNdJsonTransportTest >> testWriteMessageWhenClosedSignalsError [
+{ #category : 'tests - state' }
+ACPNdJsonTransportTest >> testCloseMarksAsClosed [
 
 	transport close.
-	self
-		should: [ transport writeMessage: { 'id' -> 1 } asDictionary ]
-		raise: ACPError
+	self assert: transport isClosed
+]
+
+{ #category : 'tests - state' }
+ACPNdJsonTransportTest >> testIsClosedInitiallyFalse [
+
+	self deny: transport isClosed
 ]
 
 { #category : 'tests - reading' }
@@ -93,25 +54,6 @@ ACPNdJsonTransportTest >> testReadMessageParsesJson [
 	self feedLine: '{"jsonrpc":"2.0","method":"test"}'.
 	result := transport readMessage.
 	self assert: (result at: 'method') equals: 'test'
-]
-
-{ #category : 'tests - reading' }
-ACPNdJsonTransportTest >> testReadMessageWithNestedObject [
-
-	| result |
-	self feedLine: '{"params":{"key":"value","num":42}}'.
-	result := transport readMessage.
-	self assert: ((result at: 'params') at: 'key') equals: 'value'.
-	self assert: ((result at: 'params') at: 'num') equals: 42
-]
-
-{ #category : 'tests - reading' }
-ACPNdJsonTransportTest >> testReadMessageWithJapanese [
-
-	| result |
-	self feedLine: '{"text":"\u3053\u3093\u306b\u3061\u306f"}'.
-	result := transport readMessage.
-	self assert: (result at: 'text') equals: 'こんにちは'
 ]
 
 { #category : 'tests - reading' }
@@ -132,6 +74,25 @@ ACPNdJsonTransportTest >> testReadMessageSkipsInvalidJson [
 ]
 
 { #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageWithJapanese [
+
+	| result |
+	self feedLine: '{"text":"\u3053\u3093\u306b\u3061\u306f"}'.
+	result := transport readMessage.
+	self assert: (result at: 'text') equals: 'こんにちは'
+]
+
+{ #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageWithNestedObject [
+
+	| result |
+	self feedLine: '{"params":{"key":"value","num":42}}'.
+	result := transport readMessage.
+	self assert: ((result at: 'params') at: 'key') equals: 'value'.
+	self assert: ((result at: 'params') at: 'num') equals: 42
+]
+
+{ #category : 'tests - reading' }
 ACPNdJsonTransportTest >> testReadMultipleMessages [
 
 	| first second |
@@ -141,6 +102,52 @@ ACPNdJsonTransportTest >> testReadMultipleMessages [
 	second := transport readMessage.
 	self assert: (first at: 'id') equals: 1.
 	self assert: (second at: 'id') equals: 2
+]
+
+{ #category : 'tests - writing' }
+ACPNdJsonTransportTest >> testWriteMessageProducesNdjson [
+
+	| dict output |
+	dict := Dictionary new
+		at: 'jsonrpc' put: '2.0';
+		at: 'method' put: 'initialize';
+		yourself.
+	transport writeMessage: dict.
+	output := self writtenOutput.
+	self assert: (output endsWith: String lf).
+	self
+		assert: (STONJSON fromString: (output trimRight))
+		equals: dict
+]
+
+{ #category : 'tests - writing' }
+ACPNdJsonTransportTest >> testWriteMessageWhenClosedSignalsError [
+
+	transport close.
+	self
+		should: [ transport writeMessage: { 'id' -> 1 } asDictionary ]
+		raise: ACPError
+]
+
+{ #category : 'tests - writing' }
+ACPNdJsonTransportTest >> testWriteMessageWithJapanese [
+
+	| dict output parsed |
+	dict := { 'text' -> 'こんにちは世界' } asDictionary.
+	transport writeMessage: dict.
+	output := self writtenOutput trimRight.
+	parsed := STONJSON fromString: output.
+	self assert: (parsed at: 'text') equals: 'こんにちは世界'
+]
+
+{ #category : 'tests - writing' }
+ACPNdJsonTransportTest >> testWriteMultipleMessages [
+
+	transport writeMessage: { 'id' -> 1 } asDictionary.
+	transport writeMessage: { 'id' -> 2 } asDictionary.
+	self
+		assert: (self writtenOutput lines size)
+		equals: 2
 ]
 
 { #category : 'tests - roundtrip' }
@@ -164,15 +171,9 @@ ACPNdJsonTransportTest >> testWriteThenReadRoundtrip [
 	self assert: ((parsed at: 'params') at: 'key') equals: 'value'
 ]
 
-{ #category : 'tests - state' }
-ACPNdJsonTransportTest >> testIsClosedInitiallyFalse [
+{ #category : 'helpers' }
+ACPNdJsonTransportTest >> writtenOutput [
+	"Return the content written to writeStream."
 
-	self deny: transport isClosed
-]
-
-{ #category : 'tests - state' }
-ACPNdJsonTransportTest >> testCloseMarksAsClosed [
-
-	transport close.
-	self assert: transport isClosed
+	^ writeStream contents
 ]

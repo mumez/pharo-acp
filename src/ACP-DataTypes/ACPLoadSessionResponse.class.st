@@ -1,5 +1,6 @@
 Class {
 	#name : 'ACPLoadSessionResponse',
 	#superclass : 'ACPBaseSessionResponse',
-	#category : 'ACP-DataTypes'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }

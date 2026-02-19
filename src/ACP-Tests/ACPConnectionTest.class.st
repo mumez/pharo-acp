@@ -5,25 +5,9 @@ Class {
 		'clientConnection',
 		'agentTransport'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
-
-{ #category : 'running' }
-ACPConnectionTest >> setUp [
-
-	| pair |
-	super setUp.
-	pair := ACPTestTransport loopbackPair.
-	clientConnection := ACPConnection on: pair first.
-	agentTransport := pair second
-]
-
-{ #category : 'running' }
-ACPConnectionTest >> tearDown [
-
-	clientConnection close.
-	super tearDown
-]
 
 { #category : 'helpers' }
 ACPConnectionTest >> agentRespondTo: aRequest with: aResult [
@@ -47,80 +31,28 @@ ACPConnectionTest >> agentRespondTo: aRequest withError: anErrorDict [
 	} asDictionary
 ]
 
-{ #category : 'tests - sending' }
-ACPConnectionTest >> testSendRequestWritesJsonRpc [
+{ #category : 'running' }
+ACPConnectionTest >> setUp [
 
-	| sent |
-	clientConnection startReadLoop.
-	[ clientConnection sendRequest: 'test/method' params: { 'key' -> 'value' } asDictionary ]
-		forkAt: Processor userBackgroundPriority.
-	sent := agentTransport readMessage.
-	self assert: (sent at: 'jsonrpc') equals: '2.0'.
-	self assert: (sent at: 'method') equals: 'test/method'.
-	self assert: ((sent at: 'params') at: 'key') equals: 'value'.
-	self assert: (sent includesKey: 'id')
+	| pair |
+	super setUp.
+	pair := ACPTestTransport loopbackPair.
+	clientConnection := ACPConnection on: pair first.
+	agentTransport := pair second
 ]
 
-{ #category : 'tests - sending' }
-ACPConnectionTest >> testSendNotificationWritesJsonRpc [
+{ #category : 'running' }
+ACPConnectionTest >> tearDown [
 
-	| sent |
-	clientConnection sendNotification: 'test/notify' params: { 'a' -> 1 } asDictionary.
-	sent := agentTransport readMessage.
-	self assert: (sent at: 'jsonrpc') equals: '2.0'.
-	self assert: (sent at: 'method') equals: 'test/notify'.
-	self deny: (sent includesKey: 'id')
+	clientConnection close.
+	super tearDown
 ]
 
-{ #category : 'tests - sending' }
-ACPConnectionTest >> testSendNotificationOmitsId [
+{ #category : 'tests - connection close' }
+ACPConnectionTest >> testCloseMarksConnectionAsClosed [
 
-	| sent |
-	clientConnection sendNotification: 'notify' params: Dictionary new.
-	sent := agentTransport readMessage.
-	self deny: (sent includesKey: 'id')
-]
-
-{ #category : 'tests - request response' }
-ACPConnectionTest >> testRequestResponseRoundTrip [
-
-	| result sem request |
-	result := nil.
-	sem := Semaphore new.
-	clientConnection startReadLoop.
-	[
-		result := clientConnection
-			sendRequest: 'echo'
-			params: { 'msg' -> 'hello' } asDictionary.
-		sem signal
-	] forkAt: Processor userBackgroundPriority.
-	request := agentTransport readMessage.
-	self agentRespondTo: request with: { 'reply' -> 'world' } asDictionary.
-	sem wait.
-	self assert: (result at: 'reply') equals: 'world'
-]
-
-{ #category : 'tests - request response' }
-ACPConnectionTest >> testRequestErrorResponse [
-
-	| sem caught request |
-	caught := nil.
-	sem := Semaphore new.
-	clientConnection startReadLoop.
-	[
-		[ clientConnection sendRequest: 'fail' params: Dictionary new ]
-			on: ACPRequestError
-			do: [ :e | caught := e ].
-		sem signal
-	] forkAt: Processor userBackgroundPriority.
-	request := agentTransport readMessage.
-	self agentRespondTo: request withError: {
-		'code' -> -32601.
-		'message' -> 'Method not found'
-	} asDictionary.
-	sem wait.
-	self assert: caught isNotNil.
-	self assert: caught code equals: -32601
+	clientConnection close.
+	self assert: clientConnection isClosed
 ]
 
 { #category : 'tests - request response' }
@@ -150,6 +82,49 @@ ACPConnectionTest >> testConcurrentRequests [
 	self assert: (result2 at: 'n') equals: 2
 ]
 
+{ #category : 'tests - connection close' }
+ACPConnectionTest >> testConnectionCloseRejectsPendingRequests [
+
+	| sem caught |
+	caught := nil.
+	sem := Semaphore new.
+	clientConnection startReadLoop.
+	[
+		[ clientConnection sendRequest: 'slow' params: Dictionary new ]
+			on: ACPRequestError
+			do: [ :e | caught := e ].
+		sem signal
+	] forkAt: Processor userBackgroundPriority.
+	"Wait for request to be sent"
+	agentTransport readMessage.
+	"Close the agent side"
+	agentTransport close.
+	sem wait.
+	self assert: caught isNotNil.
+	self assert: caught rpcMessage equals: 'Connection closed'
+]
+
+{ #category : 'tests - incoming' }
+ACPConnectionTest >> testIncomingNotificationDispatch [
+
+	| received sem |
+	received := nil.
+	sem := Semaphore new.
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/event'
+		block: [ :params |
+			received := params.
+			sem signal ].
+	clientConnection startReadLoop.
+	agentTransport writeMessage: {
+		'jsonrpc' -> '2.0'.
+		'method' -> 'test/event'.
+		'params' -> { 'type' -> 'update' } asDictionary
+	} asDictionary.
+	sem wait.
+	self assert: (received at: 'type') equals: 'update'
+]
+
 { #category : 'tests - incoming' }
 ACPConnectionTest >> testIncomingRequestDispatch [
 
@@ -176,56 +151,6 @@ ACPConnectionTest >> testIncomingRequestDispatch [
 	self assert: ((response at: 'result') at: 'pong') equals: true
 ]
 
-{ #category : 'tests - incoming' }
-ACPConnectionTest >> testIncomingNotificationDispatch [
-
-	| received sem |
-	received := nil.
-	sem := Semaphore new.
-	clientConnection messageProcessor
-		addHandlerNamed: 'test/event'
-		block: [ :params |
-			received := params.
-			sem signal ].
-	clientConnection startReadLoop.
-	agentTransport writeMessage: {
-		'jsonrpc' -> '2.0'.
-		'method' -> 'test/event'.
-		'params' -> { 'type' -> 'update' } asDictionary
-	} asDictionary.
-	sem wait.
-	self assert: (received at: 'type') equals: 'update'
-]
-
-{ #category : 'tests - connection close' }
-ACPConnectionTest >> testConnectionCloseRejectsPendingRequests [
-
-	| sem caught |
-	caught := nil.
-	sem := Semaphore new.
-	clientConnection startReadLoop.
-	[
-		[ clientConnection sendRequest: 'slow' params: Dictionary new ]
-			on: ACPRequestError
-			do: [ :e | caught := e ].
-		sem signal
-	] forkAt: Processor userBackgroundPriority.
-	"Wait for request to be sent"
-	agentTransport readMessage.
-	"Close the agent side"
-	agentTransport close.
-	sem wait.
-	self assert: caught isNotNil.
-	self assert: caught rpcMessage equals: 'Connection closed'
-]
-
-{ #category : 'tests - connection close' }
-ACPConnectionTest >> testCloseMarksConnectionAsClosed [
-
-	clientConnection close.
-	self assert: clientConnection isClosed
-]
-
 { #category : 'tests - id' }
 ACPConnectionTest >> testNextIdIsMonotonicallyIncreasing [
 
@@ -235,4 +160,80 @@ ACPConnectionTest >> testNextIdIsMonotonicallyIncreasing [
 	id3 := clientConnection nextId.
 	self assert: id2 > id1.
 	self assert: id3 > id2
+]
+
+{ #category : 'tests - request response' }
+ACPConnectionTest >> testRequestErrorResponse [
+
+	| sem caught request |
+	caught := nil.
+	sem := Semaphore new.
+	clientConnection startReadLoop.
+	[
+		[ clientConnection sendRequest: 'fail' params: Dictionary new ]
+			on: ACPRequestError
+			do: [ :e | caught := e ].
+		sem signal
+	] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self agentRespondTo: request withError: {
+		'code' -> -32601.
+		'message' -> 'Method not found'
+	} asDictionary.
+	sem wait.
+	self assert: caught isNotNil.
+	self assert: caught code equals: -32601
+]
+
+{ #category : 'tests - request response' }
+ACPConnectionTest >> testRequestResponseRoundTrip [
+
+	| result sem request |
+	result := nil.
+	sem := Semaphore new.
+	clientConnection startReadLoop.
+	[
+		result := clientConnection
+			sendRequest: 'echo'
+			params: { 'msg' -> 'hello' } asDictionary.
+		sem signal
+	] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self agentRespondTo: request with: { 'reply' -> 'world' } asDictionary.
+	sem wait.
+	self assert: (result at: 'reply') equals: 'world'
+]
+
+{ #category : 'tests - sending' }
+ACPConnectionTest >> testSendNotificationOmitsId [
+
+	| sent |
+	clientConnection sendNotification: 'notify' params: Dictionary new.
+	sent := agentTransport readMessage.
+	self deny: (sent includesKey: 'id')
+]
+
+{ #category : 'tests - sending' }
+ACPConnectionTest >> testSendNotificationWritesJsonRpc [
+
+	| sent |
+	clientConnection sendNotification: 'test/notify' params: { 'a' -> 1 } asDictionary.
+	sent := agentTransport readMessage.
+	self assert: (sent at: 'jsonrpc') equals: '2.0'.
+	self assert: (sent at: 'method') equals: 'test/notify'.
+	self deny: (sent includesKey: 'id')
+]
+
+{ #category : 'tests - sending' }
+ACPConnectionTest >> testSendRequestWritesJsonRpc [
+
+	| sent |
+	clientConnection startReadLoop.
+	[ clientConnection sendRequest: 'test/method' params: { 'key' -> 'value' } asDictionary ]
+		forkAt: Processor userBackgroundPriority.
+	sent := agentTransport readMessage.
+	self assert: (sent at: 'jsonrpc') equals: '2.0'.
+	self assert: (sent at: 'method') equals: 'test/method'.
+	self assert: ((sent at: 'params') at: 'key') equals: 'value'.
+	self assert: (sent includesKey: 'id')
 ]
