@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'connection',
 		'handler',
-		'agentInfo'
+		'initializeResponse'
 	],
 	#pools : [
 		'ACPConstants'
@@ -25,13 +25,47 @@ ACPClientConnection class >> on: aConnection handler: aHandler [
 { #category : 'accessing' }
 ACPClientConnection >> agentInfo [
 
-	^ agentInfo
+	^ self initializeResponse ifNotNil: [ :resp | resp agentInfo ]
 ]
 
 { #category : 'accessing' }
-ACPClientConnection >> agentInfo: anObject [
+ACPClientConnection >> initializeResponse [
 
-	agentInfo := anObject
+	^ initializeResponse
+]
+
+{ #category : 'accessing' }
+ACPClientConnection >> initializeResponse: anObject [
+
+	initializeResponse := anObject
+]
+
+{ #category : 'api' }
+ACPClientConnection >> authenticate: aParamsOrDictionary [
+
+	| request |
+	request := ACPRequest authenticate: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> authenticateBy: aBlock [
+
+	^ self authenticate: (ACPAuthenticateParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACPClientConnection >> cancel: aParamsOrDictionary [
+
+	| request |
+	request := ACPRequest cancel: aParamsOrDictionary.
+	^ self connection sendNotification: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> cancelBy: aBlock [
+
+	^ self cancel: (ACPCancelParams buildBy: aBlock)
 ]
 
 { #category : 'accessing' }
@@ -58,6 +92,82 @@ ACPClientConnection >> handler: anObject [
 	handler := anObject
 ]
 
+{ #category : 'api' }
+ACPClientConnection >> initialize: aParamsOrDictionary [
+
+	| request result |
+	request := ACPRequest initialize: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	self initializeResponse: (ACPInitializeResponse fromDictionary: result).
+	^ self initializeResponse
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> initializeBy: aBlock [
+
+	^ self initialize: (ACPInitializeParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACPClientConnection >> loadSession: aParamsOrDictionary [
+
+	| request result |
+	request := ACPRequest loadSession: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	^ ACPLoadSessionResponse fromDictionary: result
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> loadSessionBy: aBlock [
+
+	^ self loadSession: (ACPLoadSessionParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACPClientConnection >> newSession: aParamsOrDictionary [
+
+	| request result |
+	request := ACPRequest newSession: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	^ ACPNewSessionResponse fromDictionary: result
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> newSessionBy: aBlock [
+
+	^ self newSession: (ACPNewSessionParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACPClientConnection >> prompt: aParamsOrDictionary [
+
+	| request result |
+	request := ACPRequest prompt: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	^ ACPPromptResponse fromDictionary: result
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> promptBy: aBlock [
+
+	^ self prompt: (ACPPromptParams buildBy: aBlock)
+]
+
+{ #category : 'initialization' }
+ACPClientConnection >> registerFileHandlers [
+
+	| processor |
+	processor := self connection messageProcessor.
+
+	processor addHandler: (JRPCBlockHandler
+			 methodName: ACPMethodReadTextFile
+			 block: [ :params | self handler readTextFile: params ]).
+
+	processor addHandler: (JRPCBlockHandler
+			 methodName: ACPMethodWriteTextFile
+			 block: [ :params | self handler writeTextFile: params ])
+]
+
 { #category : 'initialization' }
 ACPClientConnection >> registerHandlers [
 
@@ -79,21 +189,6 @@ ACPClientConnection >> registerSessionHandlers [
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodRequestPermission
 			 block: [ :params | self handler requestPermission: params ])
-]
-
-{ #category : 'initialization' }
-ACPClientConnection >> registerFileHandlers [
-
-	| processor |
-	processor := self connection messageProcessor.
-
-	processor addHandler: (JRPCBlockHandler
-			 methodName: ACPMethodReadTextFile
-			 block: [ :params | self handler readTextFile: params ]).
-
-	processor addHandler: (JRPCBlockHandler
-			 methodName: ACPMethodWriteTextFile
-			 block: [ :params | self handler writeTextFile: params ])
 ]
 
 { #category : 'initialization' }
@@ -124,68 +219,43 @@ ACPClientConnection >> registerTerminalHandlers [
 ]
 
 { #category : 'api' }
-ACPClientConnection >> authenticate: aDictionary [
+ACPClientConnection >> setSessionConfigOption: aParamsOrDictionary [
 
-	^ self connection sendRequest: ACPMethodAuthenticate params: aDictionary
+	| request |
+	request := ACPRequest setSessionConfigOption: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> setSessionConfigOptionBy: aBlock [
+
+	^ self setSessionConfigOption: (ACPSetSessionConfigOptionParams buildBy: aBlock)
 ]
 
 { #category : 'api' }
-ACPClientConnection >> cancel: aDictionary [
+ACPClientConnection >> setSessionMode: aParamsOrDictionary [
 
-	^ self connection sendRequest: ACPMethodSessionCancel params: aDictionary
+	| request |
+	request := ACPRequest setSessionMode: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> setSessionModeBy: aBlock [
+
+	^ self setSessionMode: (ACPSetSessionModeParams buildBy: aBlock)
 ]
 
 { #category : 'api' }
-ACPClientConnection >> initialize: capabilities [
+ACPClientConnection >> setSessionModel: aParamsOrDictionary [
 
-	| result |
-	result := self connection
-		          sendRequest: ACPMethodInitialize
-		          params: {
-				          ('capabilities' -> capabilities).
-				          ('protocolVersion' -> ACPProtocolVersion) } asDictionary.
-	self agentInfo: (result at: 'agent' ifAbsent: [ Dictionary new ]).
-	^ result
+	| request |
+	request := ACPRequest setSessionModel: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
 ]
 
-{ #category : 'api' }
-ACPClientConnection >> loadSession: aDictionary [
+{ #category : 'api - builder' }
+ACPClientConnection >> setSessionModelBy: aBlock [
 
-	^ self connection sendRequest: ACPMethodSessionLoad params: aDictionary
-]
-
-{ #category : 'api' }
-ACPClientConnection >> newSession: aDictionary [
-
-	^ self connection sendRequest: ACPMethodSessionNew params: aDictionary
-]
-
-{ #category : 'api' }
-ACPClientConnection >> prompt: aDictionary [
-
-	^ self connection sendRequest: ACPMethodSessionPrompt params: aDictionary
-]
-
-{ #category : 'api' }
-ACPClientConnection >> setSessionConfigOption: aDictionary [
-
-	^ self connection
-		  sendRequest: ACPMethodSessionSetConfigOption
-		  params: aDictionary
-]
-
-{ #category : 'api' }
-ACPClientConnection >> setSessionMode: aDictionary [
-
-	^ self connection
-		  sendRequest: ACPMethodSessionSetMode
-		  params: aDictionary
-]
-
-{ #category : 'api' }
-ACPClientConnection >> setSessionModel: aDictionary [
-
-	^ self connection
-		  sendRequest: ACPMethodSessionSetModel
-		  params: aDictionary
+	^ self setSessionModel: (ACPSetSessionModelParams buildBy: aBlock)
 ]
