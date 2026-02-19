@@ -26,6 +26,14 @@ Class {
 	#package : 'ACP-DataTypes'
 }
 
+{ #category : 'instance creation' }
+ACPContentBlock class >> text: aString [
+
+	^ self buildBy: [ :b |
+		b type: 'text'.
+		b text: aString ]
+]
+
 { #category : 'converting' }
 ACPContentBlock >> asDictionary [
 

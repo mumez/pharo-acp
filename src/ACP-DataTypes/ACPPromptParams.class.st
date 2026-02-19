@@ -23,7 +23,7 @@ ACPPromptParams >> asDictionary [
 { #category : 'accessing' }
 ACPPromptParams >> prompt [
 
-	^ prompt
+	^ prompt ifNil: [ prompt := #() ]
 ]
 
 { #category : 'accessing' }
@@ -42,4 +42,22 @@ ACPPromptParams >> sessionId [
 ACPPromptParams >> sessionId: aString [
 
 	sessionId := aString
+]
+
+{ #category : 'factory' }
+ACPPromptParams >> contentBlockClass [
+	^ ACPContentBlock
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> textPrompt: aString [
+	^ self textPrompt: aString setting: [ :cb | ]
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> textPrompt: aString setting: aBlock [
+	| contBlock |
+	contBlock := self contentBlockClass text: aString.
+	aBlock value: contBlock.
+	self prompt: (self prompt , { contBlock asDictionary }).
 ]
