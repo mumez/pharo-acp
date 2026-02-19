@@ -43,7 +43,7 @@ ACPSmokeTest >> setUp [
 			'npx'.
 			'tsx'.
 			self class agentPath }.
-	client processLauncher workingDirectory:
+	client workingDirectory:
 		self class agentPath asFileReference parent parent parent fullName
 ]
 
@@ -66,25 +66,22 @@ ACPSmokeTest >> testFullProtocolFlow [
 	client connect.
 
 	"Step 1: Initialize"
-	initResult := client initializeWithCapabilities: Dictionary new.
-	self assert: (initResult at: 'protocolVersion') equals: 1.
+	initResult := client initialize: ACPInitializeParams new.
+	self assert: initResult protocolVersion equals: 1.
 
 	"Step 2: New session"
-	sessionResult := client clientConnection newSession: {
-				            ('cwd' -> FileSystem workingDirectory fullName).
-				            ('mcpServers' -> #()) } asDictionary.
-	sessionId := sessionResult at: 'sessionId'.
+	sessionResult := client newSessionBy: [ :params |
+		params cwd: FileSystem workingDirectory fullName ].
+	sessionId := sessionResult sessionId.
 	self assert: sessionId notNil.
 	self deny: sessionId isEmpty.
 
 	"Step 3: Prompt (blocks until agent completes the turn)"
-	promptResult := client prompt: {
-				            ('sessionId' -> sessionId).
-				            ('prompt'
-				             -> { { ('type' -> 'text'). ('text' -> 'Hello, agent!') }
-						             asDictionary }) } asDictionary.
+	promptResult := client promptBy: [ :params |
+		params sessionId: sessionId.
+		params prompt: { { ('type' -> 'text'). ('text' -> 'Hello, agent!') } asDictionary } ].
 
-	self assert: (promptResult at: 'stopReason') equals: 'end_turn'.
+	self assert: promptResult stopReason equals: 'end_turn'.
 
 	"Verify we received session updates"
 	self assert: handler updates notEmpty.
