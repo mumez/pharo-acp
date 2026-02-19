@@ -39,9 +39,21 @@ ACPContentBlock >> data [
 ]
 
 { #category : 'accessing' }
+ACPContentBlock >> data: aString [
+
+	self rawValues at: 'data' put: aString
+]
+
+{ #category : 'accessing' }
 ACPContentBlock >> mimeType [
 
 	^ self rawValues at: 'mimeType' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> mimeType: aString [
+
+	self rawValues at: 'mimeType' put: aString
 ]
 
 { #category : 'accessing' }
@@ -51,13 +63,31 @@ ACPContentBlock >> text [
 ]
 
 { #category : 'accessing' }
+ACPContentBlock >> text: aString [
+
+	self rawValues at: 'text' put: aString
+]
+
+{ #category : 'accessing' }
 ACPContentBlock >> type [
 
 	^ self rawValues at: 'type' ifAbsent: []
 ]
 
 { #category : 'accessing' }
+ACPContentBlock >> type: aString [
+
+	self rawValues at: 'type' put: aString
+]
+
+{ #category : 'accessing' }
 ACPContentBlock >> uri [
 
 	^ self rawValues at: 'uri' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> uri: aString [
+
+	self rawValues at: 'uri' put: aString
 ]

@@ -1,6 +1,8 @@
 "
 I am the unified base class for all ACP data transfer objects.
 
+rawValues is used for holding regular values, while extraProperties is used for holding extended metadata.
+Subclasses may add instance variables for holding values, but in such cases, asDictionary and fromDictionary: must be overridden appropriately.
 
 Public API:
 - fromDictionary: - class-side constructor for result-style use
