@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPAgentCapabilities',
-	#superclass : 'ACPReturnValues',
+	#superclass : 'ACPValues',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
@@ -14,17 +14,20 @@ ACPAgentCapabilities >> loadSession [
 { #category : 'accessing' }
 ACPAgentCapabilities >> mcpCapabilities [
 
-	^ self rawValues at: 'mcpCapabilities' ifAbsent: []
+	^ (self rawValues at: 'mcpCapabilities' ifAbsent: [ ^ nil ])
+		  ifNotNil: [ :dict | ACPMcpCapabilities fromDictionary: dict ]
 ]
 
 { #category : 'accessing' }
 ACPAgentCapabilities >> promptCapabilities [
 
-	^ self rawValues at: 'promptCapabilities' ifAbsent: []
+	^ (self rawValues at: 'promptCapabilities' ifAbsent: [ ^ nil ])
+		  ifNotNil: [ :dict | ACPPromptCapabilities fromDictionary: dict ]
 ]
 
 { #category : 'accessing' }
 ACPAgentCapabilities >> sessionCapabilities [
 
-	^ self rawValues at: 'sessionCapabilities' ifAbsent: []
+	^ (self rawValues at: 'sessionCapabilities' ifAbsent: [ ^ nil ])
+		  ifNotNil: [ :dict | ACPSessionCapabilities fromDictionary: dict ]
 ]

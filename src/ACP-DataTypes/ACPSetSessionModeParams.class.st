@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPSetSessionModeParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'sessionId',
 		'modeId'

@@ -285,3 +285,126 @@ ACPDataTypesTest >> testSetSessionModeParamsAsDictionary [
 	self assert: (dict at: 'sessionId') equals: 'abc'.
 	self assert: (dict at: 'modeId') equals: 'plan'
 ]
+
+{ #category : 'tests - base' }
+ACPDataTypesTest >> testValuesFromDictionary [
+
+	| vals |
+	vals := ACPValues fromDictionary: { ('key' -> 'value') } asDictionary.
+	self assert: (vals rawValues at: 'key') equals: 'value'
+]
+
+{ #category : 'tests - base' }
+ACPDataTypesTest >> testValuesSuperclassHierarchy [
+
+	self assert: ACPNewSessionParams superclass equals: ACPValues.
+	self assert: ACPPromptResponse superclass equals: ACPValues
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testMcpCapabilities [
+
+	| caps |
+	caps := ACPMcpCapabilities fromDictionary:
+		        { ('http' -> true). ('sse' -> false) } asDictionary.
+	self assert: caps http equals: true.
+	self assert: caps sse equals: false
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testPromptCapabilities [
+
+	| caps |
+	caps := ACPPromptCapabilities fromDictionary:
+		        { ('audio' -> true). ('image' -> false) } asDictionary.
+	self assert: caps audio equals: true.
+	self assert: caps image equals: false.
+	self assert: caps embeddedContext isNil
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testSessionCapabilities [
+
+	| caps forkDict |
+	forkDict := { ('supported' -> true) } asDictionary.
+	caps := ACPSessionCapabilities fromDictionary:
+		        { ('fork' -> forkDict) } asDictionary.
+	self assert: caps fork equals: forkDict.
+	self assert: caps list isNil.
+	self assert: caps resume isNil
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesTypedAccessors [
+
+	| caps mcp prompt session |
+	caps := ACPAgentCapabilities fromDictionary: {
+		        ('mcpCapabilities' -> { ('http' -> true) } asDictionary).
+		        ('promptCapabilities' -> { ('audio' -> true) } asDictionary).
+		        ('sessionCapabilities' -> Dictionary new) } asDictionary.
+	mcp := caps mcpCapabilities.
+	prompt := caps promptCapabilities.
+	session := caps sessionCapabilities.
+	self assert: mcp class equals: ACPMcpCapabilities.
+	self assert: mcp http equals: true.
+	self assert: prompt class equals: ACPPromptCapabilities.
+	self assert: prompt audio equals: true.
+	self assert: session class equals: ACPSessionCapabilities
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsNil [
+
+	| caps |
+	caps := ACPAgentCapabilities fromDictionary: Dictionary new.
+	self assert: caps mcpCapabilities isNil.
+	self assert: caps promptCapabilities isNil.
+	self assert: caps sessionCapabilities isNil
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockText [
+
+	| dict block |
+	dict := { ('type' -> 'text'). ('text' -> 'Hello') } asDictionary.
+	block := ACPContentBlock fromDictionary: dict.
+	self assert: block type equals: 'text'.
+	self assert: block text equals: 'Hello'.
+	self assert: block asDictionary equals: dict
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockImage [
+
+	| block |
+	block := ACPContentBlock fromDictionary:
+		         { ('type' -> 'image'). ('data' -> 'base64abc'). ('mimeType' -> 'image/png') }
+			         asDictionary.
+	self assert: block type equals: 'image'.
+	self assert: block data equals: 'base64abc'.
+	self assert: block mimeType equals: 'image/png'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockAbsentFieldReturnsNil [
+
+	| block |
+	block := ACPContentBlock fromDictionary:
+		         { ('type' -> 'text'). ('text' -> 'Hi') } asDictionary.
+	self assert: block mimeType isNil.
+	self assert: block data isNil.
+	self assert: block uri isNil
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentChunk [
+
+	| chunk content |
+	chunk := ACPContentChunk fromDictionary:
+		         { ('content' -> { ('type' -> 'text'). ('text' -> 'hello') } asDictionary) }
+			         asDictionary.
+	content := chunk content.
+	self assert: content class equals: ACPContentBlock.
+	self assert: content type equals: 'text'.
+	self assert: content text equals: 'hello'
+]

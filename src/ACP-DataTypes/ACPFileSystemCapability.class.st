@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPFileSystemCapability',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'readTextFile',
 		'writeTextFile'

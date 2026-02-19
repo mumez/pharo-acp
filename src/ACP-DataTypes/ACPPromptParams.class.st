@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPPromptParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'sessionId',
 		'prompt'

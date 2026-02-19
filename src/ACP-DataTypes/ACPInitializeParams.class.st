@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPInitializeParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'protocolVersion',
 		'capabilities',

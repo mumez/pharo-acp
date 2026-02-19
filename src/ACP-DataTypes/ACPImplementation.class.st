@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPImplementation',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'name',
 		'version',

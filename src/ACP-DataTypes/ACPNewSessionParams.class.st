@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPNewSessionParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'cwd',
 		'mcpServers'

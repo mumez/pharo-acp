@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPCancelParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'sessionId'
 	],

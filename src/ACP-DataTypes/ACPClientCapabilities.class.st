@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPClientCapabilities',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'fs',
 		'terminal'

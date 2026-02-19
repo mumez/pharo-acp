@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPLoadSessionParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'sessionId',
 		'cwd',

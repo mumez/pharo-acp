@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPAuthenticateParams',
-	#superclass : 'ACPParams',
+	#superclass : 'ACPValues',
 	#instVars : [
 		'methodId'
 	],
