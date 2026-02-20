@@ -1,16 +1,33 @@
 "
 I am the unified base class for all ACP data transfer objects.
 
-rawValues is used for holding regular values, while extraProperties is used for holding extended metadata.
-Subclasses may add instance variables for holding values, but in such cases, asDictionary and fromDictionary: must be overridden appropriately.
+## Storage
 
-Public API:
-- fromDictionary: - class-side constructor for result-style use
-- buildBy: - class-side constructor with configuration block
-- asDictionary - base serialization; subclasses override
-- extraPropertiesOn: - merges extraProperties under '_meta' key
-- rawValues / rawValues: - basic values holder
-- extraProperties / extraProperties: - lazy-initialized _meta extension dict
+rawValues holds all typed field values. extraProperties holds optional '_meta' extension data.
+asDictionary base implementation does Dictionary newFrom: rawValues, so subclasses must override
+to convert any nested ACPValues objects stored in rawValues to plain dictionaries.
+
+## Nested object pattern
+
+Subclass getters for nested ACPValues use ifAbsentPut: for lazy initialization, enabling fluent
+access like `params capabilities fs: something` without explicit construction. On serialization,
+trimNested:named:in: omits any nested object whose isEmpty returns true, keeping the wire format
+clean when sub-objects were never populated.
+
+## Subclass responsibilities
+
+- fromDictionary: - override to decode nested dict entries into typed ACPValues objects
+- asDictionary - override to call trimNested:named:in: for each nested field
+- ensureRequired - override to populate mandatory fields before serialization
+
+## Public API
+
+- fromDictionary: - class-side constructor from a parsed JSON dictionary
+- buildBy: - class-side constructor with a configuration block
+- asDictionary - serialize to a plain Dictionary suitable for JSON encoding
+- isEmpty - true when rawValues and extraProperties are both empty
+- rawValues / rawValues: - direct access to the value store
+- extraProperties / extraProperties: - lazy-initialized '_meta' extension dict
 "
 Class {
 	#name : 'ACPValues',

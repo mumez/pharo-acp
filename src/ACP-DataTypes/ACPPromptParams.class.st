@@ -35,6 +35,45 @@ ACPPromptParams >> contentBlockClass [
 ]
 
 { #category : 'builder' }
+ACPPromptParams >> audioPrompt: aBase64String mimeType: aMimeType [
+	^ self audioPrompt: aBase64String mimeType: aMimeType setting: [ :cb | ]
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> audioPrompt: aBase64String mimeType: aMimeType setting: aBlock [
+	| contBlock |
+	contBlock := self contentBlockClass audio: aBase64String mimeType: aMimeType.
+	aBlock value: contBlock.
+	self prompt: (self prompt , { contBlock asDictionary })
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> imagePrompt: aBase64String mimeType: aMimeType [
+	^ self imagePrompt: aBase64String mimeType: aMimeType setting: [ :cb | ]
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> imagePrompt: aBase64String mimeType: aMimeType setting: aBlock [
+	| contBlock |
+	contBlock := self contentBlockClass image: aBase64String mimeType: aMimeType.
+	aBlock value: contBlock.
+	self prompt: (self prompt , { contBlock asDictionary })
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourceLinkPrompt: aUri name: aName [
+	^ self resourceLinkPrompt: aUri name: aName setting: [ :cb | ]
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourceLinkPrompt: aUri name: aName setting: aBlock [
+	| contBlock |
+	contBlock := self contentBlockClass resourceLink: aUri name: aName.
+	aBlock value: contBlock.
+	self prompt: (self prompt , { contBlock asDictionary })
+]
+
+{ #category : 'builder' }
 ACPPromptParams >> textPrompt: aString [
 	^ self textPrompt: aString setting: [ :cb | ]
 ]
@@ -44,5 +83,5 @@ ACPPromptParams >> textPrompt: aString setting: aBlock [
 	| contBlock |
 	contBlock := self contentBlockClass text: aString.
 	aBlock value: contBlock.
-	self prompt: (self prompt , { contBlock asDictionary }).
+	self prompt: (self prompt , { contBlock asDictionary })
 ]

@@ -254,6 +254,78 @@ ACPDataTypesTest >> testPromptParamsAsDictionary [
 	self assert: (dict at: 'prompt') equals: prompt
 ]
 
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsTextPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts textPrompt: 'Hello'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'text'.
+	self assert: (block at: 'text') equals: 'Hello'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsImagePromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts imagePrompt: 'base64data' mimeType: 'image/png'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'image'.
+	self assert: (block at: 'data') equals: 'base64data'.
+	self assert: (block at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsAudioPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts audioPrompt: 'base64audio' mimeType: 'audio/mp3'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'audio'.
+	self assert: (block at: 'data') equals: 'base64audio'.
+	self assert: (block at: 'mimeType') equals: 'audio/mp3'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsResourceLinkPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourceLinkPrompt: 'file:///tmp/foo.txt' name: 'foo'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'resource_link'.
+	self assert: (block at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (block at: 'name') equals: 'foo'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsMultipleBlocksBuilder [
+
+	| opts |
+	opts := ACPPromptParams new.
+	opts textPrompt: 'Look at this image:'.
+	opts imagePrompt: 'base64data' mimeType: 'image/png'.
+	self assert: opts prompt size equals: 2.
+	self assert: ((opts prompt first) at: 'type') equals: 'text'.
+	self assert: ((opts prompt last) at: 'type') equals: 'image'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsSettingBlock [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourceLinkPrompt: 'file:///tmp/foo.txt' name: 'foo' setting: [ :cb |
+		cb title: 'Foo File'.
+		cb size: 512 ].
+	block := (opts prompt) first.
+	self assert: (block at: 'title') equals: 'Foo File'.
+	self assert: (block at: 'size') equals: 512
+]
+
 { #category : 'tests - result' }
 ACPDataTypesTest >> testPromptResponseFromDictionary [
 
@@ -401,7 +473,54 @@ ACPDataTypesTest >> testContentBlockAbsentFieldReturnsNil [
 ]
 
 { #category : 'tests - content block' }
-ACPDataTypesTest >> testContentChunk [
+ACPDataTypesTest >> testContentBlockAudio [
+
+	| block dict |
+	block := ACPContentBlock audio: 'base64audio' mimeType: 'audio/mp3'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'audio'.
+	self assert: (dict at: 'data') equals: 'base64audio'.
+	self assert: (dict at: 'mimeType') equals: 'audio/mp3'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockImage [
+
+	| block dict |
+	block := ACPContentBlock image: 'base64abc' mimeType: 'image/png'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'image'.
+	self assert: (dict at: 'data') equals: 'base64abc'.
+	self assert: (dict at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceLink [
+
+	| block dict |
+	block := ACPContentBlock resourceLink: 'file:///tmp/foo.txt' name: 'foo'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'resource_link'.
+	self assert: (dict at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (dict at: 'name') equals: 'foo'.
+	self deny: (dict includesKey: 'title').
+	self deny: (dict includesKey: 'size')
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceLinkWithOptions [
+
+	| block dict |
+	block := ACPContentBlock resourceLink: 'file:///tmp/foo.txt' name: 'foo'.
+	block title: 'Foo File'.
+	block size: 1024.
+	dict := block asDictionary.
+	self assert: (dict at: 'title') equals: 'Foo File'.
+	self assert: (dict at: 'size') equals: 1024
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockText [
 
 	| chunk content |
 	chunk := ACPContentChunk fromDictionary:

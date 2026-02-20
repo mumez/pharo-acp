@@ -27,6 +27,33 @@ Class {
 }
 
 { #category : 'instance creation' }
+ACPContentBlock class >> audio: aBase64String mimeType: aMimeType [
+
+	^ self buildBy: [ :b |
+		b type: 'audio'.
+		b data: aBase64String.
+		b mimeType: aMimeType ]
+]
+
+{ #category : 'instance creation' }
+ACPContentBlock class >> image: aBase64String mimeType: aMimeType [
+
+	^ self buildBy: [ :b |
+		b type: 'image'.
+		b data: aBase64String.
+		b mimeType: aMimeType ]
+]
+
+{ #category : 'instance creation' }
+ACPContentBlock class >> resourceLink: aUri name: aName [
+
+	^ self buildBy: [ :b |
+		b type: 'resource_link'.
+		b uri: aUri.
+		b name: aName ]
+]
+
+{ #category : 'instance creation' }
 ACPContentBlock class >> text: aString [
 
 	^ self buildBy: [ :b |
@@ -86,6 +113,42 @@ ACPContentBlock >> type [
 ACPContentBlock >> type: aString [
 
 	self rawValues at: 'type' put: aString
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> name [
+
+	^ self rawValues at: 'name' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> name: aString [
+
+	self rawValues at: 'name' put: aString
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> size [
+
+	^ self rawValues at: 'size' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> size: anInteger [
+
+	self rawValues at: 'size' put: anInteger
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> title [
+
+	^ self rawValues at: 'title' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> title: aString [
+
+	self rawValues at: 'title' put: aString
 ]
 
 { #category : 'accessing' }
