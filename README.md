@@ -56,8 +56,7 @@ client connect.
     "Send prompt (blocks until agent responds)"
     result := client promptBy: [ :params |
         params sessionId: session sessionId.
-        params prompt: {
-            { 'type' -> 'text'. 'text' -> 'Hello!' } asDictionary } ].
+        params textPrompt: 'Hello!' ].
 
     Transcript show: 'Stop reason: ', result stopReason; cr.
 ] ensure: [ client disconnect ].

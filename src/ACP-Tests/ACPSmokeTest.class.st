@@ -79,7 +79,7 @@ ACPSmokeTest >> testFullProtocolFlow [
 	"Step 3: Prompt (blocks until agent completes the turn)"
 	promptResult := client promptBy: [ :params |
 		params sessionId: sessionId.
-		params prompt: { { ('type' -> 'text'). ('text' -> 'Hello, agent!') } asDictionary } ].
+		params textPrompt: 'Hello, agent!' ].
 
 	self assert: promptResult stopReason equals: 'end_turn'.
 
