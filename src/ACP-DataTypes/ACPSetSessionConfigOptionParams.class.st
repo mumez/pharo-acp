@@ -1,59 +1,42 @@
 Class {
 	#name : 'ACPSetSessionConfigOptionParams',
-	#superclass : 'ACPParams',
-	#instVars : [
-		'sessionId',
-		'configId',
-		'value'
-	],
+	#superclass : 'ACPValues',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPSetSessionConfigOptionParams >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
-	self configId ifNotNil: [ :v | dict at: 'configId' put: v ].
-	self value ifNotNil: [ :v | dict at: 'value' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPSetSessionConfigOptionParams >> configId [
 
-	^ configId
+	^ self rawValues at: 'configId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionConfigOptionParams >> configId: aString [
 
-	configId := aString
+	self rawValues at: 'configId' put: aString
 ]
 
 { #category : 'accessing' }
 ACPSetSessionConfigOptionParams >> sessionId [
 
-	^ sessionId
+	^ self rawValues at: 'sessionId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionConfigOptionParams >> sessionId: aString [
 
-	sessionId := aString
+	self rawValues at: 'sessionId' put: aString
 ]
 
 { #category : 'accessing' }
 ACPSetSessionConfigOptionParams >> value [
 
-	^ value
+	^ self rawValues at: 'value' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionConfigOptionParams >> value: aString [
 
-	value := aString
+	self rawValues at: 'value' put: aString
 ]

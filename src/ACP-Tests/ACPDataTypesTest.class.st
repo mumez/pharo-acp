@@ -254,6 +254,78 @@ ACPDataTypesTest >> testPromptParamsAsDictionary [
 	self assert: (dict at: 'prompt') equals: prompt
 ]
 
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsTextPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts textPrompt: 'Hello'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'text'.
+	self assert: (block at: 'text') equals: 'Hello'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsImagePromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts imagePrompt: 'base64data' mimeType: 'image/png'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'image'.
+	self assert: (block at: 'data') equals: 'base64data'.
+	self assert: (block at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsAudioPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts audioPrompt: 'base64audio' mimeType: 'audio/mp3'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'audio'.
+	self assert: (block at: 'data') equals: 'base64audio'.
+	self assert: (block at: 'mimeType') equals: 'audio/mp3'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsResourceLinkPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourceLinkPrompt: 'file:///tmp/foo.txt' name: 'foo'.
+	block := (opts prompt) first.
+	self assert: (block at: 'type') equals: 'resource_link'.
+	self assert: (block at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (block at: 'name') equals: 'foo'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsMultipleBlocksBuilder [
+
+	| opts |
+	opts := ACPPromptParams new.
+	opts textPrompt: 'Look at this image:'.
+	opts imagePrompt: 'base64data' mimeType: 'image/png'.
+	self assert: opts prompt size equals: 2.
+	self assert: ((opts prompt first) at: 'type') equals: 'text'.
+	self assert: ((opts prompt last) at: 'type') equals: 'image'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsSettingBlock [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourceLinkPrompt: 'file:///tmp/foo.txt' name: 'foo' setting: [ :cb |
+		cb title: 'Foo File'.
+		cb size: 512 ].
+	block := (opts prompt) first.
+	self assert: (block at: 'title') equals: 'Foo File'.
+	self assert: (block at: 'size') equals: 512
+]
+
 { #category : 'tests - result' }
 ACPDataTypesTest >> testPromptResponseFromDictionary [
 
@@ -284,4 +356,178 @@ ACPDataTypesTest >> testSetSessionModeParamsAsDictionary [
 	dict := opts asDictionary.
 	self assert: (dict at: 'sessionId') equals: 'abc'.
 	self assert: (dict at: 'modeId') equals: 'plan'
+]
+
+{ #category : 'tests - base' }
+ACPDataTypesTest >> testValuesFromDictionary [
+
+	| vals |
+	vals := ACPValues fromDictionary: { ('key' -> 'value') } asDictionary.
+	self assert: (vals rawValues at: 'key') equals: 'value'
+]
+
+{ #category : 'tests - base' }
+ACPDataTypesTest >> testValuesSuperclassHierarchy [
+
+	self assert: ACPNewSessionParams superclass equals: ACPValues.
+	self assert: ACPPromptResponse superclass equals: ACPValues
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testMcpCapabilities [
+
+	| caps |
+	caps := ACPMcpCapabilities fromDictionary:
+		        { ('http' -> true). ('sse' -> false) } asDictionary.
+	self assert: caps http equals: true.
+	self assert: caps sse equals: false
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testPromptCapabilities [
+
+	| caps |
+	caps := ACPPromptCapabilities fromDictionary:
+		        { ('audio' -> true). ('image' -> false) } asDictionary.
+	self assert: caps audio equals: true.
+	self assert: caps image equals: false.
+	self assert: caps embeddedContext isNil
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testSessionCapabilities [
+
+	| caps forkDict |
+	forkDict := { ('supported' -> true) } asDictionary.
+	caps := ACPSessionCapabilities fromDictionary:
+		        { ('fork' -> forkDict) } asDictionary.
+	self assert: caps fork equals: forkDict.
+	self assert: caps list isNil.
+	self assert: caps resume isNil
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesTypedAccessors [
+
+	| caps mcp prompt session |
+	caps := ACPAgentCapabilities fromDictionary: {
+		        ('mcpCapabilities' -> { ('http' -> true) } asDictionary).
+		        ('promptCapabilities' -> { ('audio' -> true) } asDictionary).
+		        ('sessionCapabilities' -> Dictionary new) } asDictionary.
+	mcp := caps mcpCapabilities.
+	prompt := caps promptCapabilities.
+	session := caps sessionCapabilities.
+	self assert: mcp class equals: ACPMcpCapabilities.
+	self assert: mcp http equals: true.
+	self assert: prompt class equals: ACPPromptCapabilities.
+	self assert: prompt audio equals: true.
+	self assert: session class equals: ACPSessionCapabilities
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
+
+	| caps dict |
+	caps := ACPAgentCapabilities fromDictionary: Dictionary new.
+	self assert: caps mcpCapabilities isEmpty.
+	self assert: caps promptCapabilities isEmpty.
+	self assert: caps sessionCapabilities isEmpty.
+	dict := caps asDictionary.
+	self deny: (dict includesKey: 'mcpCapabilities').
+	self deny: (dict includesKey: 'promptCapabilities').
+	self deny: (dict includesKey: 'sessionCapabilities')
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockText [
+
+	| dict block |
+	dict := { ('type' -> 'text'). ('text' -> 'Hello') } asDictionary.
+	block := ACPContentBlock fromDictionary: dict.
+	self assert: block type equals: 'text'.
+	self assert: block text equals: 'Hello'.
+	self assert: block asDictionary equals: dict
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockImage [
+
+	| block |
+	block := ACPContentBlock fromDictionary:
+		         { ('type' -> 'image'). ('data' -> 'base64abc'). ('mimeType' -> 'image/png') }
+			         asDictionary.
+	self assert: block type equals: 'image'.
+	self assert: block data equals: 'base64abc'.
+	self assert: block mimeType equals: 'image/png'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockAbsentFieldReturnsNil [
+
+	| block |
+	block := ACPContentBlock fromDictionary:
+		         { ('type' -> 'text'). ('text' -> 'Hi') } asDictionary.
+	self assert: block mimeType isNil.
+	self assert: block data isNil.
+	self assert: block uri isNil
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockAudio [
+
+	| block dict |
+	block := ACPContentBlock audio: 'base64audio' mimeType: 'audio/mp3'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'audio'.
+	self assert: (dict at: 'data') equals: 'base64audio'.
+	self assert: (dict at: 'mimeType') equals: 'audio/mp3'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockImage [
+
+	| block dict |
+	block := ACPContentBlock image: 'base64abc' mimeType: 'image/png'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'image'.
+	self assert: (dict at: 'data') equals: 'base64abc'.
+	self assert: (dict at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceLink [
+
+	| block dict |
+	block := ACPContentBlock resourceLink: 'file:///tmp/foo.txt' name: 'foo'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'resource_link'.
+	self assert: (dict at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (dict at: 'name') equals: 'foo'.
+	self deny: (dict includesKey: 'title').
+	self deny: (dict includesKey: 'size')
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceLinkWithOptions [
+
+	| block dict |
+	block := ACPContentBlock resourceLink: 'file:///tmp/foo.txt' name: 'foo'.
+	block title: 'Foo File'.
+	block size: 1024.
+	dict := block asDictionary.
+	self assert: (dict at: 'title') equals: 'Foo File'.
+	self assert: (dict at: 'size') equals: 1024
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockText [
+
+	| chunk content |
+	chunk := ACPContentChunk fromDictionary:
+		         { ('content' -> { ('type' -> 'text'). ('text' -> 'hello') } asDictionary) }
+			         asDictionary.
+	content := chunk content.
+	self assert: content class equals: ACPContentBlock.
+	self assert: content type equals: 'text'.
+	self assert: content text equals: 'hello'
 ]

@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPInitializeResponse',
-	#superclass : 'ACPReturnValues',
+	#superclass : 'ACPValues',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }

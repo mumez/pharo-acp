@@ -1,45 +1,30 @@
 Class {
 	#name : 'ACPSetSessionModeParams',
-	#superclass : 'ACPParams',
-	#instVars : [
-		'sessionId',
-		'modeId'
-	],
+	#superclass : 'ACPValues',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPSetSessionModeParams >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
-	self modeId ifNotNil: [ :v | dict at: 'modeId' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPSetSessionModeParams >> modeId [
 
-	^ modeId
+	^ self rawValues at: 'modeId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionModeParams >> modeId: aString [
 
-	modeId := aString
+	self rawValues at: 'modeId' put: aString
 ]
 
 { #category : 'accessing' }
 ACPSetSessionModeParams >> sessionId [
 
-	^ sessionId
+	^ self rawValues at: 'sessionId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionModeParams >> sessionId: aString [
 
-	sessionId := aString
+	self rawValues at: 'sessionId' put: aString
 ]

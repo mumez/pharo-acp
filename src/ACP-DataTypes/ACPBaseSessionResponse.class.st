@@ -1,6 +1,6 @@
 Class {
 	#name : 'ACPBaseSessionResponse',
-	#superclass : 'ACPReturnValues',
+	#superclass : 'ACPValues',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }

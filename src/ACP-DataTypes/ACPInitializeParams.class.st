@@ -1,59 +1,70 @@
 Class {
 	#name : 'ACPInitializeParams',
-	#superclass : 'ACPParams',
-	#instVars : [
-		'protocolVersion',
-		'capabilities',
-		'clientInfo'
-	],
+	#superclass : 'ACPValues',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPInitializeParams >> asDictionary [
+{ #category : 'instance creation' }
+ACPInitializeParams class >> fromDictionary: aDictionary [
 
-	| dict |
-	dict := Dictionary new.
-	dict at: 'protocolVersion' put: self protocolVersion.
-	self capabilities asDictionary ifNotEmpty: [ :v | dict at: 'capabilities' put: v ].
-	self clientInfo asDictionary ifNotEmpty: [ :v | dict at: 'clientInfo' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
+	| instance |
+	instance := super fromDictionary: aDictionary.
+	instance rawValues at: 'capabilities' ifPresent: [ :dict | instance capabilities: ACPClientCapabilities fromDictionary: dict ].
+	instance rawValues at: 'clientInfo' ifPresent: [ :dict | instance clientInfo: ACPImplementation fromDictionary: dict ].
+	^ instance
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> capabilities [
 
-	^ capabilities ifNil: [ capabilities := ACPClientCapabilities new ]
+	^ self rawValues at: 'capabilities' ifAbsentPut: [ ACPClientCapabilities new ]
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> capabilities: anObject [
 
-	capabilities := anObject
+	self rawValues at: 'capabilities' put: anObject
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> clientInfo [
 
-	^ clientInfo ifNil: [ clientInfo := ACPImplementation new ]
+	^ self rawValues at: 'clientInfo' ifAbsentPut: [ ACPImplementation new ]
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> clientInfo: anObject [
 
-	clientInfo := anObject
+	self rawValues at: 'clientInfo' put: anObject
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> protocolVersion [
 
-	^ protocolVersion ifNil: [ protocolVersion := ACPConstants protocolVersion ]
+	^ self rawValues at: 'protocolVersion' ifAbsent: [ ACPConstants protocolVersion ]
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> protocolVersion: anInteger [
 
-	protocolVersion := anInteger
+	self rawValues at: 'protocolVersion' put: anInteger
+]
+
+{ #category : 'private' }
+ACPInitializeParams >> ensureRequired [
+
+	super ensureRequired.
+	self rawValues at: 'protocolVersion' ifAbsentPut: [ ACPConstants protocolVersion ].
+	^ self
+]
+
+{ #category : 'converting' }
+ACPInitializeParams >> asDictionary [
+
+	| dict |
+	dict := super asDictionary.
+	self trimNested: self capabilities named: 'capabilities' in: dict.
+	self trimNested: self clientInfo named: 'clientInfo' in: dict.
+	^ dict
 ]
