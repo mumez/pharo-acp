@@ -61,9 +61,10 @@ ACPInitializeParams >> ensureRequired [
 
 { #category : 'converting' }
 ACPInitializeParams >> asDictionary [
+
 	| dict |
 	dict := super asDictionary.
-	dict at: 'capabilities' put: self capabilities asDictionary.
-	dict at: 'clientInfo' put: self clientInfo asDictionary.
+	self trimNested: self capabilities named: 'capabilities' in: dict.
+	self trimNested: self clientInfo named: 'clientInfo' in: dict.
 	^ dict
 ]

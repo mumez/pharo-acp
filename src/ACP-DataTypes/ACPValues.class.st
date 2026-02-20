@@ -86,3 +86,17 @@ ACPValues >> ensureRequired [
 	
 	^ self
 ]
+
+{ #category : 'private' }
+ACPValues >> trimNested: nestedValues named: propName in: dict [
+
+	(nestedValues isNil or: [ nestedValues isEmpty ])
+		ifTrue: [ dict removeKey: propName ifAbsent: [] ]
+		ifFalse: [ dict at: propName put: nestedValues asDictionary ]
+]
+
+{ #category : 'testing' }
+ACPValues >> isEmpty [
+
+	^ self rawValues isEmpty and: [ self extraProperties isEmpty ]
+]

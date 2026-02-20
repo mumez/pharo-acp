@@ -353,13 +353,17 @@ ACPDataTypesTest >> testAgentCapabilitiesTypedAccessors [
 ]
 
 { #category : 'tests - capabilities' }
-ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsNil [
+ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
 
-	| caps |
+	| caps dict |
 	caps := ACPAgentCapabilities fromDictionary: Dictionary new.
-	self assert: caps mcpCapabilities isNil.
-	self assert: caps promptCapabilities isNil.
-	self assert: caps sessionCapabilities isNil
+	self assert: caps mcpCapabilities isEmpty.
+	self assert: caps promptCapabilities isEmpty.
+	self assert: caps sessionCapabilities isEmpty.
+	dict := caps asDictionary.
+	self deny: (dict includesKey: 'mcpCapabilities').
+	self deny: (dict includesKey: 'promptCapabilities').
+	self deny: (dict includesKey: 'sessionCapabilities')
 ]
 
 { #category : 'tests - content block' }
