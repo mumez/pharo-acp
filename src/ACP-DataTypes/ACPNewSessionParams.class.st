@@ -1,45 +1,37 @@
 Class {
 	#name : 'ACPNewSessionParams',
 	#superclass : 'ACPValues',
-	#instVars : [
-		'cwd',
-		'mcpServers'
-	],
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPNewSessionParams >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self cwd ifNotNil: [ :v | dict at: 'cwd' put: v ].
-	self mcpServers ifNotNil: [ :v | dict at: 'mcpServers' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPNewSessionParams >> cwd [
 
-	^ cwd
+	^ self rawValues at: 'cwd' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPNewSessionParams >> cwd: aString [
 
-	cwd := aString
+	self rawValues at: 'cwd' put: aString
 ]
 
 { #category : 'accessing' }
 ACPNewSessionParams >> mcpServers [
-	"required: set default value"
-	^ mcpServers ifNil: [ mcpServers := #() ]
+	^ self rawValues at: 'mcpServers' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPNewSessionParams >> mcpServers: anArray [
 
-	mcpServers := anArray
+	self rawValues at: 'mcpServers' put: anArray
+]
+
+{ #category : 'private' }
+ACPNewSessionParams >> ensureRequired [
+
+	super ensureRequired.
+	self rawValues at: 'mcpServers' ifAbsentPut: [ #() ].
+	^ self
 ]

@@ -1,10 +1,6 @@
 Class {
 	#name : 'ACPClientCapabilities',
 	#superclass : 'ACPValues',
-	#instVars : [
-		'fs',
-		'terminal'
-	],
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
@@ -13,33 +9,40 @@ Class {
 ACPClientCapabilities >> asDictionary [
 
 	| dict |
-	dict := Dictionary new.
-	self fs asDictionary ifNotEmpty: [ :v | dict at: 'fs' put: v ].
-	self terminal ifNotNil: [ :v | dict at: 'terminal' put: v ].
-	self extraPropertiesOn: dict.
+	dict := super asDictionary.
+	dict at: 'fs' put: self fs asDictionary.
 	^ dict
 ]
 
 { #category : 'accessing' }
 ACPClientCapabilities >> fs [
 
-	^ fs ifNil: [ fs := ACPFileSystemCapability new ]
+	^ self rawValues at: 'fs' ifAbsentPut: [ ACPFileSystemCapability new ]
 ]
 
 { #category : 'accessing' }
 ACPClientCapabilities >> fs: anObject [
 
-	fs := anObject
+	^ self rawValues at: 'fs' put: anObject
 ]
 
 { #category : 'accessing' }
 ACPClientCapabilities >> terminal [
 
-	^ terminal
+	^ self rawValues at: 'terminal' ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }
 ACPClientCapabilities >> terminal: aBoolean [
 
-	terminal := aBoolean
+	^ self rawValues at: 'terminal' put: aBoolean
+]
+
+{ #category : 'instance creation' }
+ACPClientCapabilities class >> fromDictionary: aDictionary [
+
+	| instance |
+	instance := super fromDictionary: aDictionary.
+	instance rawValues at: 'fs' ifPresent: [ :dict | instance fs: ACPFileSystemCapability fromDictionary: dict ].
+	^ instance
 ]

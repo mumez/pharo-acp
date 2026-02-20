@@ -1,45 +1,30 @@
 Class {
 	#name : 'ACPFileSystemCapability',
 	#superclass : 'ACPValues',
-	#instVars : [
-		'readTextFile',
-		'writeTextFile'
-	],
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPFileSystemCapability >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self readTextFile ifNotNil: [ :v | dict at: 'readTextFile' put: v ].
-	self writeTextFile ifNotNil: [ :v | dict at: 'writeTextFile' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPFileSystemCapability >> readTextFile [
 
-	^ readTextFile
+	^ self rawValues at: 'readTextFile' ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }
 ACPFileSystemCapability >> readTextFile: aBoolean [
 
-	readTextFile := aBoolean
+	self rawValues at: 'readTextFile' put: aBoolean
 ]
 
 { #category : 'accessing' }
 ACPFileSystemCapability >> writeTextFile [
 
-	^ writeTextFile
+	^ self rawValues at: 'writeTextFile' ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }
 ACPFileSystemCapability >> writeTextFile: aBoolean [
 
-	writeTextFile := aBoolean
+	self rawValues at: 'writeTextFile' put: aBoolean
 ]

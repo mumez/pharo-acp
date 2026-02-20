@@ -43,7 +43,8 @@ ACPValues class >> fromDictionary: aDictionary [
 { #category : 'converting' }
 ACPValues >> asDictionary [
 
-	^ self extraPropertiesOn: self rawValues.
+	self ensureRequired.
+	^ self extraPropertiesOn: (Dictionary newFrom: self rawValues).
 ]
 
 { #category : 'accessing' }
@@ -58,14 +59,6 @@ ACPValues >> extraProperties: aDictionary [
 	extraProperties := aDictionary
 ]
 
-{ #category : 'converting' }
-ACPValues >> extraPropertiesOn: aDictionary [
-
-	self extraProperties ifNotEmpty: [ :props |
-		aDictionary at: '_meta' put: props ].
-	^ aDictionary
-]
-
 { #category : 'accessing' }
 ACPValues >> rawValues [
 
@@ -76,4 +69,20 @@ ACPValues >> rawValues [
 ACPValues >> rawValues: aDictionary [
 
 	rawValues := aDictionary
+]
+
+{ #category : 'converting' }
+ACPValues >> extraPropertiesOn: aDictionary [
+
+	self extraProperties ifNotEmpty: [ :props |
+		aDictionary at: '_meta' put: props ].
+	^ aDictionary
+]
+
+{ #category : 'private' }
+ACPValues >> ensureRequired [
+
+	"Subclasses can override to initialize required fields"
+	
+	^ self
 ]

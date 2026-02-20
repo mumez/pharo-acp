@@ -1,59 +1,49 @@
 Class {
 	#name : 'ACPLoadSessionParams',
 	#superclass : 'ACPValues',
-	#instVars : [
-		'sessionId',
-		'cwd',
-		'mcpServers'
-	],
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPLoadSessionParams >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
-	self cwd ifNotNil: [ :v | dict at: 'cwd' put: v ].
-	self mcpServers ifNotNil: [ :v | dict at: 'mcpServers' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPLoadSessionParams >> cwd [
 
-	^ cwd
+	^ self rawValues at: 'cwd' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPLoadSessionParams >> cwd: aString [
 
-	cwd := aString
+	self rawValues at: 'cwd' put: aString
 ]
 
 { #category : 'accessing' }
 ACPLoadSessionParams >> mcpServers [
-	"required: set default value"
-	^ mcpServers ifNil: [ mcpServers := #() ]
+	^ self rawValues at: 'mcpServers' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPLoadSessionParams >> mcpServers: anArray [
 
-	mcpServers := anArray
+	self rawValues at: 'mcpServers' put: anArray
 ]
 
 { #category : 'accessing' }
 ACPLoadSessionParams >> sessionId [
 
-	^ sessionId
+	^ self rawValues at: 'sessionId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPLoadSessionParams >> sessionId: aString [
 
-	sessionId := aString
+	self rawValues at: 'sessionId' put: aString
+]
+
+{ #category : 'private' }
+ACPLoadSessionParams >> ensureRequired [
+
+	super ensureRequired.
+	self rawValues at: 'mcpServers' ifAbsentPut: [ #() ].
+	^ self
 ]

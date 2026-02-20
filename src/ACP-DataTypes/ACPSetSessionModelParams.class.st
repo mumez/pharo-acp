@@ -1,45 +1,30 @@
 Class {
 	#name : 'ACPSetSessionModelParams',
 	#superclass : 'ACPValues',
-	#instVars : [
-		'sessionId',
-		'modelId'
-	],
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPSetSessionModelParams >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
-	self modelId ifNotNil: [ :v | dict at: 'modelId' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPSetSessionModelParams >> modelId [
 
-	^ modelId
+	^ self rawValues at: 'modelId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionModelParams >> modelId: aString [
 
-	modelId := aString
+	self rawValues at: 'modelId' put: aString
 ]
 
 { #category : 'accessing' }
 ACPSetSessionModelParams >> sessionId [
 
-	^ sessionId
+	^ self rawValues at: 'sessionId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPSetSessionModelParams >> sessionId: aString [
 
-	sessionId := aString
+	self rawValues at: 'sessionId' put: aString
 ]

@@ -1,47 +1,32 @@
 Class {
 	#name : 'ACPPromptParams',
 	#superclass : 'ACPValues',
-	#instVars : [
-		'sessionId',
-		'prompt'
-	],
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'converting' }
-ACPPromptParams >> asDictionary [
-
-	| dict |
-	dict := Dictionary new.
-	self sessionId ifNotNil: [ :v | dict at: 'sessionId' put: v ].
-	self prompt ifNotNil: [ :v | dict at: 'prompt' put: v ].
-	self extraPropertiesOn: dict.
-	^ dict
-]
-
 { #category : 'accessing' }
 ACPPromptParams >> prompt [
 
-	^ prompt ifNil: [ prompt := #() ]
+	^ self rawValues at: 'prompt' ifAbsentPut: [ #() ]
 ]
 
 { #category : 'accessing' }
 ACPPromptParams >> prompt: anArray [
 
-	prompt := anArray
+	self rawValues at: 'prompt' put: anArray
 ]
 
 { #category : 'accessing' }
 ACPPromptParams >> sessionId [
 
-	^ sessionId
+	^ self rawValues at: 'sessionId' ifAbsent: []
 ]
 
 { #category : 'accessing' }
 ACPPromptParams >> sessionId: aString [
 
-	sessionId := aString
+	self rawValues at: 'sessionId' put: aString
 ]
 
 { #category : 'factory' }
