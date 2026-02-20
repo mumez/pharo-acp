@@ -6,7 +6,8 @@ Class {
 		'updates',
 		'permissionRequest'
 	],
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
 
 { #category : 'initialization' }
@@ -20,12 +21,6 @@ ACPMockHandler >> initialize [
 ACPMockHandler >> lastUpdate [
 
 	^ lastUpdate
-]
-
-{ #category : 'accessing' }
-ACPMockHandler >> updates [
-
-	^ updates
 ]
 
 { #category : 'accessing' }
@@ -46,4 +41,10 @@ ACPMockHandler >> sessionUpdate: aDictionary [
 
 	lastUpdate := aDictionary.
 	updates add: aDictionary
+]
+
+{ #category : 'accessing' }
+ACPMockHandler >> updates [
+
+	^ updates
 ]

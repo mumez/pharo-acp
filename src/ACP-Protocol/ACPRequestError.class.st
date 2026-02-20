@@ -1,16 +1,23 @@
 Class {
 	#name : 'ACPRequestError',
 	#superclass : 'Error',
-	#pools : [
-		'JRPCConstantsSharedPool'
-	],
 	#instVars : [
 		'code',
 		'rpcMessage',
 		'data'
 	],
-	#category : 'ACP-Protocol'
+	#pools : [
+		'JRPCConstantsSharedPool'
+	],
+	#category : 'ACP-Protocol',
+	#package : 'ACP-Protocol'
 }
+
+{ #category : 'factory' }
+ACPRequestError class >> authRequired [
+
+	^ self code: -32000 message: 'Authentication required'
+]
 
 { #category : 'instance creation' }
 ACPRequestError class >> code: aCode message: aMessage [
@@ -29,12 +36,6 @@ ACPRequestError class >> code: aCode message: aMessage data: aData [
 		  rpcMessage: aMessage;
 		  data: aData;
 		  yourself
-]
-
-{ #category : 'factory' }
-ACPRequestError class >> authRequired [
-
-	^ self code: -32000 message: 'Authentication required'
 ]
 
 { #category : 'factory' }

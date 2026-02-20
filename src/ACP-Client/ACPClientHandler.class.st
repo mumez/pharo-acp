@@ -1,14 +1,32 @@
 Class {
 	#name : 'ACPClientHandler',
 	#superclass : 'Object',
-	#category : 'ACP-Client'
+	#category : 'ACP-Client',
+	#package : 'ACP-Client'
 }
 
-{ #category : 'agent-callbacks' }
-ACPClientHandler >> sessionUpdate: aDictionary [
-	"Notification from agent about session state changes."
+{ #category : 'agent-callbacks - terminal' }
+ACPClientHandler >> createTerminal: aDictionary [
 
-	^ self subclassResponsibility
+	^ (ACPRequestError methodNotFound: 'terminal/create') signal
+]
+
+{ #category : 'agent-callbacks - terminal' }
+ACPClientHandler >> killTerminal: aDictionary [
+
+	^ (ACPRequestError methodNotFound: 'terminal/kill') signal
+]
+
+{ #category : 'agent-callbacks - filesystem' }
+ACPClientHandler >> readTextFile: aDictionary [
+
+	^ (ACPRequestError methodNotFound: 'fs/read_text_file') signal
+]
+
+{ #category : 'agent-callbacks - terminal' }
+ACPClientHandler >> releaseTerminal: aDictionary [
+
+	^ (ACPRequestError methodNotFound: 'terminal/release') signal
 ]
 
 { #category : 'agent-callbacks' }
@@ -18,22 +36,11 @@ ACPClientHandler >> requestPermission: aDictionary [
 	^ self subclassResponsibility
 ]
 
-{ #category : 'agent-callbacks - filesystem' }
-ACPClientHandler >> readTextFile: aDictionary [
+{ #category : 'agent-callbacks' }
+ACPClientHandler >> sessionUpdate: aDictionary [
+	"Notification from agent about session state changes."
 
-	^ (ACPRequestError methodNotFound: 'fs/read_text_file') signal
-]
-
-{ #category : 'agent-callbacks - filesystem' }
-ACPClientHandler >> writeTextFile: aDictionary [
-
-	^ (ACPRequestError methodNotFound: 'fs/write_text_file') signal
-]
-
-{ #category : 'agent-callbacks - terminal' }
-ACPClientHandler >> createTerminal: aDictionary [
-
-	^ (ACPRequestError methodNotFound: 'terminal/create') signal
+	^ self subclassResponsibility
 ]
 
 { #category : 'agent-callbacks - terminal' }
@@ -48,14 +55,8 @@ ACPClientHandler >> waitForTerminalExit: aDictionary [
 	^ (ACPRequestError methodNotFound: 'terminal/wait_for_exit') signal
 ]
 
-{ #category : 'agent-callbacks - terminal' }
-ACPClientHandler >> killTerminal: aDictionary [
+{ #category : 'agent-callbacks - filesystem' }
+ACPClientHandler >> writeTextFile: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'terminal/kill') signal
-]
-
-{ #category : 'agent-callbacks - terminal' }
-ACPClientHandler >> releaseTerminal: aDictionary [
-
-	^ (ACPRequestError methodNotFound: 'terminal/release') signal
+	^ (ACPRequestError methodNotFound: 'fs/write_text_file') signal
 ]

@@ -1,7 +1,8 @@
 Class {
 	#name : 'ACPSmokeHandler',
 	#superclass : 'ACPMockHandler',
-	#category : 'ACP-Tests'
+	#category : 'ACP-Tests',
+	#package : 'ACP-Tests'
 }
 
 { #category : 'agent-callbacks' }

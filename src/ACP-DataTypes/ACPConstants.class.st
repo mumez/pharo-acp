@@ -25,7 +25,8 @@ Class {
 		'ACPMethodWriteTextFile',
 		'ACPProtocolVersion'
 	],
-	#category : 'ACP-Protocol'
+	#category : 'ACP-DataTypes',
+	#package : 'ACP-DataTypes'
 }
 
 { #category : 'class initialization' }
@@ -71,4 +72,10 @@ ACPConstants class >> initializeClientToAgentMethods [
 ACPConstants class >> initializeProtocolVersion [
 
 	ACPProtocolVersion := 1
+]
+
+{ #category : 'accessing' }
+ACPConstants class >> protocolVersion [
+
+	^ ACPProtocolVersion
 ]

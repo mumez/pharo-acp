@@ -2,7 +2,7 @@
 
 ACP (Agent Client Protocol) client library for Pharo Smalltalk.
 
-Enables Pharo to communicate with ACP-compatible coding agents (Gemini CLI, Open Code, etc.) over JSON-RPC 2.0 via stdio.
+Enables Pharo to communicate with ACP-compatible coding agents ([Gemini CLI](https://github.com/google-gemini/gemini-cli), [OpenCode](https://opencode.ai/), etc.) over JSON-RPC 2.0 via stdio.
 
 References the [ACP TypeScript SDK](https://github.com/agentclientprotocol/typescript-sdk).
 
@@ -30,30 +30,56 @@ Metacello new
 
 ## Quick Start
 
+You need an ACP-compatible agent installed. Currently tested with:
+
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) — `gemini --experimental-acp`
+- [claude-code-acp](https://github.com/zed-industries/claude-agent-acp) — `claude-code-acp`
+
 ```smalltalk
 client := ACPClient new.
+
+"Use Gemini CLI:"
 client agentCommand: '/usr/bin/env' arguments: #('gemini' '--experimental-acp').
+"Or claude-code-acp:"
+"client agentCommand: '/usr/bin/env' arguments: #('claude-code-acp')."
+
 client connect.
 
 [
     "Initialize"
-    client initializeWithCapabilities: Dictionary new.
+    client initializeBy: [ :params | "uses default protocolVersion and capabilities" ].
 
     "Create session"
-    session := client clientConnection newSession: {
-        'cwd' -> FileSystem workingDirectory fullName.
-        'mcpServers' -> #() } asDictionary.
+    session := client newSessionBy: [ :params |
+        params cwd: FileSystem workingDirectory fullName ].
 
     "Send prompt (blocks until agent responds)"
-    result := client prompt: {
-        'sessionId' -> (session at: 'sessionId').
-        'prompt' -> {
-            { 'type' -> 'text'. 'text' -> 'Hello!' } asDictionary
-        } } asDictionary.
+    result := client promptBy: [ :params |
+        params sessionId: session sessionId.
+        params textPrompt: 'Hello!' ].
 
-    Transcript show: 'Stop reason: ', (result at: 'stopReason'); cr.
+    Transcript show: 'Stop reason: ', result stopReason; cr.
 ] ensure: [ client disconnect ].
 ```
+
+<details>
+<summary>Example Transcript output (Gemini CLI)</summary>
+
+```
+Session update: a Dictionary('sessionId'->'23ec274c-cfaa-4e43-80b6-896575047a12' 'update'->a Dictionary('content'->a Dictionary('text'->'**Awaiting Command Initiation**
+
+I''m currently in a holding pattern. The initial directory and file structure have been established. My primary focus remains on receiving and interpreting the user''s first command. This crucial step will define my subsequent actions.
+
+
+' 'type'->'text' ) 'sessionUpdate'->'agent_thought_chunk' ) )
+Session update: a Dictionary('sessionId'->'23ec274c-cfaa-4e43-80b6-896575047a12' 'update'->a Dictionary('content'->a Dictionary('text'->'Hello! I''m ready for your first command.' 'type'->'text' ) 'sessionUpdate'->'agent_message_chunk' ) )
+Stop reason: end_turn
+
+```
+
+</details>
+
+## Custmizing update handler
 
 By default, `ACPClient` uses `ACPTranscriptHandler` which logs session updates to the Transcript and auto-approves permission requests. Provide a custom handler by subclassing `ACPClientHandler`:
 

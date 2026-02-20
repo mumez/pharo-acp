@@ -39,3 +39,24 @@ ACPClientTest >> testDisconnectStopsProcess [
 	client disconnect.
 	self deny: client processLauncher isRunning
 ]
+
+{ #category : 'tests' }
+ACPClientTest >> testInitializeWithCapabilitiesRemoved [
+
+	self deny: (client respondsTo: #initializeWithCapabilities:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToBuilderMethods [
+
+	self assert: (client respondsTo: #initializeBy:).
+	self assert: (client respondsTo: #newSessionBy:).
+	self assert: (client respondsTo: #promptBy:).
+	self assert: (client respondsTo: #cancelBy:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToInitializeBy [
+
+	self assert: (client respondsTo: #initializeBy:)
+]
