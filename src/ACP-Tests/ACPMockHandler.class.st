@@ -30,10 +30,10 @@ ACPMockHandler >> permissionRequest [
 ]
 
 { #category : 'agent-callbacks' }
-ACPMockHandler >> requestPermission: aDictionary [
+ACPMockHandler >> requestPermission: anACPRequestPermission [
 
-	permissionRequest := aDictionary.
-	^ { 'allow' -> true } asDictionary
+	permissionRequest := anACPRequestPermission.
+	^ anACPRequestPermission makeResponse allowOnce
 ]
 
 { #category : 'agent-callbacks' }

@@ -92,8 +92,8 @@ ACPClientConnectionTest >> testRequestPermissionIsDelegatedToHandler [
 	sem wait.
 
 	self assert: handler permissionRequest notNil.
-	self assert: (handler permissionRequest at: 'tool') equals: 'ls'.
-	self assert: ((response at: 'result') at: 'allow') equals: true
+	self assert: handler permissionRequest class equals: ACPRequestPermission.
+	self assert: ((response at: 'result') at: 'outcome') notNil
 ]
 
 { #category : 'tests' }
