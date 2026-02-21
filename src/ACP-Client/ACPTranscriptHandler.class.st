@@ -6,12 +6,12 @@ Class {
 }
 
 { #category : 'agent-callbacks' }
-ACPTranscriptHandler >> requestPermission: aDictionary [
+ACPTranscriptHandler >> requestPermission: anACPRequestPermission [
 
 	Transcript
-		show: 'Permission requested: ' , aDictionary printString;
+		show: 'Permission requested: ' , anACPRequestPermission printString;
 		cr.
-	^ { 'allow' -> true } asDictionary
+	^ anACPRequestPermission makeResponse allowAlways
 ]
 
 { #category : 'agent-callbacks' }
