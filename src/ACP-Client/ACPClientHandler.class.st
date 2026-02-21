@@ -1,6 +1,9 @@
 Class {
 	#name : 'ACPClientHandler',
 	#superclass : 'Object',
+	#pools : [
+		'ACPConstants'
+	],
 	#category : 'ACP-Client',
 	#package : 'ACP-Client'
 }
@@ -8,25 +11,25 @@ Class {
 { #category : 'agent-callbacks - terminal' }
 ACPClientHandler >> createTerminal: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'terminal/create') signal
+	^ (ACPRequestError methodNotFound: ACPMethodTerminalCreate) signal
 ]
 
 { #category : 'agent-callbacks - terminal' }
 ACPClientHandler >> killTerminal: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'terminal/kill') signal
+	^ (ACPRequestError methodNotFound: ACPMethodTerminalKill) signal
 ]
 
 { #category : 'agent-callbacks - filesystem' }
 ACPClientHandler >> readTextFile: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'fs/read_text_file') signal
+	^ (ACPRequestError methodNotFound: ACPMethodReadTextFile) signal
 ]
 
 { #category : 'agent-callbacks - terminal' }
 ACPClientHandler >> releaseTerminal: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'terminal/release') signal
+	^ (ACPRequestError methodNotFound: ACPMethodTerminalRelease) signal
 ]
 
 { #category : 'agent-callbacks' }
@@ -46,17 +49,17 @@ ACPClientHandler >> sessionUpdate: aDictionary [
 { #category : 'agent-callbacks - terminal' }
 ACPClientHandler >> terminalOutput: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'terminal/output') signal
+	^ (ACPRequestError methodNotFound: ACPMethodTerminalOutput) signal
 ]
 
 { #category : 'agent-callbacks - terminal' }
 ACPClientHandler >> waitForTerminalExit: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'terminal/wait_for_exit') signal
+	^ (ACPRequestError methodNotFound: ACPMethodTerminalWaitForExit) signal
 ]
 
 { #category : 'agent-callbacks - filesystem' }
 ACPClientHandler >> writeTextFile: aDictionary [
 
-	^ (ACPRequestError methodNotFound: 'fs/write_text_file') signal
+	^ (ACPRequestError methodNotFound: ACPMethodWriteTextFile) signal
 ]
