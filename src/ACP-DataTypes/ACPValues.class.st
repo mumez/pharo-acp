@@ -130,6 +130,15 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 		  ifAbsentPut: [ #() ]
 ]
 
+{ #category : 'printing' }
+ACPValues >> printOn: aStream [
+
+	aStream nextPutAll: self class name.
+	aStream nextPut: $(.
+	self rawValues printOn: aStream.
+	aStream nextPut: $)
+]
+
 { #category : 'testing' }
 ACPValues >> isEmpty [
 

@@ -14,7 +14,7 @@ ACPSessionUpdate >> sessionId [
 { #category : 'accessing' }
 ACPSessionUpdate >> updateType [
 
-	^ self rawValues at: 'type' ifAbsent: []
+	^ self updateDict at: 'sessionUpdate' ifAbsent: []
 ]
 
 { #category : 'private' }
@@ -32,17 +32,93 @@ ACPSessionUpdate >> content [
 { #category : 'accessing' }
 ACPSessionUpdate >> availableCommands [
 
+	self isAvailableCommandsUpdate ifFalse: [ ^ #() ].
 	^ self valuesAt: 'availableCommands' typed: ACPAvailableCommand in: self updateDict
 ]
 
+{ #category : 'accessing' }
+ACPSessionUpdate >> entries [
+
+	self isPlan ifFalse: [ ^ #() ].
+	^ self valuesAt: 'entries' typed: ACPPlanEntry in: self updateDict
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> toolCall [
+
+	self isToolCall ifFalse: [ ^ nil ].
+	^ ACPToolCall fromDictionary: self updateDict
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> toolCallUpdate [
+
+	self isToolCallUpdate ifFalse: [ ^ nil ].
+	^ ACPToolCallUpdate fromDictionary: self updateDict
+]
+
 { #category : 'testing' }
-ACPSessionUpdate >> isMessageChunk [
+ACPSessionUpdate >> isAgentMessageChunk [
 
 	^ self updateType = 'agent_message_chunk'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isAgentThoughtChunk [
+
+	^ self updateType = 'agent_thought_chunk'
 ]
 
 { #category : 'testing' }
 ACPSessionUpdate >> isAvailableCommandsUpdate [
 
 	^ self updateType = 'available_commands_update'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isConfigOptionUpdate [
+
+	^ self updateType = 'config_option_update'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isCurrentModeUpdate [
+
+	^ self updateType = 'current_mode_update'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isPlan [
+
+	^ self updateType = 'plan'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isSessionInfoUpdate [
+
+	^ self updateType = 'session_info_update'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isToolCall [
+
+	^ self updateType = 'tool_call'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isToolCallUpdate [
+
+	^ self updateType = 'tool_call_update'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isUsageUpdate [
+
+	^ self updateType = 'usage_update'
+]
+
+{ #category : 'testing' }
+ACPSessionUpdate >> isUserMessageChunk [
+
+	^ self updateType = 'user_message_chunk'
 ]
