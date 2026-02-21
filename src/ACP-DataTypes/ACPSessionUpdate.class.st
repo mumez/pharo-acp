@@ -122,3 +122,46 @@ ACPSessionUpdate >> isUserMessageChunk [
 
 	^ self updateType = 'user_message_chunk'
 ]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> currentModeId [
+
+	^ self updateDict at: 'currentModeId' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> configOptions [
+
+	self isConfigOptionUpdate ifFalse: [ ^ #() ].
+	^ self valuesAt: 'configOptions' typed: ACPConfigOption in: self updateDict
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> title [
+
+	^ self updateDict at: 'title' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> updatedAt [
+
+	^ self updateDict at: 'updatedAt' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> cost [
+
+	^ self updateDict at: 'cost' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> size [
+
+	^ self updateDict at: 'size' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPSessionUpdate >> used [
+
+	^ self updateDict at: 'used' ifAbsent: []
+]
