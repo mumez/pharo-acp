@@ -33,8 +33,10 @@ ACPClientHandler >> releaseTerminal: aDictionary [
 ]
 
 { #category : 'agent-callbacks' }
-ACPClientHandler >> requestPermission: aDictionary [
-	"Request from agent for user permission (e.g. tool execution)."
+ACPClientHandler >> requestPermission: anACPRequestPermission [
+	"Request from agent for user permission (e.g. tool execution).
+	anACPRequestPermission is ACPRequestPermission.
+	Must return an ACPRequestPermissionResponse."
 
 	^ self subclassResponsibility
 ]

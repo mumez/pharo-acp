@@ -183,7 +183,7 @@ ACPClientConnection >> registerSessionHandlers [
 
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodRequestPermission
-			 block: [ :params | self handler requestPermission: params ])
+			 block: [ :params | self handler requestPermission: (ACPRequestPermission fromDictionary: params) ])
 ]
 
 { #category : 'initialization' }
