@@ -37,10 +37,10 @@ ACPMockHandler >> requestPermission: aDictionary [
 ]
 
 { #category : 'agent-callbacks' }
-ACPMockHandler >> sessionUpdate: aDictionary [
+ACPMockHandler >> sessionUpdate: aSessionUpdate [
 
-	lastUpdate := aDictionary.
-	updates add: aDictionary
+	lastUpdate := aSessionUpdate.
+	updates add: aSessionUpdate
 ]
 
 { #category : 'accessing' }
