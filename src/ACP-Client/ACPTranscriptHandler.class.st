@@ -11,7 +11,7 @@ ACPTranscriptHandler >> requestPermission: anACPRequestPermission [
 	Transcript
 		show: 'Permission requested: ' , anACPRequestPermission printString;
 		cr.
-	^ ACPRequestPermissionResponse selected: anACPRequestPermission options first optionId
+	^ anACPRequestPermission makeResponse allowAlways
 ]
 
 { #category : 'agent-callbacks' }

@@ -17,6 +17,30 @@ ACPRequestPermissionResponse class >> cancelled [
 	^ self buildBy: [ :r | r cancel ]
 ]
 
+{ #category : 'instance creation' }
+ACPRequestPermissionResponse class >> allowOnce [
+
+	^ self buildBy: [ :r | r allowOnce ]
+]
+
+{ #category : 'instance creation' }
+ACPRequestPermissionResponse class >> allowAlways [
+
+	^ self buildBy: [ :r | r allowAlways ]
+]
+
+{ #category : 'instance creation' }
+ACPRequestPermissionResponse class >> rejectOnce [
+
+	^ self buildBy: [ :r | r rejectOnce ]
+]
+
+{ #category : 'instance creation' }
+ACPRequestPermissionResponse class >> rejectAlways [
+
+	^ self buildBy: [ :r | r rejectAlways ]
+]
+
 { #category : 'accessing' }
 ACPRequestPermissionResponse >> outcome [
 

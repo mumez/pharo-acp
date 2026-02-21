@@ -22,3 +22,9 @@ ACPRequestPermission >> options [
 
 	^ self valuesAt: 'options' typed: ACPPermissionOption in: self rawValues
 ]
+
+{ #category : 'factory' }
+ACPRequestPermission >> makeResponse [
+
+	^ ACPRequestPermissionResponse new
+]
