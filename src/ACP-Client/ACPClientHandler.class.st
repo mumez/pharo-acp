@@ -40,8 +40,8 @@ ACPClientHandler >> requestPermission: aDictionary [
 ]
 
 { #category : 'agent-callbacks' }
-ACPClientHandler >> sessionUpdate: aDictionary [
-	"Notification from agent about session state changes."
+ACPClientHandler >> sessionUpdate: aSessionUpdate [
+	"aSessionUpdate is ACPSessionUpdate"
 
 	^ self subclassResponsibility
 ]

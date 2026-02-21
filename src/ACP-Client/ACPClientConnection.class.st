@@ -179,7 +179,7 @@ ACPClientConnection >> registerSessionHandlers [
 
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodSessionUpdate
-			 block: [ :params | self handler sessionUpdate: params ]).
+			 block: [ :params | self handler sessionUpdate: (ACPSessionUpdate fromDictionary: params) ]).
 
 	processor addHandler: (JRPCBlockHandler
 			 methodName: ACPMethodRequestPermission

@@ -15,9 +15,10 @@ ACPTranscriptHandler >> requestPermission: aDictionary [
 ]
 
 { #category : 'agent-callbacks' }
-ACPTranscriptHandler >> sessionUpdate: aDictionary [
+ACPTranscriptHandler >> sessionUpdate: aSessionUpdate [
 
 	Transcript
-		show: 'Session update: ' , aDictionary printString;
+		show: 'Session update [' , aSessionUpdate updateType , ']: ';
+		show: aSessionUpdate printString;
 		cr
 ]
