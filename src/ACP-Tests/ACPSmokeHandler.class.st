@@ -17,13 +17,8 @@ ACPSmokeHandler >> requestPermission: aDictionary [
 ]
 
 { #category : 'agent-callbacks' }
-ACPSmokeHandler >> sessionUpdate: aDictionary [
+ACPSmokeHandler >> sessionUpdate: aSessionUpdate [
 
-	| update |
-	super sessionUpdate: aDictionary.
-	update := aDictionary at: 'update' ifAbsent: [ aDictionary ].
-	Transcript
-		show: 'Session update: '
-			, (update at: 'sessionUpdate' ifAbsent: [ 'unknown' ]);
-		cr
+	super sessionUpdate: aSessionUpdate.
+	Transcript show: aSessionUpdate updateType printString; nl
 ]

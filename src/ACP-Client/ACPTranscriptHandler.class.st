@@ -6,18 +6,19 @@ Class {
 }
 
 { #category : 'agent-callbacks' }
-ACPTranscriptHandler >> requestPermission: aDictionary [
+ACPTranscriptHandler >> requestPermission: anACPRequestPermission [
 
 	Transcript
-		show: 'Permission requested: ' , aDictionary printString;
+		show: 'Permission requested: ' , anACPRequestPermission printString;
 		cr.
-	^ { 'allow' -> true } asDictionary
+	^ anACPRequestPermission makeResponse allowAlways
 ]
 
 { #category : 'agent-callbacks' }
-ACPTranscriptHandler >> sessionUpdate: aDictionary [
+ACPTranscriptHandler >> sessionUpdate: aSessionUpdate [
 
 	Transcript
-		show: 'Session update: ' , aDictionary printString;
+		show: 'Session update [' , aSessionUpdate updateType , ']: ';
+		show: aSessionUpdate printString;
 		cr
 ]

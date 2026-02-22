@@ -92,8 +92,8 @@ ACPClientConnectionTest >> testRequestPermissionIsDelegatedToHandler [
 	sem wait.
 
 	self assert: handler permissionRequest notNil.
-	self assert: (handler permissionRequest at: 'tool') equals: 'ls'.
-	self assert: ((response at: 'result') at: 'allow') equals: true
+	self assert: handler permissionRequest class equals: ACPRequestPermission.
+	self assert: ((response at: 'result') at: 'outcome') notNil
 ]
 
 { #category : 'tests' }
@@ -105,7 +105,10 @@ ACPClientConnectionTest >> testSessionUpdateIsDelegatedToHandler [
 	agentTransport writeMessage: {
 			('jsonrpc' -> '2.0').
 			('method' -> 'session/update').
-			('params' -> { ('state' -> 'running') } asDictionary) } asDictionary.
+			('params' -> {
+				('sessionId' -> 'sess-001').
+				('update' -> { ('sessionUpdate' -> 'agent_message_chunk') } asDictionary) }
+				asDictionary) } asDictionary.
 
 	"Wait a bit for the read loop to process"
 	[
@@ -114,7 +117,6 @@ ACPClientConnectionTest >> testSessionUpdateIsDelegatedToHandler [
 	sem wait.
 
 	self assert: handler lastUpdate notNil.
-	self
-		assert: (handler lastUpdate at: 'state')
-		equals: 'running'
+	self assert: handler lastUpdate class equals: ACPSessionUpdate.
+	self assert: handler lastUpdate sessionId equals: 'sess-001'
 ]

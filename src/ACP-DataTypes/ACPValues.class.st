@@ -100,16 +100,43 @@ ACPValues >> extraPropertiesOn: aDictionary [
 ACPValues >> ensureRequired [
 
 	"Subclasses can override to initialize required fields"
-	
+
 	^ self
 ]
 
 { #category : 'private' }
-ACPValues >> trimNested: nestedValues named: propName in: dict [
+ACPValues >> trimNested: nestedValues named: propName in: aDictionary [
 
 	(nestedValues isNil or: [ nestedValues isEmpty ])
-		ifTrue: [ dict removeKey: propName ifAbsent: [] ]
-		ifFalse: [ dict at: propName put: nestedValues asDictionary ]
+		ifTrue: [ aDictionary removeKey: propName ifAbsent: [] ]
+		ifFalse: [ aDictionary at: propName put: nestedValues asDictionary ]
+]
+
+{ #category : 'private' }
+ACPValues >> valueAt: propName typed: valueClass in: aDictionary [
+
+	^ aDictionary
+		  at: propName
+		  ifPresent: [ :dict | valueClass fromDictionary: dict ]
+		  ifAbsentPut: [ valueClass new ]
+]
+
+{ #category : 'private' }
+ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
+
+	^ aDictionary
+		  at: propName
+		  ifPresent: [ :coll | coll collect: [ :each | valueClass fromDictionary: each ] ]
+		  ifAbsentPut: [ #() ]
+]
+
+{ #category : 'printing' }
+ACPValues >> printOn: aStream [
+
+	aStream nextPutAll: self class name.
+	aStream nextPut: $(.
+	self rawValues printOn: aStream.
+	aStream nextPut: $)
 ]
 
 { #category : 'testing' }

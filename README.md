@@ -66,13 +66,13 @@ client connect.
 <summary>Example Transcript output (Gemini CLI)</summary>
 
 ```
-Session update: a Dictionary('sessionId'->'23ec274c-cfaa-4e43-80b6-896575047a12' 'update'->a Dictionary('content'->a Dictionary('text'->'**Awaiting Command Initiation**
+Session update [agent_thought_chunk]: ACPSessionUpdate(a Dictionary('sessionId'->'42f04b38-b27d-4adf-b1e5-f46f1d69216e' 'update'->a Dictionary('content'->a Dictionary('text'->'**Awaiting Initial Input**
 
-I''m currently in a holding pattern. The initial directory and file structure have been established. My primary focus remains on receiving and interpreting the user''s first command. This crucial step will define my subsequent actions.
+I''ve processed the initial setup details: directory structure and environment specs, which point to a Pharo Smalltalk environment. Currently, I''m simply standing by, waiting for the user''s first directive or request before moving forward.
 
 
-' 'type'->'text' ) 'sessionUpdate'->'agent_thought_chunk' ) )
-Session update: a Dictionary('sessionId'->'23ec274c-cfaa-4e43-80b6-896575047a12' 'update'->a Dictionary('content'->a Dictionary('text'->'Hello! I''m ready for your first command.' 'type'->'text' ) 'sessionUpdate'->'agent_message_chunk' ) )
+' 'type'->'text' ) 'sessionUpdate'->'agent_thought_chunk' ) ))
+Session update [agent_message_chunk]: ACPSessionUpdate(a Dictionary('sessionId'->'42f04b38-b27d-4adf-b1e5-f46f1d69216e' 'update'->a Dictionary('content'->a Dictionary('text'->'Hello! How can I help you today?' 'type'->'text' ) 'sessionUpdate'->'agent_message_chunk' ) ))
 Stop reason: end_turn
 
 ```
