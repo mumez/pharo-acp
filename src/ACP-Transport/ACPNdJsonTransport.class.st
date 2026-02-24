@@ -16,13 +16,18 @@ Class {
 
 { #category : 'instance creation' }
 ACPNdJsonTransport class >> on: anACPProcessLauncher [
-	"OSSPipe atEnd is unreliable for non-blocking pipes — disable it."
+	"OSSPipe atEnd is unreliable for non-blocking pipes — disable it.
+	 Both streams are set to binary mode so UTF-8 ByteArrays are exchanged as-is."
 
-	^ self new
-		  writeStream: anACPProcessLauncher stdinStream;
-		  readStream: anACPProcessLauncher stdoutStream;
-		  useAtEnd: false;
-		  yourself
+	| transport |
+	transport := self new
+		             writeStream: anACPProcessLauncher stdinStream;
+		             readStream: anACPProcessLauncher stdoutStream;
+		             useAtEnd: false;
+		             yourself.
+	transport writeStream binary.
+	transport readStream binary.
+	^ transport
 ]
 
 { #category : 'instance creation' }
@@ -47,7 +52,7 @@ ACPNdJsonTransport >> initialize [
 	super initialize.
 	writeMutex := Mutex new.
 	isClosed := false.
-	readBuffer := ''.
+	readBuffer := ByteArray new.
 	pollDelay := 500 milliSeconds.
 	useAtEnd := true
 ]
@@ -92,9 +97,9 @@ ACPNdJsonTransport >> readLine [
 
 	| lfIndex chunk line |
 	[
-		lfIndex := readBuffer indexOf: Character lf.
+		lfIndex := readBuffer indexOf: Character lf asciiValue.
 		lfIndex > 0 ifTrue: [
-			line := readBuffer copyFrom: 1 to: lfIndex - 1.
+			line := (readBuffer copyFrom: 1 to: lfIndex - 1) utf8Decoded.
 			readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
 			^ line ].
 		[ chunk := self readStream upToEnd ]
@@ -104,8 +109,8 @@ ACPNdJsonTransport >> readLine [
 			ifTrue: [
 				self isAtEnd ifTrue: [
 					readBuffer ifEmpty: [ ^ nil ].
-					line := readBuffer.
-					readBuffer := ''.
+					line := readBuffer utf8Decoded.
+					readBuffer := ByteArray new.
 					^ line ].
 				self pollDelay wait ]
 			ifFalse: [ readBuffer := readBuffer , chunk ]
@@ -160,8 +165,8 @@ ACPNdJsonTransport >> writeMessage: aDictionary [
 	self isClosed ifTrue: [ ACPError transportIsClosed signal ].
 	self writeMutex critical: [
 		self writeStream
-			nextPutAll: (STONJSON toString: aDictionary);
-			nextPut: Character lf;
+			nextPutAll: (STONJSON toString: aDictionary) utf8Encoded;
+			nextPut: Character lf asciiValue;
 			flush ]
 ]
 

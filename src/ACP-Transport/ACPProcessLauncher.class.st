@@ -115,9 +115,9 @@ ACPProcessLauncher >> stdinStream [
 
 { #category : 'accessing' }
 ACPProcessLauncher >> stdoutStream [
-	"Return the stdout OSSPipe. Non-blocking by default."
+	"Return the stdout reader (OSSAttachableFileStream). Non-blocking by default."
 
-	^ self process stdoutStream
+	^ self process stdoutStream reader
 ]
 
 { #category : 'operations' }
