@@ -16,13 +16,17 @@ Class {
 
 { #category : 'instance creation' }
 ACPNdJsonTransport class >> on: anACPProcessLauncher [
-	"OSSPipe atEnd is unreliable for non-blocking pipes — disable it."
+	"OSSPipe atEnd is unreliable for non-blocking pipes — disable it.
+	 The stdin writer is set to binary mode so UTF-8 ByteArrays are written as-is."
 
-	^ self new
-		  writeStream: anACPProcessLauncher stdinStream;
-		  readStream: anACPProcessLauncher stdoutStream;
-		  useAtEnd: false;
-		  yourself
+	| transport |
+	transport := self new
+		             writeStream: anACPProcessLauncher stdinStream;
+		             readStream: anACPProcessLauncher stdoutStream;
+		             useAtEnd: false;
+		             yourself.
+	transport writeStream binary.
+	^ transport
 ]
 
 { #category : 'instance creation' }
@@ -160,8 +164,7 @@ ACPNdJsonTransport >> writeMessage: aDictionary [
 	self isClosed ifTrue: [ ACPError transportIsClosed signal ].
 	self writeMutex critical: [
 		self writeStream
-			nextPutAll: (STONJSON toString: aDictionary);
-			nextPut: Character lf;
+			nextPutAll: ((STONJSON toString: aDictionary) utf8Encoded , #[10]);
 			flush ]
 ]
 

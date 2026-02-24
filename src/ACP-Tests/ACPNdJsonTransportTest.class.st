@@ -12,14 +12,12 @@ Class {
 
 { #category : 'helpers' }
 ACPNdJsonTransportTest >> feedLine: aString [
-	"Append a line to readStream and reset position for reading."
+	"Append a UTF-8 encoded line to readStream and reset position for reading."
 
 	| pos |
 	pos := readStream position.
 	readStream setToEnd.
-	readStream
-		nextPutAll: aString;
-		nextPut: Character lf.
+	readStream nextPutAll: (aString , String lf) utf8Encoded.
 	readStream position: pos
 ]
 
@@ -27,8 +25,8 @@ ACPNdJsonTransportTest >> feedLine: aString [
 ACPNdJsonTransportTest >> setUp [
 
 	super setUp.
-	readStream := ReadWriteStream on: String new.
-	writeStream := ReadWriteStream on: String new.
+	readStream := ReadWriteStream on: ByteArray new.
+	writeStream := ReadWriteStream on: ByteArray new.
 	transport := ACPNdJsonTransport
 		writeStream: writeStream
 		readStream: readStream
@@ -113,10 +111,10 @@ ACPNdJsonTransportTest >> testWriteMessageProducesNdjson [
 		at: 'method' put: 'initialize';
 		yourself.
 	transport writeMessage: dict.
-	output := self writtenOutput.
+	output := self writtenOutput utf8Decoded.
 	self assert: (output endsWith: String lf).
 	self
-		assert: (STONJSON fromString: (output trimRight))
+		assert: (STONJSON fromString: output trimRight)
 		equals: dict
 ]
 
@@ -135,7 +133,7 @@ ACPNdJsonTransportTest >> testWriteMessageWithJapanese [
 	| dict output parsed |
 	dict := { 'text' -> 'こんにちは世界' } asDictionary.
 	transport writeMessage: dict.
-	output := self writtenOutput trimRight.
+	output := self writtenOutput utf8Decoded trimRight.
 	parsed := STONJSON fromString: output.
 	self assert: (parsed at: 'text') equals: 'こんにちは世界'
 ]
@@ -146,7 +144,7 @@ ACPNdJsonTransportTest >> testWriteMultipleMessages [
 	transport writeMessage: { 'id' -> 1 } asDictionary.
 	transport writeMessage: { 'id' -> 2 } asDictionary.
 	self
-		assert: (self writtenOutput lines size)
+		assert: (self writtenOutput utf8Decoded lines size)
 		equals: 2
 ]
 
@@ -162,7 +160,7 @@ ACPNdJsonTransportTest >> testWriteThenReadRoundtrip [
 	} asDictionary.
 	transport writeMessage: original.
 	readerTransport := ACPNdJsonTransport
-		writeStream: (ReadWriteStream on: String new)
+		writeStream: (ReadWriteStream on: ByteArray new)
 		readStream: (ReadStream on: self writtenOutput).
 	parsed := readerTransport readMessage.
 	self assert: (parsed at: 'jsonrpc') equals: '2.0'.
