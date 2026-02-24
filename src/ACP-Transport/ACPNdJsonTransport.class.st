@@ -47,7 +47,7 @@ ACPNdJsonTransport >> initialize [
 	super initialize.
 	writeMutex := Mutex new.
 	isClosed := false.
-	readBuffer := ''.
+	readBuffer := ByteArray new.
 	pollDelay := 500 milliSeconds.
 	useAtEnd := true
 ]
@@ -92,9 +92,9 @@ ACPNdJsonTransport >> readLine [
 
 	| lfIndex chunk line |
 	[
-		lfIndex := readBuffer indexOf: Character lf.
+		lfIndex := readBuffer indexOf: Character lf asciiValue.
 		lfIndex > 0 ifTrue: [
-			line := readBuffer copyFrom: 1 to: lfIndex - 1.
+			line := (readBuffer copyFrom: 1 to: lfIndex - 1) utf8Decoded.
 			readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
 			^ line ].
 		[ chunk := self readStream upToEnd ]
@@ -104,11 +104,11 @@ ACPNdJsonTransport >> readLine [
 			ifTrue: [
 				self isAtEnd ifTrue: [
 					readBuffer ifEmpty: [ ^ nil ].
-					line := readBuffer.
-					readBuffer := ''.
+					line := readBuffer utf8Decoded.
+					readBuffer := ByteArray new.
 					^ line ].
 				self pollDelay wait ]
-			ifFalse: [ readBuffer := readBuffer , chunk ]
+			ifFalse: [ readBuffer := readBuffer , chunk asByteArray ]
 	] repeat
 ]
 
