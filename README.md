@@ -34,6 +34,8 @@ You need an ACP-compatible agent installed. Currently tested with:
 
 - [Gemini CLI](https://github.com/google-gemini/gemini-cli) — `gemini --experimental-acp`
 - [claude-code-acp](https://github.com/zed-industries/claude-agent-acp) — `claude-code-acp`
+- [OpenCode](https://github.com/anomalyco/opencode) — `opencode acp`
+
 
 ```smalltalk
 client := ACPClient new.
@@ -78,6 +80,18 @@ Stop reason: end_turn
 ```
 
 </details>
+
+## Example: Chat UI
+
+[pharo-acp-chat-ui](https://github.com/mumez/pharo-acp-chat-ui) is a minimal chat interface built on top of this library.
+
+```smalltalk
+"Launch with Gemini CLI:"
+ACPChatPresenter gemini open.
+
+"Or with Claude Code:"
+ACPChatPresenter claude open.
+```
 
 ## Custmizing update handler
 
