@@ -1,3 +1,28 @@
+"
+I represent a JSON-RPC protocol error as a Smalltalk exception, carrying the RPC error code, message, and optional data.
+
+Responsibility:
+- I carry a JSON-RPC error code, message string, and optional data payload
+- I provide factory methods for standard ACP/JSON-RPC error conditions
+- I convert between Smalltalk exception and RPC error dictionary representations
+
+Collaborators:
+- JRPCConstantsSharedPool: I reference standard error codes (MethodNotFound, InvalidParams, InternalError)
+- ACPPendingRequest: signals me when a response contains an error
+
+Public API and Key Messages:
+- #signalForRpcError: - create and signal from a raw error Dictionary (used by ACPPendingRequest)
+- #methodNotFound: - factory for method-not-found errors
+- #invalidParams: - factory for invalid parameter errors
+- #internalError: - factory for internal errors
+- #authRequired - factory for authentication-required errors
+- #asRpcErrorDictionary - convert to a JSON-RPC error Dictionary for wire transmission
+
+Internal Representation:
+- code - Integer JSON-RPC error code
+- rpcMessage - String error message (overrides #messageText)
+- data - Optional extra error data (nil if absent)
+"
 Class {
 	#name : 'ACPRequestError',
 	#superclass : 'Error',
