@@ -1,3 +1,34 @@
+"
+I implement the ACP (Agent Client Protocol) method layer on top of a bidirectional JSON-RPC connection.
+
+Responsibility:
+- I provide typed methods for every ACP client-to-agent request: initialize, newSession, loadSession, prompt, cancel, authenticate, setSessionMode/Model/ConfigOption
+- I register server-side callback handlers for agent-initiated requests: session updates, permission requests, and terminal/file operations
+- I translate raw Dictionary results into typed ACPDataTypes response objects
+
+Collaborators:
+- ACPConnection: my underlying JSON-RPC engine; I call #sendRequest:params: and #sendNotification:params: on it
+- ACPClientHandler: I delegate incoming agent callbacks (sessionUpdate:, requestPermission:, terminal, file ops) to it
+- ACPRequest: I use it to construct method + params pairs for each ACP operation
+- ACPConstants (SharedPool): I reference ACP method name constants
+
+Public API and Key Messages:
+- #initialize: - handshake with agent; stores ACPInitializeResponse in agentInfo
+- #newSession: / #newSessionBy: - start a new agent session
+- #prompt: / #promptBy: - send a prompt; blocks until the agent responds
+- #cancel: / #cancelBy: - cancel the current prompt (notification, no response)
+- #loadSession: - resume a prior session by ID
+
+Internal Representation:
+- connection - the ACPConnection used for transport
+- handler - the ACPClientHandler that receives agent-initiated callbacks
+- agentInfo - ACPInitializeResponse cached from the initialize handshake
+
+Implementation Points:
+- Each ""By:"" variant accepts a builder block for constructing typed params objects
+- Handler registration happens at creation time via #registerHandlers
+- Terminal and file operation defaults signal ACPRequestError methodNotFound; subclass ACPClientHandler to override
+"
 Class {
 	#name : 'ACPClientConnection',
 	#superclass : 'Object',

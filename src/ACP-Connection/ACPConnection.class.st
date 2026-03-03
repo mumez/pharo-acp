@@ -1,3 +1,38 @@
+"
+I am the bidirectional JSON-RPC engine that drives all communication with an ACP agent.
+
+Responsibility:
+- I maintain a background read loop that continuously reads incoming messages from the transport
+- I dispatch responses to pending requests (via Semaphore signaling) and route incoming requests/notifications to a JRPCMessageProcessor
+- I assign monotonically increasing IDs to outgoing requests and track them in a pending requests dictionary
+- I handle connection closure gracefully, rejecting all outstanding pending requests
+
+Collaborators:
+- ACPNdJsonTransport: my transport layer — I read and write JSON messages through it
+- ACPPendingRequest: one instance per in-flight request; I resolve or reject it when the response arrives
+- JRPCMessageProcessor: I delegate incoming requests and notifications to it for handler dispatch
+
+Public API and Key Messages:
+- #startReadLoop - fork a background process at lowIOPriority to read messages continuously
+- #sendRequest:params: - send a JSON-RPC request; blocks caller until the response arrives
+- #sendNotification:params: - send a fire-and-forget notification (no response expected)
+- #close - terminate the read loop and transport
+- #waitForClose - block until the connection is closed (useful for scripting)
+
+Internal Representation:
+- transport - the ACPNdJsonTransport used for I/O
+- pendingRequests - Dictionary mapping request id → ACPPendingRequest
+- messageProcessor - JRPCMessageProcessor for dispatching incoming requests/notifications
+- id - monotonically increasing request ID counter
+- readProcess - the background Process running the read loop
+- isClosed - true once close has been called
+- closeSemaphore - signaled when the connection closes
+
+Implementation Points:
+- The read loop runs at lowIOPriority to keep the Pharo IDE responsive
+- Error in message processing sends a JSON-RPC error response back to the agent (for requests only)
+- On connection closed, all pending requests are rejected with code -32000
+"
 Class {
 	#name : 'ACPConnection',
 	#superclass : 'Object',

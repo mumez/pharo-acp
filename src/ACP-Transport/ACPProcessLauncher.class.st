@@ -1,3 +1,37 @@
+"
+I wrap OSSUnixSubprocess to launch and manage an ACP agent subprocess with stdin/stdout pipes.
+
+Responsibility:
+- I launch the agent process with configured command, arguments, working directory, and environment
+- I expose typed stream accessors for stdin (writer) and stdout (reader)
+- I perform graceful shutdown: close stdin → wait → SIGTERM → wait → SIGKILL
+- I sanitize environment variables that may contain WideStrings (e.g. Japanese chars in PATH)
+
+Collaborators:
+- OSSUnixSubprocess: the underlying subprocess I configure and run
+- ACPNdJsonTransport: reads my stdinStream/stdoutStream after launch
+- ACPClient: configures me and calls #launch / #terminate
+
+Public API and Key Messages:
+- #launch - start the subprocess; terminates any previously running process first
+- #terminate - graceful shutdown with escalation (stdin close → SIGTERM → SIGKILL)
+- #stdinStream - returns the stdin writer for sending data to the agent
+- #stdoutStream - returns the stdout reader for receiving agent output
+- #isRunning - true if the subprocess is alive
+- #command: / #arguments: / #workingDirectory: - configure before calling #launch
+
+Internal Representation:
+- command - executable path string
+- arguments - Array of argument strings
+- workingDirectory - optional working directory string
+- envVariables - Dictionary of custom environment variable overrides
+- process - the OSSUnixSubprocess instance
+
+Implementation Points:
+- OSSubprocess memCopy fails on WideStrings; #ensureByteString: converts them to UTF-8 ByteStrings before passing to OSSUnixSubprocess
+- The full parent environment is copied first, then custom variables are overlaid
+- #stdoutStream uses non-blocking pipes; ACPNdJsonTransport polls for data with a delay
+"
 Class {
 	#name : 'ACPProcessLauncher',
 	#superclass : 'Object',
