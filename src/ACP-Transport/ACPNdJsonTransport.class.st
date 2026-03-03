@@ -1,3 +1,35 @@
+"
+I implement newline-delimited JSON (ndjson) framing over a pair of read/write streams.
+
+Responsibility:
+- I serialize Dictionaries to UTF-8 JSON lines and write them to a write stream, protected by a Mutex
+- I read LF-terminated lines from a read stream, buffering partial reads, and parse them as JSON
+- I handle non-blocking OSSPipe reads by polling with a configurable delay instead of blocking
+
+Collaborators:
+- ACPProcessLauncher: provides the stdin/stdout streams I wrap
+- ACPConnection: calls #readMessage and #writeMessage on me
+
+Public API and Key Messages:
+- #readMessage - read and parse the next JSON line; returns a Dictionary or nil on close
+- #writeMessage: - serialize aDictionary as a JSON line and flush; mutex-protected
+- #close - mark as closed and close the write stream
+- #pollDelay: - configure polling interval for non-blocking pipes (default 500ms)
+
+Internal Representation:
+- writeStream / readStream - the underlying I/O streams
+- writeMutex - Mutex protecting concurrent writes
+- readBuffer - ByteArray accumulating partial line data between polls
+- isClosed - true once close has been called
+- pollDelay - Duration to wait when no data is available on a non-blocking pipe
+- useAtEnd - false for OSSPipe (atEnd is unreliable); true for regular streams
+
+Implementation Points:
+- OSSPipe does not reliably report atEnd when data is temporarily unavailable; useAtEnd: false skips the check
+- Streams are set to binary mode so UTF-8 ByteArrays are exchanged without re-encoding
+- Empty lines in the ndjson stream are silently skipped
+- A Mutex is required because multiple Pharo processes may call #writeMessage: concurrently
+"
 Class {
 	#name : 'ACPNdJsonTransport',
 	#superclass : 'Object',

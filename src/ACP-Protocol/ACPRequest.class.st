@@ -1,3 +1,18 @@
+"
+I am a simple value object pairing an ACP method name with its parameters dictionary.
+
+Responsibility:
+- I carry a method name string and a params dictionary for one ACP JSON-RPC call
+- I provide named factory methods for every ACP operation, reading method name constants from ACPConstants
+
+Collaborators:
+- ACPConstants (SharedPool): I read ACP method name constants (ACPMethodInitialize, ACPMethodSessionPrompt, etc.)
+- ACPClientConnection: creates me and passes my method/params to ACPConnection
+
+Public API and Key Messages:
+- #initialize: / #newSession: / #prompt: / #cancel: / #loadSession: / #authenticate: etc. - named constructors for each ACP operation
+- #method / #params - accessors for the constructed values
+"
 Class {
 	#name : 'ACPRequest',
 	#superclass : 'Object',

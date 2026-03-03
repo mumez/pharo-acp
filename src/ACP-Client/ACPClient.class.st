@@ -1,3 +1,33 @@
+"
+I am the user-facing facade for connecting to and communicating with an ACP-compatible coding agent.
+
+Responsibility:
+- I assemble and wire together all layers (ACPProcessLauncher, ACPNdJsonTransport, ACPConnection, ACPClientConnection) on #connect
+- I delegate all ACP protocol calls (prompt, cancel, newSession, initialize) to my ACPClientConnection
+- I manage the agent subprocess lifecycle: launch on connect, graceful shutdown on disconnect
+
+Collaborators:
+- ACPProcessLauncher: I configure and launch the agent subprocess
+- ACPNdJsonTransport: transport layer wrapping the subprocess pipes
+- ACPConnection: bidirectional JSON-RPC engine
+- ACPClientConnection: ACP protocol methods layer
+- ACPClientHandler: receives agent-initiated callbacks; defaults to ACPTranscriptHandler
+
+Public API and Key Messages:
+- #connect - launch subprocess and start the read loop
+- #disconnect - close connection and terminate subprocess
+- #prompt: / #promptBy: - send a prompt to the agent (blocks caller; fork if used from UI)
+- #newSession: / #newSessionBy: - start a new session
+- #cancel: / #cancelBy: - cancel the current prompt
+- #agentCommand:arguments: - configure the agent executable and its arguments
+- #workingDirectory: - set the agent working directory
+- #environmentAt:put: - add environment variables for the subprocess
+
+Implementation Points:
+- #connect is synchronous; call it from a forked process when used from a Pharo UI tool
+- #handler defaults to ACPTranscriptHandler if not set before connecting
+- #initialize: and #initializeBy: perform the ACP handshake after connecting
+"
 Class {
 	#name : 'ACPClient',
 	#superclass : 'Object',
