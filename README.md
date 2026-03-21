@@ -36,7 +36,7 @@ You need an ACP-compatible agent installed. Currently tested with:
 - [claude-code-acp](https://github.com/zed-industries/claude-agent-acp) — `claude-code-acp`
 - [OpenCode](https://github.com/anomalyco/opencode) — `opencode acp`
 - [Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) — `copilot --acp --stdio`
-- [Codex](https://github.com/zed-industries/codex-acp) — `codex-acp`
+- [codex-acp](https://github.com/zed-industries/codex-acp) — `codex-acp`
 
 
 ```smalltalk
