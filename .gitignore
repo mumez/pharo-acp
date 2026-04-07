@@ -6,3 +6,6 @@ openspec/
 .cursor/
 .windsurf/
 .git/
+.pharo/
+*.xml
+crash.dmp
