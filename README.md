@@ -33,7 +33,7 @@ Metacello new
 You need an ACP-compatible agent installed. Currently tested with:
 
 - [Gemini CLI](https://github.com/google-gemini/gemini-cli) — `gemini --acp`
-- [claude-agent-mcp](https://github.com/agentclientprotocol/claude-agent-acp) — `claude-agent-mcp`
+- [claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp) — `claude-agent-acp`
 - [OpenCode](https://github.com/anomalyco/opencode) — `opencode acp`
 - [Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) — `copilot --acp --stdio`
 - [codex-acp](https://github.com/zed-industries/codex-acp) — `codex-acp`
@@ -44,8 +44,8 @@ client := ACPClient new.
 
 "Use Gemini CLI:"
 client agentCommand: '/usr/bin/env' arguments: #('gemini' '--acp').
-"Or claude-agent-mcp:"
-"client agentCommand: '/usr/bin/env' arguments: #('claude-agent-mcp')."
+"Or claude-agent-acp:"
+"client agentCommand: '/usr/bin/env' arguments: #('claude-agent-acp')."
 
 client connect.
 
