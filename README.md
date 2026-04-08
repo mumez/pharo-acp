@@ -38,6 +38,7 @@ You need an ACP-compatible agent installed. Currently tested with:
 - [Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) — `copilot --acp --stdio`
 - [codex-acp](https://github.com/zed-industries/codex-acp) — `codex-acp`
 
+> **Note:** Before connecting from Pharo, configure each agent CLI directly: log in, set your API key, default model, and any required environment variables (e.g. `GEMINI_API_KEY`, `GEMINI_MODEL` for Gemini CLI).
 
 ```smalltalk
 client := ACPClient new.
