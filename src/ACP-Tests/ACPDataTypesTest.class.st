@@ -290,6 +290,58 @@ ACPDataTypesTest >> testPromptParamsAudioPromptBuilder [
 ]
 
 { #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsResourceTextPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourcePrompt: 'file:///tmp/foo.txt' text: 'hello' mimeType: 'text/plain'.
+	block := opts prompt first.
+	self assert: (block at: 'type') equals: 'resource'.
+	self assert: (block at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (block at: 'text') equals: 'hello'.
+	self assert: (block at: 'mimeType') equals: 'text/plain'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsResourceTextPromptBuilderNoMimeType [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourcePrompt: 'file:///tmp/foo.txt' text: 'hello'.
+	block := opts prompt first.
+	self assert: (block at: 'type') equals: 'resource'.
+	self assert: (block at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (block at: 'text') equals: 'hello'.
+	self deny: (block includesKey: 'mimeType')
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsResourceBlobPromptBuilder [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourcePrompt: 'file:///tmp/img.png' blob: 'base64data' mimeType: 'image/png'.
+	block := opts prompt first.
+	self assert: (block at: 'type') equals: 'resource'.
+	self assert: (block at: 'uri') equals: 'file:///tmp/img.png'.
+	self assert: (block at: 'blob') equals: 'base64data'.
+	self assert: (block at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - prompt builder' }
+ACPDataTypesTest >> testPromptParamsResourceBlobPromptBuilderNoMimeType [
+
+	| opts block |
+	opts := ACPPromptParams new.
+	opts resourcePrompt: 'file:///tmp/img.png' blob: 'base64data'.
+	block := opts prompt first.
+	self assert: (block at: 'type') equals: 'resource'.
+	self assert: (block at: 'uri') equals: 'file:///tmp/img.png'.
+	self assert: (block at: 'blob') equals: 'base64data'.
+	self deny: (block includesKey: 'mimeType')
+]
+
+{ #category : 'tests - prompt builder' }
 ACPDataTypesTest >> testPromptParamsResourceLinkPromptBuilder [
 
 	| opts block |
@@ -492,6 +544,54 @@ ACPDataTypesTest >> testContentBlockImage [
 	self assert: (dict at: 'type') equals: 'image'.
 	self assert: (dict at: 'data') equals: 'base64abc'.
 	self assert: (dict at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceTextWithMimeType [
+
+	| block dict |
+	block := ACPContentBlock resource: 'file:///tmp/foo.txt' text: 'hello' mimeType: 'text/plain'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'resource'.
+	self assert: (dict at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (dict at: 'text') equals: 'hello'.
+	self assert: (dict at: 'mimeType') equals: 'text/plain'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceTextNoMimeType [
+
+	| block dict |
+	block := ACPContentBlock resource: 'file:///tmp/foo.txt' text: 'hello'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'resource'.
+	self assert: (dict at: 'uri') equals: 'file:///tmp/foo.txt'.
+	self assert: (dict at: 'text') equals: 'hello'.
+	self deny: (dict includesKey: 'mimeType')
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceBlobWithMimeType [
+
+	| block dict |
+	block := ACPContentBlock resource: 'file:///tmp/img.png' blob: 'base64data' mimeType: 'image/png'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'resource'.
+	self assert: (dict at: 'uri') equals: 'file:///tmp/img.png'.
+	self assert: (dict at: 'blob') equals: 'base64data'.
+	self assert: (dict at: 'mimeType') equals: 'image/png'
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentBlockResourceBlobNoMimeType [
+
+	| block dict |
+	block := ACPContentBlock resource: 'file:///tmp/img.png' blob: 'base64data'.
+	dict := block asDictionary.
+	self assert: (dict at: 'type') equals: 'resource'.
+	self assert: (dict at: 'uri') equals: 'file:///tmp/img.png'.
+	self assert: (dict at: 'blob') equals: 'base64data'.
+	self deny: (dict includesKey: 'mimeType')
 ]
 
 { #category : 'tests - content block' }
