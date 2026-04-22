@@ -631,3 +631,101 @@ ACPDataTypesTest >> testContentBlockText [
 	self assert: content type equals: 'text'.
 	self assert: content text equals: 'hello'
 ]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionBooleanFromDictionary [
+
+	| opt |
+	opt := ACPConfigOption fromDictionary: {
+		       ('id' -> 'autoApprove').
+		       ('name' -> 'Auto Approve').
+		       ('type' -> 'boolean').
+		       ('currentValue' -> true) } asDictionary.
+	self assert: opt id equals: 'autoApprove'.
+	self assert: opt name equals: 'Auto Approve'.
+	self assert: opt type equals: 'boolean'.
+	self assert: opt currentValue equals: true.
+	self assert: opt isBoolean.
+	self deny: opt isSelect
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionSelectFromDictionary [
+
+	| opt options |
+	opt := ACPConfigOption fromDictionary: {
+		       ('id' -> 'model').
+		       ('name' -> 'Model').
+		       ('type' -> 'select').
+		       ('currentValue' -> 'claude-3').
+		       ('options' -> {
+			        { ('value' -> 'claude-3'). ('name' -> 'Claude 3') } asDictionary.
+			        { ('value' -> 'claude-4'). ('name' -> 'Claude 4') } asDictionary }
+			        asOrderedCollection) } asDictionary.
+	self assert: opt id equals: 'model'.
+	self assert: opt type equals: 'select'.
+	self assert: opt currentValue equals: 'claude-3'.
+	self assert: opt isSelect.
+	options := opt options.
+	self assert: options size equals: 2.
+	self assert: options first class equals: ACPConfigSelectOption.
+	self assert: options first value equals: 'claude-3'.
+	self assert: options first name equals: 'Claude 3'
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionSelectWithGroupsFromDictionary [
+
+	| opt groups |
+	opt := ACPConfigOption fromDictionary: {
+		       ('id' -> 'theme').
+		       ('name' -> 'Theme').
+		       ('type' -> 'select').
+		       ('currentValue' -> 'dark').
+		       ('options' -> {
+			        {
+				        ('group' -> 'basic').
+				        ('name' -> 'Basic Themes').
+				        ('options' -> {
+					         { ('value' -> 'dark'). ('name' -> 'Dark') } asDictionary.
+					         { ('value' -> 'light'). ('name' -> 'Light') } asDictionary }
+					         asOrderedCollection) } asDictionary }
+			        asOrderedCollection) } asDictionary.
+	groups := opt options.
+	self assert: groups size equals: 1.
+	self assert: groups first class equals: ACPConfigSelectGroup.
+	self assert: groups first group equals: 'basic'.
+	self assert: groups first name equals: 'Basic Themes'.
+	self assert: groups first options size equals: 2.
+	self assert: groups first options first value equals: 'dark'
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionOptionalFieldsAbsent [
+
+	| opt |
+	opt := ACPConfigOption fromDictionary: {
+		       ('id' -> 'flag').
+		       ('name' -> 'Flag').
+		       ('type' -> 'boolean').
+		       ('currentValue' -> false) } asDictionary.
+	self assert: opt description isNil.
+	self assert: opt category isNil.
+	self assert: opt options isEmpty
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionWithCategoryAndDescription [
+
+	| opt |
+	opt := ACPConfigOption fromDictionary: {
+		       ('id' -> 'model').
+		       ('name' -> 'Model').
+		       ('type' -> 'select').
+		       ('currentValue' -> 'opus').
+		       ('category' -> 'model').
+		       ('description' -> 'Choose AI model').
+		       ('options' -> OrderedCollection new) } asDictionary.
+	self assert: opt category equals: 'model'.
+	self assert: opt description equals: 'Choose AI model'
+]
