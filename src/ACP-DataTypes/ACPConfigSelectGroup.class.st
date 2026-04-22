@@ -15,7 +15,7 @@ ACPConfigSelectGroup class >> fromDictionary: aDictionary [
 		rawCopy
 			at: 'options'
 			put: (opts collect: [ :each |
-				(each isKindOf: Dictionary)
+				each isDictionary
 					ifTrue: [ ACPConfigSelectOption fromDictionary: each ]
 					ifFalse: [ each ] ]) ].
 	instance := self new rawValues: rawCopy.

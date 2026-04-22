@@ -46,6 +46,12 @@ ACPRequest class >> initialize: aParamsOrDictionary [
 ]
 
 { #category : 'instance creation' }
+ACPRequest class >> listSessions: aParamsOrDictionary [
+
+	^ self method: ACPMethodSessionList params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
 ACPRequest class >> loadSession: aParamsOrDictionary [
 
 	^ self method: ACPMethodSessionLoad params: aParamsOrDictionary asDictionary

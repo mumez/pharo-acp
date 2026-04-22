@@ -187,6 +187,63 @@ ACPDataTypesTest >> testInitializeResponseFromDictionary [
 ]
 
 { #category : 'tests - result' }
+ACPDataTypesTest >> testListSessionsResponseFromDictionary [
+
+	| resp sessions |
+	resp := ACPListSessionsResponse fromDictionary: {
+		        ('sessions' -> {
+			         { ('sessionId' -> 'abc'). ('cwd' -> '/home/user') } asDictionary.
+			         { ('sessionId' -> 'def'). ('cwd' -> '/tmp'). ('title' -> 'My Session') } asDictionary }
+			         asOrderedCollection).
+		        ('nextCursor' -> 'tok123') } asDictionary.
+	sessions := resp sessions.
+	self assert: sessions size equals: 2.
+	self assert: sessions first class equals: ACPSessionInfo.
+	self assert: sessions first sessionId equals: 'abc'.
+	self assert: sessions last title equals: 'My Session'.
+	self assert: resp nextCursor equals: 'tok123'.
+	self assert: resp hasNextPage
+]
+
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testListSessionsResponseNoNextCursor [
+
+	| resp |
+	resp := ACPListSessionsResponse fromDictionary: {
+		        ('sessions' -> OrderedCollection new) } asDictionary.
+	self assert: resp sessions isEmpty.
+	self assert: resp nextCursor isNil.
+	self deny: resp hasNextPage
+]
+
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testSessionInfoFields [
+
+	| info |
+	info := ACPSessionInfo fromDictionary: {
+		        ('sessionId' -> 'abc-123').
+		        ('cwd' -> '/home/user/project').
+		        ('title' -> 'My Session').
+		        ('updatedAt' -> '2026-04-22T10:00:00Z') } asDictionary.
+	self assert: info sessionId equals: 'abc-123'.
+	self assert: info cwd equals: '/home/user/project'.
+	self assert: info title equals: 'My Session'.
+	self assert: info updatedAt equals: '2026-04-22T10:00:00Z'
+]
+
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testListSessionsParamsAsDictionary [
+
+	| params dict |
+	params := ACPListSessionsParams new.
+	params cwd: '/home/user'.
+	params cursor: 'tok456'.
+	dict := params asDictionary.
+	self assert: (dict at: 'cwd') equals: '/home/user'.
+	self assert: (dict at: 'cursor') equals: 'tok456'
+]
+
+{ #category : 'tests - result' }
 ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 
 	| resp |

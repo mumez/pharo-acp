@@ -56,6 +56,24 @@ ACPRequestTest >> testInitializeFactoryWithRawDictionary [
 ]
 
 { #category : 'tests' }
+ACPRequestTest >> testListSessionsFactory [
+
+	| request |
+	request := ACPRequest listSessions: (ACPListSessionsParams buildBy: [ :p |
+			           p cwd: '/home/user/project' ]).
+	self assert: request method equals: 'session/list'.
+	self assert: (request params at: 'cwd') equals: '/home/user/project'
+]
+
+{ #category : 'tests' }
+ACPRequestTest >> testListSessionsFactoryEmptyParams [
+
+	| request |
+	request := ACPRequest listSessions: Dictionary new.
+	self assert: request method equals: 'session/list'
+]
+
+{ #category : 'tests' }
 ACPRequestTest >> testLoadSessionFactory [
 
 	| request |
