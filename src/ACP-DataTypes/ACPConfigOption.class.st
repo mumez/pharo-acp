@@ -5,26 +5,6 @@ Class {
 	#package : 'ACP-DataTypes'
 }
 
-{ #category : 'instance creation' }
-ACPConfigOption class >> fromDictionary: aDictionary [
-
-	| instance opts rawCopy |
-	rawCopy := aDictionary copy.
-	opts := aDictionary at: 'options' ifAbsent: [ nil ].
-	opts ifNotNil: [
-		rawCopy
-			at: 'options'
-			put: (opts collect: [ :each |
-				each isDictionary
-					ifTrue: [
-						(each includesKey: 'group')
-							ifTrue: [ ACPConfigSelectGroup fromDictionary: each ]
-							ifFalse: [ ACPConfigSelectOption fromDictionary: each ] ]
-					ifFalse: [ each ] ]) ].
-	instance := self new rawValues: rawCopy.
-	^ instance
-]
-
 { #category : 'accessing' }
 ACPConfigOption >> id [
 
@@ -64,7 +44,13 @@ ACPConfigOption >> currentValue [
 { #category : 'accessing' }
 ACPConfigOption >> options [
 
-	^ self rawValues at: 'options' ifAbsent: [ #() ]
+	^ (self rawValues at: 'options' ifAbsent: [ #() ]) collect: [ :each |
+		each isDictionary
+			ifTrue: [
+				(each includesKey: 'group')
+					ifTrue: [ ACPConfigSelectGroup fromDictionary: each ]
+					ifFalse: [ ACPConfigSelectOption fromDictionary: each ] ]
+			ifFalse: [ each ] ]
 ]
 
 { #category : 'testing' }
