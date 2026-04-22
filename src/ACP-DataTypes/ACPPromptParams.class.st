@@ -61,6 +61,42 @@ ACPPromptParams >> imagePrompt: aBase64String mimeType: aMimeType setting: aBloc
 ]
 
 { #category : 'builder' }
+ACPPromptParams >> resourcePrompt: aUri blob: aContent [
+	^ self resourcePrompt: aUri blob: aContent mimeType: nil
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourcePrompt: aUri blob: aContent mimeType: aMimeType [
+	^ self resourcePrompt: aUri blob: aContent mimeType: aMimeType setting: [ :cb | ]
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourcePrompt: aUri blob: aContent mimeType: aMimeType setting: aBlock [
+	| contBlock |
+	contBlock := self contentBlockClass resource: aUri blob: aContent mimeType: aMimeType.
+	aBlock value: contBlock.
+	self prompt: (self prompt , { contBlock asDictionary })
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourcePrompt: aUri text: aContent [
+	^ self resourcePrompt: aUri text: aContent mimeType: nil
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourcePrompt: aUri text: aContent mimeType: aMimeType [
+	^ self resourcePrompt: aUri text: aContent mimeType: aMimeType setting: [ :cb | ]
+]
+
+{ #category : 'builder' }
+ACPPromptParams >> resourcePrompt: aUri text: aContent mimeType: aMimeType setting: aBlock [
+	| contBlock |
+	contBlock := self contentBlockClass resource: aUri text: aContent mimeType: aMimeType.
+	aBlock value: contBlock.
+	self prompt: (self prompt , { contBlock asDictionary })
+]
+
+{ #category : 'builder' }
 ACPPromptParams >> resourceLinkPrompt: aUri name: aName [
 	^ self resourceLinkPrompt: aUri name: aName setting: [ :cb | ]
 ]

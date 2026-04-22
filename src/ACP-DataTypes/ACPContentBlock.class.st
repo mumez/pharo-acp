@@ -45,6 +45,38 @@ ACPContentBlock class >> image: aBase64String mimeType: aMimeType [
 ]
 
 { #category : 'instance creation' }
+ACPContentBlock class >> resource: aUri blob: aContent [
+
+	^ self resource: aUri blob: aContent mimeType: nil
+]
+
+{ #category : 'instance creation' }
+ACPContentBlock class >> resource: aUri blob: aContent mimeType: aMimeType [
+
+	^ self buildBy: [ :b |
+		b type: 'resource'.
+		b uri: aUri.
+		b blob: aContent.
+		b mimeType: aMimeType ]
+]
+
+{ #category : 'instance creation' }
+ACPContentBlock class >> resource: aUri text: aContent [
+
+	^ self resource: aUri text: aContent mimeType: nil
+]
+
+{ #category : 'instance creation' }
+ACPContentBlock class >> resource: aUri text: aContent mimeType: aMimeType [
+
+	^ self buildBy: [ :b |
+		b type: 'resource'.
+		b uri: aUri.
+		b text: aContent.
+		b mimeType: aMimeType ]
+]
+
+{ #category : 'instance creation' }
 ACPContentBlock class >> resourceLink: aUri name: aName [
 
 	^ self buildBy: [ :b |
@@ -68,6 +100,18 @@ ACPContentBlock >> asDictionary [
 ]
 
 { #category : 'accessing' }
+ACPContentBlock >> blob [
+
+	^ self rawValues at: 'blob' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> blob: aString [
+
+	self rawValues at: 'blob' put: aString
+]
+
+{ #category : 'accessing' }
 ACPContentBlock >> data [
 
 	^ self rawValues at: 'data' ifAbsent: []
@@ -88,6 +132,7 @@ ACPContentBlock >> mimeType [
 { #category : 'accessing' }
 ACPContentBlock >> mimeType: aString [
 
+	aString ifNil: [ ^ self ].
 	self rawValues at: 'mimeType' put: aString
 ]
 

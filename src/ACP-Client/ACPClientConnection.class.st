@@ -135,6 +135,21 @@ ACPClientConnection >> initializeBy: aBlock [
 ]
 
 { #category : 'api' }
+ACPClientConnection >> listSessions: aParamsOrDictionary [
+
+	| request result |
+	request := ACPRequest listSessions: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	^ ACPListSessionsResponse fromDictionary: result
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> listSessionsBy: aBlock [
+
+	^ self listSessions: (ACPListSessionsParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
 ACPClientConnection >> loadSession: aParamsOrDictionary [
 
 	| request result |
