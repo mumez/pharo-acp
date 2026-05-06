@@ -786,3 +786,43 @@ ACPDataTypesTest >> testConfigOptionWithCategoryAndDescription [
 	self assert: opt category equals: 'model'.
 	self assert: opt description equals: 'Choose AI model'
 ]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionCategoryPredicates [
+
+	| model mode thoughtLevel |
+	model := ACPConfigOption fromDictionary: { ('category' -> 'model') }
+		         asDictionary.
+	mode := ACPConfigOption fromDictionary: { ('category' -> 'mode') }
+		        asDictionary.
+	thoughtLevel := ACPConfigOption fromDictionary:
+		                { ('category' -> 'thought_level') } asDictionary.
+
+	self assert: model isModelCategory.
+	self deny: model isModeCategory.
+	self deny: model isThoughtLevelCategory.
+
+	self assert: mode isModeCategory.
+	self deny: mode isModelCategory.
+	self deny: mode isThoughtLevelCategory.
+
+	self assert: thoughtLevel isThoughtLevelCategory.
+	self deny: thoughtLevel isModelCategory.
+	self deny: thoughtLevel isModeCategory
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionCategoryMutators [
+
+	| opt |
+	opt := ACPConfigOption new.
+
+	opt beModelCategory.
+	self assert: opt category equals: 'model'.
+
+	opt beModeCategory.
+	self assert: opt category equals: 'mode'.
+
+	opt beThoughtLevelCategory.
+	self assert: opt category equals: 'thought_level'
+]

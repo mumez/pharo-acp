@@ -120,3 +120,57 @@ ACPClientConnectionTest >> testSessionUpdateIsDelegatedToHandler [
 	self assert: handler lastUpdate class equals: ACPSessionUpdate.
 	self assert: handler lastUpdate sessionId equals: 'sess-001'
 ]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testSetSessionConfigOptionReturnsBaseSessionResponse [
+
+	| request sem result |
+	sem := Semaphore new.
+	connection startReadLoop.
+
+	[ result := clientConnection setSessionConfigOption:
+		          (ACPSetSessionConfigOptionParams buildBy: [ :p |
+			           p sessionId: 'sess-001'.
+			           p configId: 'model'.
+			           p value: 'model-1' ]).
+	sem signal ] forkAt: Processor userBackgroundPriority.
+
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/set_config_option'.
+	agentTransport writeMessage: (self setConfigOptionResponseFor: request).
+
+	sem wait.
+	self assertSetConfigOptionResult: result
+]
+
+{ #category : 'private' }
+ACPClientConnectionTest >> assertSetConfigOptionResult: result [
+
+	self assert: result class equals: ACPBaseSessionResponse.
+	self assert: result configOptions size equals: 2.
+	self assert: (result configOptions second at: 'id') equals: 'model'.
+	self assert: (result configOptions second at: 'currentValue') equals: 'model-1'
+]
+
+{ #category : 'private' }
+ACPClientConnectionTest >> setConfigOptionResponseFor: request [
+
+	^ {
+		  ('jsonrpc' -> '2.0').
+		  ('id' -> (request at: 'id')).
+		  ('result' -> {
+			   ('configOptions' -> {
+			    {
+				    ('id' -> 'mode').
+				    ('name' -> 'Session Mode').
+				    ('type' -> 'select').
+				    ('currentValue' -> 'code').
+				    ('options' -> #()) } asDictionary.
+			    {
+				    ('id' -> 'model').
+				    ('name' -> 'Model').
+				    ('type' -> 'select').
+				    ('currentValue' -> 'model-1').
+				    ('options' -> #()) } asDictionary } asArray) } asDictionary) }
+		  asDictionary
+]

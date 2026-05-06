@@ -175,6 +175,18 @@ ACPClient >> prompt: aParamsOrDictionary [
 	^ self clientConnection prompt: aParamsOrDictionary
 ]
 
+{ #category : 'api' }
+ACPClient >> setSessionConfigOption: aParamsOrDictionary [
+
+	^ self clientConnection setSessionConfigOption: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> setSessionConfigOptionBy: aBlock [
+
+	^ self clientConnection setSessionConfigOptionBy: aBlock
+]
+
 { #category : 'api - builder' }
 ACPClient >> promptBy: aBlock [
 
