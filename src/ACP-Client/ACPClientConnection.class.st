@@ -262,9 +262,10 @@ ACPClientConnection >> registerTerminalHandlers [
 { #category : 'api' }
 ACPClientConnection >> setSessionConfigOption: aParamsOrDictionary [
 
-	| request |
+	| request result |
 	request := ACPRequest setSessionConfigOption: aParamsOrDictionary.
-	^ self connection sendRequest: request method params: request params
+	result := self connection sendRequest: request method params: request params.
+	^ ACPBaseSessionResponse fromDictionary: result
 ]
 
 { #category : 'api - builder' }
