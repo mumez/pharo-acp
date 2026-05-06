@@ -30,6 +30,12 @@ ACPConfigOption >> category [
 ]
 
 { #category : 'accessing' }
+ACPConfigOption >> category: aString [
+
+	self rawValues at: 'category' put: aString
+]
+
+{ #category : 'accessing' }
 ACPConfigOption >> type [
 
 	^ self rawValues at: 'type' ifAbsent: []
@@ -65,3 +71,41 @@ ACPConfigOption >> isBoolean [
 	^ self type = 'boolean'
 ]
 
+{ #category : 'testing' }
+ACPConfigOption >> isModelCategory [
+
+	^ self category = 'model'
+]
+
+{ #category : 'testing' }
+ACPConfigOption >> isModeCategory [
+
+	^ self category = 'mode'
+]
+
+{ #category : 'testing' }
+ACPConfigOption >> isThoughtLevelCategory [
+
+	^ self category = 'thought_level'
+]
+
+{ #category : 'accessing' }
+ACPConfigOption >> beModelCategory [
+
+	self category: 'model'.
+	^ self
+]
+
+{ #category : 'accessing' }
+ACPConfigOption >> beModeCategory [
+
+	self category: 'mode'.
+	^ self
+]
+
+{ #category : 'accessing' }
+ACPConfigOption >> beThoughtLevelCategory [
+
+	self category: 'thought_level'.
+	^ self
+]

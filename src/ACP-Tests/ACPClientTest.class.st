@@ -52,7 +52,9 @@ ACPClientTest >> testRespondsToBuilderMethods [
 	self assert: (client respondsTo: #initializeBy:).
 	self assert: (client respondsTo: #newSessionBy:).
 	self assert: (client respondsTo: #promptBy:).
-	self assert: (client respondsTo: #cancelBy:)
+	self assert: (client respondsTo: #cancelBy:).
+	self assert: (client respondsTo: #setSessionConfigOption:).
+	self assert: (client respondsTo: #setSessionConfigOptionBy:)
 ]
 
 { #category : 'tests' }
