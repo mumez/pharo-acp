@@ -265,8 +265,6 @@ ACPClientConnection >> setSessionConfigOption: aParamsOrDictionary [
 	| request result |
 	request := ACPRequest setSessionConfigOption: aParamsOrDictionary.
 	result := self connection sendRequest: request method params: request params.
-	"`session/set_config_option` is modeled as a generic base response because it is
-	defined around configOptions, not session setup payload shape."
 	^ ACPBaseSessionResponse fromDictionary: result
 ]
 
