@@ -126,7 +126,16 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 
 	^ aDictionary
 		  at: propName
-		  ifPresent: [ :coll | coll collect: [ :each | valueClass fromDictionary: each ] ]
+		  ifPresent: [ :coll |
+			  ((coll isCollection and: [ coll isString not ])
+				   and: [ coll isDictionary not ])
+				  ifFalse: [ #() ]
+				  ifTrue: [
+					  (coll select: [ :each |
+						   each isDictionary or: [ each isKindOf: valueClass ] ]) collect: [ :each |
+						  each isDictionary
+							  ifTrue: [ valueClass fromDictionary: each ]
+							  ifFalse: [ each ] ] ] ]
 		  ifAbsentPut: [ #() ]
 ]
 

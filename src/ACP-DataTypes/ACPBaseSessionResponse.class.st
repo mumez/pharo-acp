@@ -8,54 +8,37 @@ Class {
 { #category : 'accessing' }
 ACPBaseSessionResponse >> configOptions [
 
-	^ self typedValuesAt: 'configOptions' typed: ACPConfigOption
+	^ self valuesAt: 'configOptions' typed: ACPConfigOption in: self rawValues
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> models [
 
-	| rawModels |
+	| rawModels valuesDict |
 	rawModels := self rawValues at: 'models' ifAbsent: [ ^ #() ].
 	rawModels ifNil: [ ^ #() ].
 	rawModels isDictionary ifTrue: [
 		rawModels := rawModels at: 'availableModels' ifAbsent: [ #() ] ].
-	^ self typedCollectionFrom: rawModels typed: ACPSessionModel
+	valuesDict := Dictionary newFrom: self rawValues.
+	valuesDict at: 'models' put: rawModels.
+	^ self valuesAt: 'models' typed: ACPSessionModel in: valuesDict
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> modes [
 
-	| rawModes |
+	| rawModes valuesDict |
 	rawModes := self rawValues at: 'modes' ifAbsent: [ ^ #() ].
 	rawModes ifNil: [ ^ #() ].
 	rawModes isDictionary ifTrue: [
 		rawModes := rawModes at: 'availableModes' ifAbsent: [ #() ] ].
-	^ self typedCollectionFrom: rawModes typed: ACPSessionMode
+	valuesDict := Dictionary newFrom: self rawValues.
+	valuesDict at: 'modes' put: rawModes.
+	^ self valuesAt: 'modes' typed: ACPSessionMode in: valuesDict
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> sessionId [
 
 	^ self rawValues at: 'sessionId' ifAbsent: []
-]
-
-{ #category : 'private' }
-ACPBaseSessionResponse >> typedCollectionFrom: rawCollection typed: valueClass [
-
-	((rawCollection isCollection and: [ rawCollection isString not ])
-		 and: [ rawCollection isDictionary not ])
-		ifFalse: [ ^ #() ].
-	^ (rawCollection select: [ :each |
-		   each isDictionary or: [ each isKindOf: valueClass ] ]) collect: [ :each |
-		  each isDictionary
-			  ifTrue: [ valueClass fromDictionary: each ]
-			  ifFalse: [ each ] ]
-]
-
-{ #category : 'private' }
-ACPBaseSessionResponse >> typedValuesAt: propName typed: valueClass [
-
-	^ self
-		  typedCollectionFrom: (self rawValues at: propName ifAbsent: [ #() ])
-		  typed: valueClass
 ]
