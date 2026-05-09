@@ -126,53 +126,58 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 
 	^ aDictionary
 		  at: propName
-		  ifPresent: [ :coll |
-			  self dataTypeValuesFromCollection: coll for: valueClass ]
+		  ifPresent: [ :rawPluralFieldValue |
+			  self
+				  dataTypeValuesFromCollection: rawPluralFieldValue
+				  for: valueClass ]
 		  ifAbsentPut: [ #() ]
 ]
 
 { #category : 'private' }
-ACPValues >> dataTypeValuesFromCollection: rawCollection for: valueClass [
+ACPValues >> dataTypeValuesFromCollection: collectionValue for: valueClass [
 
-	^ (self dataTypeCollectionEntriesFrom: rawCollection for: valueClass) collect: [ :each |
-		  self dataTypeValueFrom: each for: valueClass ]
+	^ (self dataTypeCollectionEntriesFrom: collectionValue for: valueClass) collect: [ :candidateEntry |
+		  self dataTypeValueFrom: candidateEntry for: valueClass ]
 ]
 
 { #category : 'private' }
-ACPValues >> dataTypeValuesSourceFrom: rawCollection [
+ACPValues >> dataTypeValuesSourceFrom: collectionValue [
 	"`valuesAt:` accessors represent array-like payload fields.
 	Non-collection values (including Dictionary and String) are treated as malformed
 	input and normalized to an empty collection."
 
-	((rawCollection isCollection and: [ rawCollection isString not ])
-		 and: [ rawCollection isDictionary not ])
+	((collectionValue isCollection and: [ collectionValue isString not ])
+		 and: [ collectionValue isDictionary not ])
 		ifFalse: [ ^ #() ].
-	^ rawCollection
+	^ collectionValue
 ]
 
 { #category : 'private' }
-ACPValues >> dataTypeCollectionEntriesFrom: rawCollection for: valueClass [
-	"`rawCollection` is already normalized to an array-like source.
+ACPValues >> dataTypeCollectionEntriesFrom: collectionValue for: valueClass [
+	"`collectionValue` is normalized to an array-like source first.
 	Here we validate each entry, not the container type."
 
-	^ (self dataTypeValuesSourceFrom: rawCollection) select: [ :each |
-		  self isSupportedDataTypeEntry: each for: valueClass ]
+	| normalizedArrayLikeCollection |
+	normalizedArrayLikeCollection := self
+		                                 dataTypeValuesSourceFrom: collectionValue.
+	^ normalizedArrayLikeCollection select: [ :candidateEntry |
+		  self isSupportedDataTypeEntry: candidateEntry for: valueClass ]
 ]
 
 { #category : 'private' }
-ACPValues >> dataTypeValueFrom: rawValue for: valueClass [
+ACPValues >> dataTypeValueFrom: dataTypeEntry for: valueClass [
 
-	rawValue isDictionary ifTrue: [ ^ valueClass fromDictionary: rawValue ].
-	^ rawValue
+	dataTypeEntry isDictionary ifTrue: [ ^ valueClass fromDictionary: dataTypeEntry ].
+	^ dataTypeEntry
 ]
 
 { #category : 'private' }
-ACPValues >> isSupportedDataTypeEntry: rawValue for: valueClass [
+ACPValues >> isSupportedDataTypeEntry: dataTypeEntry for: valueClass [
 	"Dictionary entries are valid payload elements and will be converted by
 	`dataTypeValueFrom:for:`. This is distinct from rejecting Dictionary as the
 	container itself in `dataTypeValuesSourceFrom:`."
 
-	^ rawValue isDictionary or: [ rawValue isKindOf: valueClass ]
+	^ dataTypeEntry isDictionary or: [ dataTypeEntry isKindOf: valueClass ]
 ]
 
 { #category : 'printing' }
