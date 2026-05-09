@@ -28,10 +28,11 @@ cd /workspace && smalltalkci -s Pharo64-12 .smalltalk.ston
 ## CI matrix and local expectations
 
 - GitHub Actions runs Pharo 12 and Pharo 13.
-- Local verification in this repository should use **Pharo64-12** as the baseline command above.
-- Pharo64-13 currently shows an intermittent VM crash in `ACPClientTest>>testDisconnectStopsProcess`
-  (inside OSSubprocess/deprecation handling). Treat this as an upstream/runtime issue unless your
-  change directly touches that area.
+- Both Pharo 12 and Pharo 13 are expected to pass in CI.
+- For local/cloud-agent verification, run Pharo 12 first as a quick baseline, then run Pharo 13
+  when your change may affect runtime/process behavior.
+- If a local/cloud-agent-only VM crash appears on Pharo 13 but CI is green, treat it as an
+  environment-specific flake and include logs in your report.
 
 ## Useful notes for contributors/agents
 
