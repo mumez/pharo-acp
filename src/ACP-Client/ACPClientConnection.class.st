@@ -155,7 +155,7 @@ ACPClientConnection >> loadSession: aParamsOrDictionary [
 	| request result |
 	request := ACPRequest loadSession: aParamsOrDictionary.
 	result := self connection sendRequest: request method params: request params.
-	^ ACPLoadSessionResponse fromDictionary: result
+	^ ACPSessionSetupResponse fromDictionary: result
 ]
 
 { #category : 'api - builder' }
@@ -170,7 +170,7 @@ ACPClientConnection >> newSession: aParamsOrDictionary [
 	| request result |
 	request := ACPRequest newSession: aParamsOrDictionary.
 	result := self connection sendRequest: request method params: request params.
-	^ ACPNewSessionResponse fromDictionary: result
+	^ ACPSessionSetupResponse fromDictionary: result
 ]
 
 { #category : 'api - builder' }

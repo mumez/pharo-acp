@@ -8,19 +8,7 @@ Class {
 { #category : 'accessing' }
 ACPBaseSessionResponse >> configOptions [
 
-	^ self rawValues at: 'configOptions' ifAbsent: []
-]
-
-{ #category : 'accessing' }
-ACPBaseSessionResponse >> models [
-
-	^ self rawValues at: 'models' ifAbsent: []
-]
-
-{ #category : 'accessing' }
-ACPBaseSessionResponse >> modes [
-
-	^ self rawValues at: 'modes' ifAbsent: []
+	^ self valuesAt: 'configOptions' typed: ACPConfigOption in: self rawValues
 ]
 
 { #category : 'accessing' }

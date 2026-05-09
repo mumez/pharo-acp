@@ -148,8 +148,9 @@ ACPClientConnectionTest >> assertSetConfigOptionResult: result [
 
 	self assert: result class equals: ACPBaseSessionResponse.
 	self assert: result configOptions size equals: 2.
-	self assert: (result configOptions second at: 'id') equals: 'model'.
-	self assert: (result configOptions second at: 'currentValue') equals: 'model-1'
+	self assert: result configOptions second class equals: ACPConfigOption.
+	self assert: result configOptions second id equals: 'model'.
+	self assert: result configOptions second currentValue equals: 'model-1'
 ]
 
 { #category : 'private' }

@@ -126,8 +126,52 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 
 	^ aDictionary
 		  at: propName
-		  ifPresent: [ :coll | coll collect: [ :each | valueClass fromDictionary: each ] ]
+		  ifPresent: [ :rawPluralFieldValue |
+			  self
+				  dataTypeValuesFromRawArrayLikeValue: rawPluralFieldValue
+				  for: valueClass ]
 		  ifAbsentPut: [ #() ]
+]
+
+{ #category : 'private' }
+ACPValues >> dataTypeValuesFromRawArrayLikeValue: rawArrayLikeValue for: valueClass [
+
+	| normalizedArrayLikeCollection |
+	normalizedArrayLikeCollection := self
+		                                 normalizedArrayLikeDataTypeSourceFrom: rawArrayLikeValue.
+	^ (normalizedArrayLikeCollection select: [ :candidateEntry |
+		   self isSupportedDataTypeEntry: candidateEntry for: valueClass ])
+		  collect: [ :candidateEntry |
+		  self dataTypeValueFrom: candidateEntry for: valueClass ]
+]
+
+{ #category : 'private' }
+ACPValues >> normalizedArrayLikeDataTypeSourceFrom: rawArrayLikeValue [
+	"`valuesAt:` accessors represent array-like payload fields.
+	Only sequenceable collections are accepted (e.g. Array/OrderedCollection).
+	Dictionary, String, and other non-sequenceable values are treated as malformed
+	input and normalized to an empty collection."
+
+	((rawArrayLikeValue isKindOf: SequenceableCollection)
+		 and: [ rawArrayLikeValue isString not ])
+		ifFalse: [ ^ #() ].
+	^ rawArrayLikeValue
+]
+
+{ #category : 'private' }
+ACPValues >> dataTypeValueFrom: dataTypeEntry for: valueClass [
+
+	dataTypeEntry isDictionary ifTrue: [ ^ valueClass fromDictionary: dataTypeEntry ].
+	^ dataTypeEntry
+]
+
+{ #category : 'private' }
+ACPValues >> isSupportedDataTypeEntry: dataTypeEntry for: valueClass [
+	"Dictionary entries are valid payload elements and will be converted by
+	`dataTypeValueFrom:for:`. This is distinct from rejecting Dictionary as the
+	container itself in `normalizedArrayLikeDataTypeSourceFrom:`."
+
+	^ dataTypeEntry isDictionary or: [ dataTypeEntry isKindOf: valueClass ]
 ]
 
 { #category : 'printing' }
