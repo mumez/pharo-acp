@@ -126,17 +126,37 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 
 	^ aDictionary
 		  at: propName
-		  ifPresent: [ :coll |
-			  ((coll isCollection and: [ coll isString not ])
-				   and: [ coll isDictionary not ])
-				  ifFalse: [ #() ]
-				  ifTrue: [
-					  (coll select: [ :each |
-						   each isDictionary or: [ each isKindOf: valueClass ] ]) collect: [ :each |
-						  each isDictionary
-							  ifTrue: [ valueClass fromDictionary: each ]
-							  ifFalse: [ each ] ] ] ]
+		  ifPresent: [ :coll | self typedValuesFrom: coll typed: valueClass ]
 		  ifAbsentPut: [ #() ]
+]
+
+{ #category : 'private' }
+ACPValues >> typedValuesFrom: rawCollection typed: valueClass [
+
+	(self isTypedCollection: rawCollection) ifFalse: [ ^ #() ].
+	^ (self typedCollectionEntriesFrom: rawCollection typed: valueClass) collect: [ :each |
+		  self typedValueFrom: each typed: valueClass ]
+]
+
+{ #category : 'private' }
+ACPValues >> isTypedCollection: rawCollection [
+
+	^ (rawCollection isCollection and: [ rawCollection isString not ])
+		  and: [ rawCollection isDictionary not ]
+]
+
+{ #category : 'private' }
+ACPValues >> typedCollectionEntriesFrom: rawCollection typed: valueClass [
+
+	^ rawCollection select: [ :each |
+		  each isDictionary or: [ each isKindOf: valueClass ] ]
+]
+
+{ #category : 'private' }
+ACPValues >> typedValueFrom: rawValue typed: valueClass [
+
+	rawValue isDictionary ifTrue: [ ^ valueClass fromDictionary: rawValue ].
+	^ rawValue
 ]
 
 { #category : 'printing' }
