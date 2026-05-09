@@ -152,9 +152,11 @@ ACPValues >> dataTypeValuesSourceFrom: rawCollection [
 
 { #category : 'private' }
 ACPValues >> dataTypeCollectionEntriesFrom: rawCollection for: valueClass [
+	"`rawCollection` is already normalized to an array-like source.
+	Here we validate each entry, not the container type."
 
 	^ (self dataTypeValuesSourceFrom: rawCollection) select: [ :each |
-		  each isDictionary or: [ each isKindOf: valueClass ] ]
+		  self isSupportedDataTypeEntry: each for: valueClass ]
 ]
 
 { #category : 'private' }
@@ -162,6 +164,15 @@ ACPValues >> dataTypeValueFrom: rawValue for: valueClass [
 
 	rawValue isDictionary ifTrue: [ ^ valueClass fromDictionary: rawValue ].
 	^ rawValue
+]
+
+{ #category : 'private' }
+ACPValues >> isSupportedDataTypeEntry: rawValue for: valueClass [
+	"Dictionary entries are valid payload elements and will be converted by
+	`dataTypeValueFrom:for:`. This is distinct from rejecting Dictionary as the
+	container itself in `dataTypeValuesSourceFrom:`."
+
+	^ rawValue isDictionary or: [ rawValue isKindOf: valueClass ]
 ]
 
 { #category : 'printing' }
