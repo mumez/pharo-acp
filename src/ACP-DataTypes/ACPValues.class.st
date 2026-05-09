@@ -126,19 +126,20 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 
 	^ aDictionary
 		  at: propName
-		  ifPresent: [ :coll | self typedValuesFrom: coll typed: valueClass ]
+		  ifPresent: [ :coll |
+			  self dataTypeValuesFromCollection: coll for: valueClass ]
 		  ifAbsentPut: [ #() ]
 ]
 
 { #category : 'private' }
-ACPValues >> typedValuesFrom: rawCollection typed: valueClass [
+ACPValues >> dataTypeValuesFromCollection: rawCollection for: valueClass [
 
-	^ (self typedCollectionEntriesFrom: rawCollection typed: valueClass) collect: [ :each |
-		  self typedValueFrom: each typed: valueClass ]
+	^ (self dataTypeCollectionEntriesFrom: rawCollection for: valueClass) collect: [ :each |
+		  self dataTypeValueFrom: each for: valueClass ]
 ]
 
 { #category : 'private' }
-ACPValues >> typedValuesSourceFrom: rawCollection [
+ACPValues >> dataTypeValuesSourceFrom: rawCollection [
 	"`valuesAt:` accessors represent array-like payload fields.
 	Non-collection values (including Dictionary and String) are treated as malformed
 	input and normalized to an empty collection."
@@ -150,14 +151,14 @@ ACPValues >> typedValuesSourceFrom: rawCollection [
 ]
 
 { #category : 'private' }
-ACPValues >> typedCollectionEntriesFrom: rawCollection typed: valueClass [
+ACPValues >> dataTypeCollectionEntriesFrom: rawCollection for: valueClass [
 
-	^ (self typedValuesSourceFrom: rawCollection) select: [ :each |
+	^ (self dataTypeValuesSourceFrom: rawCollection) select: [ :each |
 		  each isDictionary or: [ each isKindOf: valueClass ] ]
 ]
 
 { #category : 'private' }
-ACPValues >> typedValueFrom: rawValue typed: valueClass [
+ACPValues >> dataTypeValueFrom: rawValue for: valueClass [
 
 	rawValue isDictionary ifTrue: [ ^ valueClass fromDictionary: rawValue ].
 	^ rawValue
