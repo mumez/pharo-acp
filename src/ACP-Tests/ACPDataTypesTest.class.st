@@ -265,9 +265,13 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 	self assert: resp modes size equals: 1.
 	self assert: resp modes first class equals: ACPSessionMode.
 	self assert: resp modes first id equals: 'ask'.
+	self assert: resp availableModes size equals: 1.
+	self assert: resp availableModes first id equals: 'ask'.
 	self assert: resp models size equals: 1.
 	self assert: resp models first class equals: ACPSessionModel.
-	self assert: resp models first modelId equals: 'model-1'
+	self assert: resp models first modelId equals: 'model-1'.
+	self assert: resp availableModels size equals: 1.
+	self assert: resp availableModels first modelId equals: 'model-1'
 ]
 
 { #category : 'tests - result' }
@@ -282,8 +286,26 @@ ACPDataTypesTest >> testLoadSessionResponseParsesModesFromModeState [
 				          { ('id' -> 'code'). ('name' -> 'Code') } asDictionary }
 					         asOrderedCollection) } asDictionary) } asDictionary.
 	self assert: resp modes size equals: 2.
+	self assert: resp availableModes size equals: 2.
 	self assert: resp modes second class equals: ACPSessionMode.
 	self assert: resp modes second id equals: 'code'
+]
+
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testLoadSessionResponseParsesModelsFromModelState [
+
+	| resp |
+	resp := ACPLoadSessionResponse fromDictionary: {
+		        ('models' -> {
+			         ('currentModelId' -> 'model-2').
+			         ('availableModels' -> {
+				          { ('modelId' -> 'model-1'). ('name' -> 'Model 1') } asDictionary.
+				          { ('modelId' -> 'model-2'). ('name' -> 'Model 2') } asDictionary }
+					         asOrderedCollection) } asDictionary) } asDictionary.
+	self assert: resp models size equals: 2.
+	self assert: resp availableModels size equals: 2.
+	self assert: resp models second class equals: ACPSessionModel.
+	self assert: resp models second modelId equals: 'model-2'
 ]
 
 { #category : 'tests - leaf options' }

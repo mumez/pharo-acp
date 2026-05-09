@@ -14,27 +14,43 @@ ACPBaseSessionResponse >> configOptions [
 { #category : 'accessing' }
 ACPBaseSessionResponse >> models [
 
-	| rawModels valuesDict |
-	rawModels := self rawValues at: 'models' ifAbsent: [ ^ #() ].
-	rawModels ifNil: [ ^ #() ].
-	rawModels isDictionary ifTrue: [
-		rawModels := rawModels at: 'availableModels' ifAbsent: [ #() ] ].
-	valuesDict := Dictionary newFrom: self rawValues.
-	valuesDict at: 'models' put: rawModels.
-	^ self valuesAt: 'models' typed: ACPSessionModel in: valuesDict
+	^ self availableModels
 ]
 
 { #category : 'accessing' }
 ACPBaseSessionResponse >> modes [
 
-	| rawModes valuesDict |
+	^ self availableModes
+]
+
+{ #category : 'accessing' }
+ACPBaseSessionResponse >> availableModels [
+
+	| rawModels |
+	rawModels := self rawValues at: 'models' ifAbsent: [ ^ #() ].
+	rawModels ifNil: [ ^ #() ].
+	rawModels isDictionary
+		ifTrue: [
+			^ self
+				  valuesAt: 'availableModels'
+				  typed: ACPSessionModel
+				  in: rawModels ].
+	^ self valuesAt: 'models' typed: ACPSessionModel in: self rawValues
+]
+
+{ #category : 'accessing' }
+ACPBaseSessionResponse >> availableModes [
+
+	| rawModes |
 	rawModes := self rawValues at: 'modes' ifAbsent: [ ^ #() ].
 	rawModes ifNil: [ ^ #() ].
-	rawModes isDictionary ifTrue: [
-		rawModes := rawModes at: 'availableModes' ifAbsent: [ #() ] ].
-	valuesDict := Dictionary newFrom: self rawValues.
-	valuesDict at: 'modes' put: rawModes.
-	^ self valuesAt: 'modes' typed: ACPSessionMode in: valuesDict
+	rawModes isDictionary
+		ifTrue: [
+			^ self
+				  valuesAt: 'availableModes'
+				  typed: ACPSessionMode
+				  in: rawModes ].
+	^ self valuesAt: 'modes' typed: ACPSessionMode in: self rawValues
 ]
 
 { #category : 'accessing' }
