@@ -133,22 +133,26 @@ ACPValues >> valuesAt: propName typed: valueClass in: aDictionary [
 { #category : 'private' }
 ACPValues >> typedValuesFrom: rawCollection typed: valueClass [
 
-	(self isTypedCollection: rawCollection) ifFalse: [ ^ #() ].
 	^ (self typedCollectionEntriesFrom: rawCollection typed: valueClass) collect: [ :each |
 		  self typedValueFrom: each typed: valueClass ]
 ]
 
 { #category : 'private' }
-ACPValues >> isTypedCollection: rawCollection [
+ACPValues >> typedValuesSourceFrom: rawCollection [
+	"`valuesAt:` accessors represent array-like payload fields.
+	Non-collection values (including Dictionary and String) are treated as malformed
+	input and normalized to an empty collection."
 
-	^ (rawCollection isCollection and: [ rawCollection isString not ])
-		  and: [ rawCollection isDictionary not ]
+	((rawCollection isCollection and: [ rawCollection isString not ])
+		 and: [ rawCollection isDictionary not ])
+		ifFalse: [ ^ #() ].
+	^ rawCollection
 ]
 
 { #category : 'private' }
 ACPValues >> typedCollectionEntriesFrom: rawCollection typed: valueClass [
 
-	^ rawCollection select: [ :each |
+	^ (self typedValuesSourceFrom: rawCollection) select: [ :each |
 		  each isDictionary or: [ each isKindOf: valueClass ] ]
 ]
 
