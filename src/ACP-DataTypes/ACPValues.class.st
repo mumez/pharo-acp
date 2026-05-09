@@ -139,9 +139,9 @@ ACPValues >> dataTypeValuesFromRawArrayLikeValue: rawArrayLikeValue for: valueCl
 	| normalizedArrayLikeCollection |
 	normalizedArrayLikeCollection := self
 		                                 normalizedArrayLikeDataTypeSourceFrom: rawArrayLikeValue.
-	^ (self
-		   dataTypeCollectionEntriesFrom: normalizedArrayLikeCollection
-		   for: valueClass) collect: [ :candidateEntry |
+	^ (normalizedArrayLikeCollection select: [ :candidateEntry |
+		   self isSupportedDataTypeEntry: candidateEntry for: valueClass ])
+		  collect: [ :candidateEntry |
 		  self dataTypeValueFrom: candidateEntry for: valueClass ]
 ]
 
@@ -156,16 +156,6 @@ ACPValues >> normalizedArrayLikeDataTypeSourceFrom: rawArrayLikeValue [
 		 and: [ rawArrayLikeValue isString not ])
 		ifFalse: [ ^ #() ].
 	^ rawArrayLikeValue
-]
-
-{ #category : 'private' }
-ACPValues >> dataTypeCollectionEntriesFrom: normalizedArrayLikeCollection for: valueClass [
-	"`normalizedArrayLikeCollection` is already normalized by
-	`normalizedArrayLikeDataTypeSourceFrom:`.
-	Here we validate each entry, not the container type."
-
-	^ normalizedArrayLikeCollection select: [ :candidateEntry |
-		  self isSupportedDataTypeEntry: candidateEntry for: valueClass ]
 ]
 
 { #category : 'private' }
