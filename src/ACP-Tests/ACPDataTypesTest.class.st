@@ -248,10 +248,42 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 
 	| resp |
 	resp := ACPLoadSessionResponse fromDictionary: {
-		        ('configOptions' -> #()).
-		        ('modes' -> nil) } asDictionary.
-	self assert: resp configOptions equals: #().
-	self assert: resp models isNil
+		        ('configOptions' -> {
+			         {
+				         ('id' -> 'mode').
+				         ('name' -> 'Mode').
+				         ('type' -> 'select').
+				         ('currentValue' -> 'ask').
+				         ('options' -> #()) } asDictionary } asOrderedCollection).
+		        ('modes' -> {
+			         { ('id' -> 'ask'). ('name' -> 'Ask') } asDictionary } asOrderedCollection).
+		        ('models' -> {
+			         { ('id' -> 'model-1'). ('name' -> 'Model 1') } asDictionary } asOrderedCollection) } asDictionary.
+	self assert: resp configOptions size equals: 1.
+	self assert: resp configOptions first class equals: ACPConfigOption.
+	self assert: resp configOptions first id equals: 'mode'.
+	self assert: resp modes size equals: 1.
+	self assert: resp modes first class equals: ACPSessionMode.
+	self assert: resp modes first id equals: 'ask'.
+	self assert: resp models size equals: 1.
+	self assert: resp models first class equals: ACPSessionModel.
+	self assert: resp models first id equals: 'model-1'
+]
+
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testLoadSessionResponseParsesModesFromModeState [
+
+	| resp |
+	resp := ACPLoadSessionResponse fromDictionary: {
+		        ('modes' -> {
+			         ('currentModeId' -> 'code').
+			         ('availableModes' -> {
+				          { ('id' -> 'ask'). ('name' -> 'Ask') } asDictionary.
+				          { ('id' -> 'code'). ('name' -> 'Code') } asDictionary }
+					         asOrderedCollection) } asDictionary) } asDictionary.
+	self assert: resp modes size equals: 2.
+	self assert: resp modes second class equals: ACPSessionMode.
+	self assert: resp modes second id equals: 'code'
 ]
 
 { #category : 'tests - leaf options' }
@@ -294,8 +326,23 @@ ACPDataTypesTest >> testNewSessionResponseFromDictionary [
 	resp := ACPNewSessionResponse fromDictionary:
 		        { ('sessionId' -> 'sess-001') } asDictionary.
 	self assert: resp sessionId equals: 'sess-001'.
-	self assert: resp configOptions isNil.
-	self assert: resp modes isNil
+	self assert: resp configOptions isEmpty.
+	self assert: resp modes isEmpty.
+	self assert: resp models isEmpty
+]
+
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testBaseSessionResponsePluralFieldsFallbackToEmptyCollection [
+
+	| resp |
+	resp := ACPNewSessionResponse fromDictionary: {
+		        ('sessionId' -> 'sess-001').
+		        ('configOptions' -> nil).
+		        ('modes' -> nil).
+		        ('models' -> nil) } asDictionary.
+	self assert: resp configOptions isEmpty.
+	self assert: resp modes isEmpty.
+	self assert: resp models isEmpty
 ]
 
 { #category : 'tests - leaf options' }
