@@ -247,7 +247,7 @@ ACPDataTypesTest >> testListSessionsParamsAsDictionary [
 ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 
 	| resp |
-	resp := ACPLoadSessionResponse fromDictionary: {
+	resp := ACPSessionSetupResponse fromDictionary: {
 		        ('configOptions' -> {
 			         {
 				         ('id' -> 'mode').
@@ -278,7 +278,7 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 ACPDataTypesTest >> testLoadSessionResponseParsesModesFromModeState [
 
 	| resp |
-	resp := ACPLoadSessionResponse fromDictionary: {
+	resp := ACPSessionSetupResponse fromDictionary: {
 		        ('modes' -> {
 			         ('currentModeId' -> 'code').
 			         ('availableModes' -> {
@@ -295,7 +295,7 @@ ACPDataTypesTest >> testLoadSessionResponseParsesModesFromModeState [
 ACPDataTypesTest >> testLoadSessionResponseParsesModelsFromModelState [
 
 	| resp |
-	resp := ACPLoadSessionResponse fromDictionary: {
+	resp := ACPSessionSetupResponse fromDictionary: {
 		        ('models' -> {
 			         ('currentModelId' -> 'model-2').
 			         ('availableModels' -> {
@@ -345,7 +345,7 @@ ACPDataTypesTest >> testNewSessionParamsOmitsNilFields [
 ACPDataTypesTest >> testNewSessionResponseFromDictionary [
 
 	| resp |
-	resp := ACPNewSessionResponse fromDictionary:
+	resp := ACPSessionSetupResponse fromDictionary:
 		        { ('sessionId' -> 'sess-001') } asDictionary.
 	self assert: resp sessionId equals: 'sess-001'.
 	self assert: resp configOptions isEmpty.
@@ -357,7 +357,7 @@ ACPDataTypesTest >> testNewSessionResponseFromDictionary [
 ACPDataTypesTest >> testBaseSessionResponsePluralFieldsFallbackToEmptyCollection [
 
 	| resp |
-	resp := ACPNewSessionResponse fromDictionary: {
+	resp := ACPSessionSetupResponse fromDictionary: {
 		        ('sessionId' -> 'sess-001').
 		        ('configOptions' -> nil).
 		        ('modes' -> nil).
