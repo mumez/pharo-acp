@@ -8,15 +8,7 @@ Class {
 { #category : 'accessing' }
 ACPSessionMode >> id [
 
-	^ self rawValues
-		  at: 'id'
-		  ifAbsent: [ self rawValues at: 'modeId' ifAbsent: [] ]
-]
-
-{ #category : 'accessing' }
-ACPSessionMode >> modeId [
-
-	^ self id
+	^ self rawValues at: 'id' ifAbsent: []
 ]
 
 { #category : 'accessing' }

@@ -6,17 +6,9 @@ Class {
 }
 
 { #category : 'accessing' }
-ACPSessionModel >> id [
-
-	^ self rawValues
-		  at: 'id'
-		  ifAbsent: [ self rawValues at: 'modelId' ifAbsent: [] ]
-]
-
-{ #category : 'accessing' }
 ACPSessionModel >> modelId [
 
-	^ self id
+	^ self rawValues at: 'modelId' ifAbsent: []
 ]
 
 { #category : 'accessing' }

@@ -258,7 +258,7 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 		        ('modes' -> {
 			         { ('id' -> 'ask'). ('name' -> 'Ask') } asDictionary } asOrderedCollection).
 		        ('models' -> {
-			         { ('id' -> 'model-1'). ('name' -> 'Model 1') } asDictionary } asOrderedCollection) } asDictionary.
+			         { ('modelId' -> 'model-1'). ('name' -> 'Model 1') } asDictionary } asOrderedCollection) } asDictionary.
 	self assert: resp configOptions size equals: 1.
 	self assert: resp configOptions first class equals: ACPConfigOption.
 	self assert: resp configOptions first id equals: 'mode'.
@@ -267,7 +267,7 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 	self assert: resp modes first id equals: 'ask'.
 	self assert: resp models size equals: 1.
 	self assert: resp models first class equals: ACPSessionModel.
-	self assert: resp models first id equals: 'model-1'
+	self assert: resp models first modelId equals: 'model-1'
 ]
 
 { #category : 'tests - result' }
