@@ -51,13 +51,21 @@ ACPContentBlock class >> resource: aUri blob: aContent [
 ]
 
 { #category : 'instance creation' }
+ACPContentBlock class >> fromDictionary: aDictionary [
+
+	| instance |
+	instance := super fromDictionary: aDictionary.
+	instance rawValues at: 'resource' ifPresent: [ :dict |
+		instance resource: (ACPEmbeddedResource fromDictionary: dict) ].
+	^ instance
+]
+
+{ #category : 'instance creation' }
 ACPContentBlock class >> resource: aUri blob: aContent mimeType: aMimeType [
 
 	^ self buildBy: [ :b |
 		b type: 'resource'.
-		b uri: aUri.
-		b blob: aContent.
-		b mimeType: aMimeType ]
+		b resource uri: aUri; blob: aContent; mimeType: aMimeType ]
 ]
 
 { #category : 'instance creation' }
@@ -71,9 +79,7 @@ ACPContentBlock class >> resource: aUri text: aContent mimeType: aMimeType [
 
 	^ self buildBy: [ :b |
 		b type: 'resource'.
-		b uri: aUri.
-		b text: aContent.
-		b mimeType: aMimeType ]
+		b resource uri: aUri; text: aContent; mimeType: aMimeType ]
 ]
 
 { #category : 'instance creation' }
@@ -96,7 +102,11 @@ ACPContentBlock class >> text: aString [
 { #category : 'converting' }
 ACPContentBlock >> asDictionary [
 
-	^ self rawValues ifNil: [ Dictionary new ]
+	| dict |
+	dict := self rawValues ifNil: [ ^ Dictionary new ].
+	dict := Dictionary newFrom: dict.
+	self trimNested: (self rawValues at: 'resource' ifAbsent: [ nil ]) named: 'resource' in: dict.
+	^ dict
 ]
 
 { #category : 'accessing' }
@@ -109,6 +119,18 @@ ACPContentBlock >> blob [
 ACPContentBlock >> blob: aString [
 
 	self rawValues at: 'blob' put: aString
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> resource [
+
+	^ self rawValues at: 'resource' ifAbsentPut: [ ACPEmbeddedResource new ]
+]
+
+{ #category : 'accessing' }
+ACPContentBlock >> resource: anACPEmbeddedResource [
+
+	self rawValues at: 'resource' put: anACPEmbeddedResource
 ]
 
 { #category : 'accessing' }
