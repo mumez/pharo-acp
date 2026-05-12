@@ -542,14 +542,12 @@ ACPDataTypesTest >> testResultPreservesUnknownKeys [
 ]
 
 { #category : 'tests - result' }
-ACPDataTypesTest >> testInitializeResponseDefaultsLoadSessionCapability [
+ACPDataTypesTest >> testInitializeResponseOmitsAgentCapabilitiesWhenAbsent [
 
 	| resp dict |
 	resp := ACPInitializeResponse new.
 	dict := resp asDictionary.
-	self
-		assert: ((dict at: 'agentCapabilities') at: 'loadSession')
-		equals: true
+	self deny: (dict includesKey: 'agentCapabilities')
 ]
 
 { #category : 'tests - leaf options' }
@@ -645,13 +643,13 @@ ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
 ]
 
 { #category : 'tests - capabilities' }
-ACPDataTypesTest >> testAgentCapabilitiesDefaultsLoadSessionToTrue [
+ACPDataTypesTest >> testAgentCapabilitiesHasNoDefaultLoadSession [
 
 	| caps dict |
 	caps := ACPAgentCapabilities new.
-	self assert: caps loadSession equals: true.
+	self assert: caps loadSession isNil.
 	dict := caps asDictionary.
-	self assert: (dict at: 'loadSession') equals: true
+	self deny: (dict includesKey: 'loadSession')
 ]
 
 { #category : 'tests - content block' }

@@ -74,9 +74,3 @@ ACPAgentCapabilities >> asDictionary [
 	^ dict
 ]
 
-{ #category : 'initialization' }
-ACPAgentCapabilities >> initialize [
-
-	super initialize.
-	self loadSession: true
-]
