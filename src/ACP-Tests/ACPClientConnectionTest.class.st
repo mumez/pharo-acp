@@ -122,6 +122,28 @@ ACPClientConnectionTest >> testSessionUpdateIsDelegatedToHandler [
 ]
 
 { #category : 'tests' }
+ACPClientConnectionTest >> testResumeSessionBySendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection resumeSessionBy: [ :p |
+		p sessionId: 'sess-001'.
+		p cwd: '/tmp' ].
+	sem signal ]
+		forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/resume'.
+	self assert: ((request at: 'params') at: 'sessionId') equals: 'sess-001'.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> Dictionary new) } asDictionary.
+	sem wait
+]
+
+{ #category : 'tests' }
 ACPClientConnectionTest >> testSetSessionConfigOptionReturnsBaseSessionResponse [
 
 	| request sem result |

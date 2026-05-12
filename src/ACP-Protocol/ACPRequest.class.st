@@ -79,6 +79,12 @@ ACPRequest class >> prompt: aParamsOrDictionary [
 ]
 
 { #category : 'instance creation' }
+ACPRequest class >> resumeSession: aParamsOrDictionary [
+
+	^ self method: ACPMethodSessionResume params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
 ACPRequest class >> setSessionConfigOption: aParamsOrDictionary [
 
 	^ self method: ACPMethodSessionSetConfigOption params: aParamsOrDictionary asDictionary
