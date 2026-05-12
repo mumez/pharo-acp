@@ -157,6 +157,18 @@ ACPClient >> newSessionBy: aBlock [
 	^ self clientConnection newSessionBy: aBlock
 ]
 
+{ #category : 'api' }
+ACPClient >> loadSession: aParamsOrDictionary [
+
+	^ self clientConnection loadSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> loadSessionBy: aBlock [
+
+	^ self clientConnection loadSessionBy: aBlock
+]
+
 { #category : 'accessing' }
 ACPClient >> processLauncher [
 

@@ -51,10 +51,18 @@ ACPClientTest >> testRespondsToBuilderMethods [
 
 	self assert: (client respondsTo: #initializeBy:).
 	self assert: (client respondsTo: #newSessionBy:).
+	self assert: (client respondsTo: #loadSessionBy:).
 	self assert: (client respondsTo: #promptBy:).
 	self assert: (client respondsTo: #cancelBy:).
 	self assert: (client respondsTo: #setSessionConfigOption:).
 	self assert: (client respondsTo: #setSessionConfigOptionBy:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToLoadSessionApi [
+
+	self assert: (client respondsTo: #loadSession:).
+	self assert: (client respondsTo: #loadSessionBy:)
 ]
 
 { #category : 'tests' }
