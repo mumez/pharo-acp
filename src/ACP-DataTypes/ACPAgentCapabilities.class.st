@@ -12,6 +12,12 @@ ACPAgentCapabilities >> loadSession [
 ]
 
 { #category : 'accessing' }
+ACPAgentCapabilities >> loadSession: aBoolean [
+
+	self rawValues at: 'loadSession' put: aBoolean
+]
+
+{ #category : 'accessing' }
 ACPAgentCapabilities >> mcpCapabilities [
 
 	^ self rawValues at: 'mcpCapabilities' ifAbsentPut: [ ACPMcpCapabilities new ]
@@ -66,4 +72,11 @@ ACPAgentCapabilities >> asDictionary [
 	self trimNested: self promptCapabilities named: 'promptCapabilities' in: dict.
 	self trimNested: self sessionCapabilities named: 'sessionCapabilities' in: dict.
 	^ dict
+]
+
+{ #category : 'initialization' }
+ACPAgentCapabilities >> initialize [
+
+	super initialize.
+	self loadSession: true
 ]

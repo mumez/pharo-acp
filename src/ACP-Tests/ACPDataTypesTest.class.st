@@ -187,6 +187,19 @@ ACPDataTypesTest >> testInitializeResponseFromDictionary [
 ]
 
 { #category : 'tests - result' }
+ACPDataTypesTest >> testInitializeResponseParsesAgentCapabilities [
+
+	| resp |
+	resp := ACPInitializeResponse fromDictionary: {
+		        ('protocolVersion' -> 1).
+		        ('agentCapabilities' -> { ('loadSession' -> true) } asDictionary) }
+		        asDictionary.
+	self assert: resp protocolVersion equals: 1.
+	self assert: resp agentCapabilities class equals: ACPAgentCapabilities.
+	self assert: resp agentCapabilities loadSession equals: true
+]
+
+{ #category : 'tests - result' }
 ACPDataTypesTest >> testListSessionsResponseFromDictionary [
 
 	| resp sessions |
@@ -528,6 +541,17 @@ ACPDataTypesTest >> testResultPreservesUnknownKeys [
 	self assert: (resp rawValues at: 'futureField') equals: 42
 ]
 
+{ #category : 'tests - result' }
+ACPDataTypesTest >> testInitializeResponseDefaultsLoadSessionCapability [
+
+	| resp dict |
+	resp := ACPInitializeResponse new.
+	dict := resp asDictionary.
+	self
+		assert: ((dict at: 'agentCapabilities') at: 'loadSession')
+		equals: true
+]
+
 { #category : 'tests - leaf options' }
 ACPDataTypesTest >> testSetSessionModeParamsAsDictionary [
 
@@ -618,6 +642,16 @@ ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
 	self deny: (dict includesKey: 'mcpCapabilities').
 	self deny: (dict includesKey: 'promptCapabilities').
 	self deny: (dict includesKey: 'sessionCapabilities')
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesDefaultsLoadSessionToTrue [
+
+	| caps dict |
+	caps := ACPAgentCapabilities new.
+	self assert: caps loadSession equals: true.
+	dict := caps asDictionary.
+	self assert: (dict at: 'loadSession') equals: true
 ]
 
 { #category : 'tests - content block' }
