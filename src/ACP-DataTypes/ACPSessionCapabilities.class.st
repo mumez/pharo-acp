@@ -30,6 +30,12 @@ ACPSessionCapabilities >> fork [
 ]
 
 { #category : 'accessing' }
+ACPSessionCapabilities >> close [
+
+	^ self rawValues at: 'close' ifAbsent: []
+]
+
+{ #category : 'accessing' }
 ACPSessionCapabilities >> list [
 
 	^ self rawValues at: 'list' ifAbsent: []

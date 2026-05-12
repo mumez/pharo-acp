@@ -85,6 +85,17 @@ ACPRequestTest >> testLoadSessionFactory [
 ]
 
 { #category : 'tests' }
+ACPRequestTest >> testResumeSessionFactory [
+
+	| request |
+	request := ACPRequest resumeSession: (ACPResumeSessionParams buildBy: [ :p |
+			           p sessionId: 'abc'.
+			           p cwd: '/tmp' ]).
+	self assert: request method equals: 'session/resume'.
+	self assert: (request params at: 'sessionId') equals: 'abc'
+]
+
+{ #category : 'tests' }
 ACPRequestTest >> testNewSessionFactory [
 
 	| request |

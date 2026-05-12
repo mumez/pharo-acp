@@ -146,6 +146,18 @@ ACPClient >> initializeBy: aBlock [
 ]
 
 { #category : 'api' }
+ACPClient >> listSessions: aParamsOrDictionary [
+
+	^ self clientConnection listSessions: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> listSessionsBy: aBlock [
+
+	^ self clientConnection listSessionsBy: aBlock
+]
+
+{ #category : 'api' }
 ACPClient >> newSession: aParamsOrDictionary [
 
 	^ self clientConnection newSession: aParamsOrDictionary
@@ -155,6 +167,30 @@ ACPClient >> newSession: aParamsOrDictionary [
 ACPClient >> newSessionBy: aBlock [
 
 	^ self clientConnection newSessionBy: aBlock
+]
+
+{ #category : 'api' }
+ACPClient >> loadSession: aParamsOrDictionary [
+
+	^ self clientConnection loadSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> loadSessionBy: aBlock [
+
+	^ self clientConnection loadSessionBy: aBlock
+]
+
+{ #category : 'api' }
+ACPClient >> resumeSession: aParamsOrDictionary [
+
+	^ self clientConnection resumeSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> resumeSessionBy: aBlock [
+
+	^ self clientConnection resumeSessionBy: aBlock
 ]
 
 { #category : 'accessing' }

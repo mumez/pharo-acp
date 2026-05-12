@@ -194,6 +194,21 @@ ACPClientConnection >> promptBy: aBlock [
 	^ self prompt: (ACPPromptParams buildBy: aBlock)
 ]
 
+{ #category : 'api' }
+ACPClientConnection >> resumeSession: aParamsOrDictionary [
+
+	| request result |
+	request := ACPRequest resumeSession: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	^ ACPSessionSetupResponse fromDictionary: result
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> resumeSessionBy: aBlock [
+
+	^ self resumeSession: (ACPResumeSessionParams buildBy: aBlock)
+]
+
 { #category : 'initialization' }
 ACPClientConnection >> registerFileHandlers [
 
