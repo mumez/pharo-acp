@@ -652,6 +652,52 @@ ACPDataTypesTest >> testAgentCapabilitiesHasNoDefaultLoadSession [
 	self deny: (dict includesKey: 'loadSession')
 ]
 
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsLoadSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: { ('loadSession' -> true) } asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isLoadSupported.
+	self deny: unsupported isLoadSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsResumeSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities' -> { ('resume' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isResumeSupported.
+	self deny: unsupported isResumeSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsListSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities' -> { ('list' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isListSupported.
+	self deny: unsupported isListSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsCloseSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities' -> { ('close' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isCloseSupported.
+	self deny: unsupported isCloseSupported
+]
+
 { #category : 'tests - content block' }
 ACPDataTypesTest >> testContentBlockText [
 

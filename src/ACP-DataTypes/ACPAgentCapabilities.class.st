@@ -11,6 +11,30 @@ ACPAgentCapabilities >> loadSession [
 	^ self rawValues at: 'loadSession' ifAbsent: []
 ]
 
+{ #category : 'testing' }
+ACPAgentCapabilities >> isLoadSupported [
+
+	^ self loadSession = true
+]
+
+{ #category : 'testing' }
+ACPAgentCapabilities >> isListSupported [
+
+	^ self sessionCapabilities list notNil
+]
+
+{ #category : 'testing' }
+ACPAgentCapabilities >> isCloseSupported [
+
+	^ self sessionCapabilities close notNil
+]
+
+{ #category : 'testing' }
+ACPAgentCapabilities >> isResumeSupported [
+
+	^ self sessionCapabilities resume notNil
+]
+
 { #category : 'accessing' }
 ACPAgentCapabilities >> loadSession: aBoolean [
 
@@ -73,4 +97,3 @@ ACPAgentCapabilities >> asDictionary [
 	self trimNested: self sessionCapabilities named: 'sessionCapabilities' in: dict.
 	^ dict
 ]
-
