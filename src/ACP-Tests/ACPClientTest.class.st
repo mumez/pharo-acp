@@ -50,12 +50,20 @@ ACPClientTest >> testInitializeWithCapabilitiesRemoved [
 ACPClientTest >> testRespondsToBuilderMethods [
 
 	self assert: (client respondsTo: #initializeBy:).
+	self assert: (client respondsTo: #listSessionsBy:).
 	self assert: (client respondsTo: #newSessionBy:).
 	self assert: (client respondsTo: #loadSessionBy:).
 	self assert: (client respondsTo: #promptBy:).
 	self assert: (client respondsTo: #cancelBy:).
 	self assert: (client respondsTo: #setSessionConfigOption:).
 	self assert: (client respondsTo: #setSessionConfigOptionBy:)
+]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToListSessionsApi [
+
+	self assert: (client respondsTo: #listSessions:).
+	self assert: (client respondsTo: #listSessionsBy:)
 ]
 
 { #category : 'tests' }
