@@ -32,13 +32,38 @@ ACPResumeSessionParams >> cwd: aString [
 
 { #category : 'accessing' }
 ACPResumeSessionParams >> mcpServers [
-	^ self rawValues at: 'mcpServers' ifAbsent: []
+	^ self valuesAt: 'mcpServers' typed: self mcpServerClass in: self rawValues
 ]
 
 { #category : 'accessing' }
 ACPResumeSessionParams >> mcpServers: anArray [
 
-	self rawValues at: 'mcpServers' put: anArray
+	self
+		rawValues
+		at: 'mcpServers'
+		put: (self dataTypeValuesFromRawArrayLikeValue: anArray for: self mcpServerClass)
+]
+
+{ #category : 'accessing' }
+ACPResumeSessionParams >> addMcpServer: anACPMcpServer [
+
+	self mcpServers: (self mcpServers , { anACPMcpServer })
+]
+
+{ #category : 'accessing' }
+ACPResumeSessionParams >> addMcpServerBy: aBuilderBlock [
+	| defaultServer builtServer mcpServer |
+	defaultServer := ACPMcpServerStdio new.
+	builtServer := aBuilderBlock value: defaultServer.
+	mcpServer := (builtServer isKindOf: self mcpServerClass)
+		             ifTrue: [ builtServer ]
+		             ifFalse: [ defaultServer ].
+	self addMcpServer: mcpServer
+]
+
+{ #category : 'factory' }
+ACPResumeSessionParams >> mcpServerClass [
+	^ ACPMcpServer
 ]
 
 { #category : 'accessing' }
@@ -59,4 +84,13 @@ ACPResumeSessionParams >> ensureRequired [
 	super ensureRequired.
 	self rawValues at: 'mcpServers' ifAbsentPut: [ #() ].
 	^ self
+]
+
+{ #category : 'converting' }
+ACPResumeSessionParams >> asDictionary [
+
+	| dict |
+	dict := super asDictionary.
+	dict at: 'mcpServers' put: (self mcpServers collect: [ :server | server asDictionary ]).
+	^ dict
 ]
