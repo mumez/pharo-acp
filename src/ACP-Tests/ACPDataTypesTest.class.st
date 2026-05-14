@@ -19,7 +19,7 @@ ACPDataTypesTest >> testAuthenticateParamsAsDictionary [
 ACPDataTypesTest >> testBuildBy [
 
 	| opts dict |
-	opts := ACPNewSessionParams buildBy: [ :p |
+	opts := ACPSessionParams buildBy: [ :p |
 		        p cwd: '/tmp'.
 		        p mcpServers: #() ].
 	dict := opts asDictionary.
@@ -31,7 +31,7 @@ ACPDataTypesTest >> testBuildBy [
 ACPDataTypesTest >> testBuildByEmptyBlock [
 
 	| opts dict |
-	opts := ACPNewSessionParams buildBy: [ :p | ].
+	opts := ACPSessionParams buildBy: [ :p | ].
 	dict := opts asDictionary.
 	self assert: dict size equals: 1.
 	self assert: (dict at: 'mcpServers') equals: #()
@@ -65,7 +65,7 @@ ACPDataTypesTest >> testClientCapabilitiesNestedFs [
 ACPDataTypesTest >> testExtraPropertiesOn [
 
 	| opts dict props |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts cwd: '/tmp'.
 	props := { ('foo' -> 'bar') } asDictionary.
 	opts extraProperties: props.
@@ -287,6 +287,43 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 	self assert: resp availableModels first modelId equals: 'model-1'
 ]
 
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testLoadSessionParamsAddMcpServerByBuilder [
+
+	| params dict server |
+	params := ACPSessionParams new.
+	params sessionId: 'sess-001'.
+	params addMcpServerBy: [ :mcpServer |
+		mcpServer name: 'filesystem'.
+		mcpServer command: '/path/to/mcp-server'.
+		mcpServer args: { '--stdio' }.
+		mcpServer addEnvNamed: 'API_KEY' value: 'secret123' ].
+	dict := params asDictionary.
+	server := (dict at: 'mcpServers') first.
+	self assert: (server at: 'name') equals: 'filesystem'.
+	self assert: (((server at: 'env') first) at: 'value') equals: 'secret123'
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testLoadSessionParamsMcpServersTypedAccessorsFromDictionary [
+
+	| params server |
+	params := ACPSessionParams new.
+	params mcpServers: {
+			{
+				('name' -> 'filesystem').
+				('command' -> '/path/to/mcp-server').
+				('args' -> { '--stdio' }).
+				('env' -> {
+					 {
+						 ('name' -> 'API_KEY').
+						 ('value' -> 'secret123') } asDictionary } asOrderedCollection) }
+				asDictionary }.
+	server := params mcpServers first.
+	self assert: server class equals: ACPMcpServer.
+	self assert: server command equals: '/path/to/mcp-server'
+]
+
 { #category : 'tests - result' }
 ACPDataTypesTest >> testLoadSessionResponseParsesModesFromModeState [
 
@@ -325,7 +362,7 @@ ACPDataTypesTest >> testLoadSessionResponseParsesModelsFromModelState [
 ACPDataTypesTest >> testNewSessionParamsAsDictionary [
 
 	| opts dict |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts cwd: '/home/user/project'.
 	opts mcpServers: #().
 	dict := opts asDictionary.
@@ -333,25 +370,145 @@ ACPDataTypesTest >> testNewSessionParamsAsDictionary [
 	self assert: (dict at: 'mcpServers') equals: #()
 ]
 
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testNewSessionParamsAddMcpServerByBuilder [
+
+	| opts dict server |
+	opts := ACPSessionParams new.
+	opts addMcpServerBy: [ :mcpServer |
+		mcpServer name: 'filesystem'.
+		mcpServer command: '/path/to/mcp-server'.
+		mcpServer args: { '--stdio' }.
+		mcpServer addEnvNamed: 'API_KEY' value: 'secret123' ].
+	dict := opts asDictionary.
+	server := (dict at: 'mcpServers') first.
+	self assert: (server at: 'name') equals: 'filesystem'.
+	self assert: (server at: 'command') equals: '/path/to/mcp-server'.
+	self assert: (server at: 'args') equals: { '--stdio' }.
+	self assert: (((server at: 'env') first) at: 'name') equals: 'API_KEY'
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testNewSessionParamsAddMcpServerByBuilderCanReturnHttpServer [
+
+	| opts dict server |
+	opts := ACPSessionParams new.
+	opts addMcpServerBy: [ :mcpServer |
+		mcpServer type: 'http'.
+		mcpServer name: 'remote'.
+		mcpServer url: 'https://example.com/mcp'.
+		mcpServer addHeaderNamed: 'Authorization' value: 'Bearer token' ].
+	dict := opts asDictionary.
+	server := (dict at: 'mcpServers') first.
+	self assert: (server at: 'type') equals: 'http'.
+	self assert: (server at: 'name') equals: 'remote'.
+	self assert: (((server at: 'headers') first) at: 'name') equals: 'Authorization'
+]
+
 { #category : 'tests - base' }
 ACPDataTypesTest >> testNewSessionParamsIncludesMandatoryMcpServersByDefault [
 
 	| opts dict |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	dict := opts asDictionary.
 	self assert: dict size equals: 1.
 	self assert: (dict at: 'mcpServers') equals: #()
 ]
 
 { #category : 'tests - leaf options' }
+ACPDataTypesTest >> testNewSessionParamsMcpServersTypedAccessorsFromDictionary [
+
+	| opts server |
+	opts := ACPSessionParams new.
+	opts mcpServers: {
+			{
+				('name' -> 'filesystem').
+				('command' -> '/path/to/mcp-server').
+				('args' -> { '--stdio' }).
+				('env' -> {
+					 {
+						 ('name' -> 'API_KEY').
+						 ('value' -> 'secret123') } asDictionary } asOrderedCollection) }
+				asDictionary.
+			{
+				('type' -> 'http').
+				('name' -> 'remote').
+				('url' -> 'https://example.com/mcp').
+				('headers' -> {
+					 {
+						 ('name' -> 'Authorization').
+						 ('value' -> 'Bearer token') } asDictionary } asOrderedCollection) }
+				asDictionary }.
+	server := opts mcpServers first.
+	self assert: server name equals: 'filesystem'.
+	self assert: server command equals: '/path/to/mcp-server'.
+	self assert: (server env first value) equals: 'secret123'.
+	self assert: (opts mcpServers second headers first name) equals: 'Authorization'
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testNewSessionParamsPreservesUnknownMcpServerType [
+
+	| opts dict server |
+	opts := ACPSessionParams new.
+	opts mcpServers: {
+			{
+				('type' -> 'websocket').
+				('name' -> 'ws-server').
+				('url' -> 'wss://example.com/mcp') } asDictionary }.
+	dict := opts asDictionary.
+	server := (dict at: 'mcpServers') first.
+	self assert: (server at: 'type') equals: 'websocket'.
+	self deny: (server includesKey: 'args').
+	self deny: (server includesKey: 'env')
+]
+
+{ #category : 'tests - leaf options' }
 ACPDataTypesTest >> testNewSessionParamsOmitsNilFields [
 
 	| opts dict |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts cwd: '/tmp'.
 	dict := opts asDictionary.
 	self assert: (dict includesKey: 'cwd').
 	self assert: (dict includesKey: 'mcpServers')
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testResumeSessionParamsAddMcpServerByBuilder [
+
+	| params dict server |
+	params := ACPSessionParams new.
+	params sessionId: 'sess-001'.
+	params addMcpServerBy: [ :mcpServer |
+		mcpServer name: 'filesystem'.
+		mcpServer command: '/path/to/mcp-server'.
+		mcpServer args: { '--stdio' }.
+		mcpServer addEnvNamed: 'API_KEY' value: 'secret123' ].
+	dict := params asDictionary.
+	server := (dict at: 'mcpServers') first.
+	self assert: (server at: 'name') equals: 'filesystem'.
+	self assert: (((server at: 'env') first) at: 'name') equals: 'API_KEY'
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testResumeSessionParamsMcpServersTypedAccessorsFromDictionary [
+
+	| params server |
+	params := ACPSessionParams new.
+	params mcpServers: {
+			{
+				('type' -> 'http').
+				('name' -> 'remote').
+				('url' -> 'https://example.com/mcp').
+				('headers' -> {
+					 {
+						 ('name' -> 'Authorization').
+						 ('value' -> 'Bearer token') } asDictionary } asOrderedCollection) }
+				asDictionary }.
+	server := params mcpServers first.
+	self assert: server class equals: ACPMcpServer.
+	self assert: server url equals: 'https://example.com/mcp'
 ]
 
 { #category : 'tests - result' }
@@ -573,7 +730,7 @@ ACPDataTypesTest >> testValuesFromDictionary [
 { #category : 'tests - base' }
 ACPDataTypesTest >> testValuesSuperclassHierarchy [
 
-	self assert: ACPNewSessionParams superclass equals: ACPValues.
+	self assert: ACPSessionParams superclass equals: ACPValues.
 	self assert: ACPPromptResponse superclass equals: ACPValues
 ]
 
