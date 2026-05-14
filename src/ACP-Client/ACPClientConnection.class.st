@@ -161,7 +161,7 @@ ACPClientConnection >> loadSession: aParamsOrDictionary [
 { #category : 'api - builder' }
 ACPClientConnection >> loadSessionBy: aBlock [
 
-	^ self loadSession: (ACPLoadSessionParams buildBy: aBlock)
+	^ self loadSession: (ACPSessionParams buildBy: aBlock)
 ]
 
 { #category : 'api' }
@@ -176,7 +176,7 @@ ACPClientConnection >> newSession: aParamsOrDictionary [
 { #category : 'api - builder' }
 ACPClientConnection >> newSessionBy: aBlock [
 
-	^ self newSession: (ACPNewSessionParams buildBy: aBlock)
+	^ self newSession: (ACPSessionParams buildBy: aBlock)
 ]
 
 { #category : 'api' }
@@ -206,7 +206,7 @@ ACPClientConnection >> resumeSession: aParamsOrDictionary [
 { #category : 'api - builder' }
 ACPClientConnection >> resumeSessionBy: aBlock [
 
-	^ self resumeSession: (ACPResumeSessionParams buildBy: aBlock)
+	^ self resumeSession: (ACPSessionParams buildBy: aBlock)
 ]
 
 { #category : 'initialization' }

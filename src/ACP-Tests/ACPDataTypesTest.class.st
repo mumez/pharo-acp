@@ -19,7 +19,7 @@ ACPDataTypesTest >> testAuthenticateParamsAsDictionary [
 ACPDataTypesTest >> testBuildBy [
 
 	| opts dict |
-	opts := ACPNewSessionParams buildBy: [ :p |
+	opts := ACPSessionParams buildBy: [ :p |
 		        p cwd: '/tmp'.
 		        p mcpServers: #() ].
 	dict := opts asDictionary.
@@ -31,7 +31,7 @@ ACPDataTypesTest >> testBuildBy [
 ACPDataTypesTest >> testBuildByEmptyBlock [
 
 	| opts dict |
-	opts := ACPNewSessionParams buildBy: [ :p | ].
+	opts := ACPSessionParams buildBy: [ :p | ].
 	dict := opts asDictionary.
 	self assert: dict size equals: 1.
 	self assert: (dict at: 'mcpServers') equals: #()
@@ -65,7 +65,7 @@ ACPDataTypesTest >> testClientCapabilitiesNestedFs [
 ACPDataTypesTest >> testExtraPropertiesOn [
 
 	| opts dict props |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts cwd: '/tmp'.
 	props := { ('foo' -> 'bar') } asDictionary.
 	opts extraProperties: props.
@@ -291,7 +291,7 @@ ACPDataTypesTest >> testLoadSessionResponseFromDictionary [
 ACPDataTypesTest >> testLoadSessionParamsAddMcpServerByBuilder [
 
 	| params dict server |
-	params := ACPLoadSessionParams new.
+	params := ACPSessionParams new.
 	params sessionId: 'sess-001'.
 	params addMcpServerBy: [ :mcpServer |
 		mcpServer name: 'filesystem'.
@@ -308,7 +308,7 @@ ACPDataTypesTest >> testLoadSessionParamsAddMcpServerByBuilder [
 ACPDataTypesTest >> testLoadSessionParamsMcpServersTypedAccessorsFromDictionary [
 
 	| params server |
-	params := ACPLoadSessionParams new.
+	params := ACPSessionParams new.
 	params mcpServers: {
 			{
 				('name' -> 'filesystem').
@@ -320,7 +320,7 @@ ACPDataTypesTest >> testLoadSessionParamsMcpServersTypedAccessorsFromDictionary 
 						 ('value' -> 'secret123') } asDictionary } asOrderedCollection) }
 				asDictionary }.
 	server := params mcpServers first.
-	self assert: server class equals: ACPMcpServerStdio.
+	self assert: server class equals: ACPMcpServer.
 	self assert: server command equals: '/path/to/mcp-server'
 ]
 
@@ -362,7 +362,7 @@ ACPDataTypesTest >> testLoadSessionResponseParsesModelsFromModelState [
 ACPDataTypesTest >> testNewSessionParamsAsDictionary [
 
 	| opts dict |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts cwd: '/home/user/project'.
 	opts mcpServers: #().
 	dict := opts asDictionary.
@@ -374,7 +374,7 @@ ACPDataTypesTest >> testNewSessionParamsAsDictionary [
 ACPDataTypesTest >> testNewSessionParamsAddMcpServerByBuilder [
 
 	| opts dict server |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts addMcpServerBy: [ :mcpServer |
 		mcpServer name: 'filesystem'.
 		mcpServer command: '/path/to/mcp-server'.
@@ -392,14 +392,12 @@ ACPDataTypesTest >> testNewSessionParamsAddMcpServerByBuilder [
 ACPDataTypesTest >> testNewSessionParamsAddMcpServerByBuilderCanReturnHttpServer [
 
 	| opts dict server |
-	opts := ACPNewSessionParams new.
-	opts addMcpServerBy: [ :default |
-		self assert: default class equals: ACPMcpServerStdio.
-		ACPMcpServerHttp buildBy: [ :mcpServer |
-			mcpServer type.
-			mcpServer name: 'remote'.
-			mcpServer url: 'https://example.com/mcp'.
-			mcpServer addHeaderNamed: 'Authorization' value: 'Bearer token' ] ].
+	opts := ACPSessionParams new.
+	opts addMcpServerBy: [ :mcpServer |
+		mcpServer type: 'http'.
+		mcpServer name: 'remote'.
+		mcpServer url: 'https://example.com/mcp'.
+		mcpServer addHeaderNamed: 'Authorization' value: 'Bearer token' ].
 	dict := opts asDictionary.
 	server := (dict at: 'mcpServers') first.
 	self assert: (server at: 'type') equals: 'http'.
@@ -411,7 +409,7 @@ ACPDataTypesTest >> testNewSessionParamsAddMcpServerByBuilderCanReturnHttpServer
 ACPDataTypesTest >> testNewSessionParamsIncludesMandatoryMcpServersByDefault [
 
 	| opts dict |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	dict := opts asDictionary.
 	self assert: dict size equals: 1.
 	self assert: (dict at: 'mcpServers') equals: #()
@@ -421,7 +419,7 @@ ACPDataTypesTest >> testNewSessionParamsIncludesMandatoryMcpServersByDefault [
 ACPDataTypesTest >> testNewSessionParamsMcpServersTypedAccessorsFromDictionary [
 
 	| opts server |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts mcpServers: {
 			{
 				('name' -> 'filesystem').
@@ -452,7 +450,7 @@ ACPDataTypesTest >> testNewSessionParamsMcpServersTypedAccessorsFromDictionary [
 ACPDataTypesTest >> testNewSessionParamsPreservesUnknownMcpServerType [
 
 	| opts dict server |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts mcpServers: {
 			{
 				('type' -> 'websocket').
@@ -469,7 +467,7 @@ ACPDataTypesTest >> testNewSessionParamsPreservesUnknownMcpServerType [
 ACPDataTypesTest >> testNewSessionParamsOmitsNilFields [
 
 	| opts dict |
-	opts := ACPNewSessionParams new.
+	opts := ACPSessionParams new.
 	opts cwd: '/tmp'.
 	dict := opts asDictionary.
 	self assert: (dict includesKey: 'cwd').
@@ -480,7 +478,7 @@ ACPDataTypesTest >> testNewSessionParamsOmitsNilFields [
 ACPDataTypesTest >> testResumeSessionParamsAddMcpServerByBuilder [
 
 	| params dict server |
-	params := ACPResumeSessionParams new.
+	params := ACPSessionParams new.
 	params sessionId: 'sess-001'.
 	params addMcpServerBy: [ :mcpServer |
 		mcpServer name: 'filesystem'.
@@ -497,7 +495,7 @@ ACPDataTypesTest >> testResumeSessionParamsAddMcpServerByBuilder [
 ACPDataTypesTest >> testResumeSessionParamsMcpServersTypedAccessorsFromDictionary [
 
 	| params server |
-	params := ACPResumeSessionParams new.
+	params := ACPSessionParams new.
 	params mcpServers: {
 			{
 				('type' -> 'http').
@@ -509,7 +507,7 @@ ACPDataTypesTest >> testResumeSessionParamsMcpServersTypedAccessorsFromDictionar
 						 ('value' -> 'Bearer token') } asDictionary } asOrderedCollection) }
 				asDictionary }.
 	server := params mcpServers first.
-	self assert: server class equals: ACPMcpServerHttp.
+	self assert: server class equals: ACPMcpServer.
 	self assert: server url equals: 'https://example.com/mcp'
 ]
 
@@ -732,7 +730,7 @@ ACPDataTypesTest >> testValuesFromDictionary [
 { #category : 'tests - base' }
 ACPDataTypesTest >> testValuesSuperclassHierarchy [
 
-	self assert: ACPNewSessionParams superclass equals: ACPValues.
+	self assert: ACPSessionParams superclass equals: ACPValues.
 	self assert: ACPPromptResponse superclass equals: ACPValues
 ]
 
