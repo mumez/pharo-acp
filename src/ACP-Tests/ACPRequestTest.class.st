@@ -77,7 +77,7 @@ ACPRequestTest >> testListSessionsFactoryEmptyParams [
 ACPRequestTest >> testLoadSessionFactory [
 
 	| request |
-	request := ACPRequest loadSession: (ACPLoadSessionParams buildBy: [ :p |
+	request := ACPRequest loadSession: (ACPSessionParams buildBy: [ :p |
 			           p sessionId: 'abc'.
 			           p cwd: '/tmp' ]).
 	self assert: request method equals: 'session/load'.
@@ -88,7 +88,7 @@ ACPRequestTest >> testLoadSessionFactory [
 ACPRequestTest >> testResumeSessionFactory [
 
 	| request |
-	request := ACPRequest resumeSession: (ACPResumeSessionParams buildBy: [ :p |
+	request := ACPRequest resumeSession: (ACPSessionParams buildBy: [ :p |
 			           p sessionId: 'abc'.
 			           p cwd: '/tmp' ]).
 	self assert: request method equals: 'session/resume'.
@@ -99,7 +99,7 @@ ACPRequestTest >> testResumeSessionFactory [
 ACPRequestTest >> testNewSessionFactory [
 
 	| request |
-	request := ACPRequest newSession: (ACPNewSessionParams buildBy: [ :p |
+	request := ACPRequest newSession: (ACPSessionParams buildBy: [ :p |
 			           p cwd: '/tmp'.
 			           p mcpServers: #() ]).
 	self assert: request method equals: 'session/new'.
