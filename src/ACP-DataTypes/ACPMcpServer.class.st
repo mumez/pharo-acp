@@ -100,6 +100,21 @@ ACPMcpServer >> headers: anArray [
 		put: (self dataTypeValuesFromRawArrayLikeValue: anArray for: ACPHttpHeader)
 ]
 
+{ #category : 'initialization' }
+ACPMcpServer >> ensureRequired [
+
+	super ensureRequired.
+	self rawValues at: 'name' ifAbsentPut: [ '' ].
+	(#( 'http' 'sse' ) includes: self type)
+		ifTrue: [
+			self rawValues at: 'url' ifAbsentPut: [ '' ].
+			self rawValues at: 'headers' ifAbsentPut: [ #() ] ].
+	self type ifNil: [
+		self rawValues at: 'command' ifAbsentPut: [ '' ].
+		self rawValues at: 'args' ifAbsentPut: [ #() ].
+		self rawValues at: 'env' ifAbsentPut: [ #() ] ]
+]
+
 { #category : 'accessing' }
 ACPMcpServer >> name [
 
