@@ -58,7 +58,7 @@ ACPConnectionTest >> testCloseMarksConnectionAsClosed [
 { #category : 'tests - request response' }
 ACPConnectionTest >> testConcurrentRequests [
 
-	| result1 result2 sem req1 req2 |
+	| result1 result2 sem req1 req2 firstReq secondReq |
 	sem := Semaphore new.
 	result1 := nil.
 	result2 := nil.
@@ -73,9 +73,12 @@ ACPConnectionTest >> testConcurrentRequests [
 	] forkAt: Processor userBackgroundPriority.
 	req1 := agentTransport readMessage.
 	req2 := agentTransport readMessage.
-	"Respond in reverse order"
-	self agentRespondTo: req2 with: { 'n' -> 2 } asDictionary.
-	self agentRespondTo: req1 with: { 'n' -> 1 } asDictionary.
+	"Identify requests by method name regardless of arrival order"
+	firstReq := { req1. req2 } detect: [ :r | (r at: 'method') = 'first' ].
+	secondReq := { req1. req2 } detect: [ :r | (r at: 'method') = 'second' ].
+	"Respond in reverse order to test ID-based matching"
+	self agentRespondTo: secondReq with: { 'n' -> 2 } asDictionary.
+	self agentRespondTo: firstReq with: { 'n' -> 1 } asDictionary.
 	sem wait.
 	sem wait.
 	self assert: (result1 at: 'n') equals: 1.
