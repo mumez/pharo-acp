@@ -18,6 +18,14 @@ ACPAgentCapabilities >> isLoadSupported [
 ]
 
 { #category : 'testing' }
+ACPAgentCapabilities >> isMcpServersSupported [
+
+	| caps |
+	caps := self rawValues at: 'mcpCapabilities' ifAbsent: [ nil ].
+	^ (caps isNil or: [ caps isEmpty ]) not
+]
+
+{ #category : 'testing' }
 ACPAgentCapabilities >> isListSupported [
 
 	^ self sessionCapabilities list notNil
