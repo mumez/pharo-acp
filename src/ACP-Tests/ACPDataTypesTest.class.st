@@ -855,6 +855,38 @@ ACPDataTypesTest >> testAgentCapabilitiesIsCloseSupported [
 	self deny: unsupported isCloseSupported
 ]
 
+{ #category : 'tests - agent capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsHttpMcpServersSupported [
+
+	| httpSupported sseOnly noCaps |
+	httpSupported := ACPAgentCapabilities fromDictionary: {
+			         ('mcpCapabilities' -> { ('http' -> true). ('sse' -> false) } asDictionary) }
+		                 asDictionary.
+	sseOnly := ACPAgentCapabilities fromDictionary: {
+			   ('mcpCapabilities' -> { ('http' -> false). ('sse' -> true) } asDictionary) }
+		           asDictionary.
+	noCaps := ACPAgentCapabilities new.
+	self assert: httpSupported isHttpMcpServersSupported.
+	self deny: sseOnly isHttpMcpServersSupported.
+	self deny: noCaps isHttpMcpServersSupported
+]
+
+{ #category : 'tests - agent capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsSseMcpServersSupported [
+
+	| sseSupported httpOnly noCaps |
+	sseSupported := ACPAgentCapabilities fromDictionary: {
+			        ('mcpCapabilities' -> { ('http' -> false). ('sse' -> true) } asDictionary) }
+		                asDictionary.
+	httpOnly := ACPAgentCapabilities fromDictionary: {
+			    ('mcpCapabilities' -> { ('http' -> true). ('sse' -> false) } asDictionary) }
+		            asDictionary.
+	noCaps := ACPAgentCapabilities new.
+	self assert: sseSupported isSseMcpServersSupported.
+	self deny: httpOnly isSseMcpServersSupported.
+	self deny: noCaps isSseMcpServersSupported
+]
+
 { #category : 'tests - content block' }
 ACPDataTypesTest >> testContentBlockText [
 
