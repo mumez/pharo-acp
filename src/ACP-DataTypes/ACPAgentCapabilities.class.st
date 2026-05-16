@@ -26,6 +26,18 @@ ACPAgentCapabilities >> isMcpServersSupported [
 ]
 
 { #category : 'testing' }
+ACPAgentCapabilities >> isHttpMcpServersSupported [
+
+	^ self isMcpServersSupported and: [ self mcpCapabilities http = true ]
+]
+
+{ #category : 'testing' }
+ACPAgentCapabilities >> isSseMcpServersSupported [
+
+	^ self isMcpServersSupported and: [ self mcpCapabilities sse = true ]
+]
+
+{ #category : 'testing' }
 ACPAgentCapabilities >> isListSupported [
 
 	^ self sessionCapabilities list notNil
