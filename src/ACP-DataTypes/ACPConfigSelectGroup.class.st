@@ -25,3 +25,8 @@ ACPConfigSelectGroup >> options [
 			ifTrue: [ ACPConfigSelectOption fromDictionary: each ]
 			ifFalse: [ each ] ]
 ]
+
+{ #category : 'testing' }
+ACPConfigSelectGroup >> isGroup [
+    ^ true
+]
