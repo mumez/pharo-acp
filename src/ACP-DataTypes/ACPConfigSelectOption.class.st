@@ -22,3 +22,8 @@ ACPConfigSelectOption >> description [
 
 	^ self rawValues at: 'description' ifAbsent: []
 ]
+
+{ #category : 'testing' }
+ACPConfigSelectOption >> isGroup [
+    ^ false
+]
