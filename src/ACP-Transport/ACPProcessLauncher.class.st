@@ -133,7 +133,7 @@ ACPProcessLauncher >> setupEnvironmentOn: aProcess [
 	"Copy parent environment variables with WideString safety,
 	then overlay custom variables. OSSubprocess cannot memCopy WideStrings."
 
-	Smalltalk os environment asDictionary keysAndValuesDo: [ :key :value |
+	OSEnvironment current asDictionary keysAndValuesDo: [ :key :value |
 		aProcess
 			environmentAt: (self ensureByteString: key)
 			put: (self ensureByteString: value) ].
