@@ -5,4 +5,7 @@ openspec/
 .agent/
 .cursor/
 .windsurf/
+.devin/
+.agents/
 .git/
+CLAUDE.local.md
