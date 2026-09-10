@@ -214,6 +214,91 @@ ACP2ClientConnectionTest >> testListSessionsSendsCorrectRequest [
 ]
 
 { #category : 'tests' }
+ACP2ClientConnectionTest >> testBasicExchangeMimicsDualVersionAgent [
+	"Mimics the TypeScript SDK's dual-version-agent.ts v2 handler: initialize -> session/new ->
+	session/prompt, with session/update notifications (user_message, agent_message, state_update)
+	delivered to the handler before prompt: returns."
+
+	| sem sessionId request initResult sessionResult promptResult |
+	sem := Semaphore new.
+	connection startReadLoop.
+
+	[
+	initResult := clientConnection initializeBy: [ :p | ].
+	sessionResult := clientConnection newSessionBy: [ :p | p cwd: '/tmp' ].
+	promptResult := clientConnection promptBy: [ :p |
+		p sessionId: sessionResult sessionId.
+		p textPrompt: 'Hello, agent!' ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+
+	"initialize"
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'initialize'.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> {
+				 ('protocolVersion' -> 2).
+				 ('info' -> { ('name' -> 'dual-version-example') } asDictionary) }
+				 asDictionary) } asDictionary.
+
+	"session/new"
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/new'.
+	sessionId := 'sess-001'.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> { ('sessionId' -> sessionId) } asDictionary) } asDictionary.
+
+	"session/prompt"
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/prompt'.
+	self assert: ((request at: 'params') at: 'sessionId') equals: sessionId.
+
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('method' -> 'session/update').
+			('params' -> {
+				 ('sessionId' -> sessionId).
+				 ('update' -> { ('sessionUpdate' -> 'user_message') } asDictionary) }
+				 asDictionary) } asDictionary.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('method' -> 'session/update').
+			('params' -> {
+				 ('sessionId' -> sessionId).
+				 ('update' -> { ('sessionUpdate' -> 'agent_message') } asDictionary) }
+				 asDictionary) } asDictionary.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('method' -> 'session/update').
+			('params' -> {
+				 ('sessionId' -> sessionId).
+				 ('update' -> {
+					  ('sessionUpdate' -> 'state_update').
+					  ('state' -> 'idle').
+					  ('stopReason' -> 'end_turn') } asDictionary) }
+				 asDictionary) } asDictionary.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> Dictionary new) } asDictionary.
+
+	sem wait.
+
+	self assert: initResult protocolVersion equals: 2.
+	self assert: sessionResult sessionId equals: sessionId.
+	self assert: promptResult notNil.
+
+	self assert: handler updates size equals: 3.
+	self assert: handler updates first sessionUpdate equals: 'user_message'.
+	self assert: handler updates second sessionUpdate equals: 'agent_message'.
+	self assert: handler updates third sessionUpdate equals: 'state_update'.
+	self assert: handler updates last stopReason equals: 'end_turn'
+]
+
+{ #category : 'tests' }
 ACP2ClientConnectionTest >> testCancelSendsNotificationWithoutWaitingForResponse [
 
 	| notification |

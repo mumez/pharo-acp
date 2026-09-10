@@ -15,7 +15,7 @@ Class {
 { #category : 'accessing' }
 ACP2SmokeTest class >> agentPath [
 
-	"^ '/<path to typescript sdk sample agent>/typescript-sdk/src/examples/agent.ts'"
+	"^ '/<path to typescript sdk>/typescript-sdk/src/examples/dual-version-agent.ts'"
 	^ AgentPath
 ]
 
@@ -57,17 +57,23 @@ ACP2SmokeTest >> tearDown [
 
 { #category : 'tests' }
 ACP2SmokeTest >> testFullProtocolFlow [
-	"Test initialize → newSession → prompt against the TypeScript example agent."
+	"Test initialize → newSession → prompt against the TypeScript SDK's dual-version-agent.ts
+	v2 example. Unlike v1, the turn's outcome is not carried synchronously in the prompt
+	response - it arrives later via a session/update notification with sessionUpdate:
+	'state_update', so we poll the handler for it after prompt: returns."
 
-	| initResult sessionResult promptResult sessionId |
+	| initResult sessionResult sessionId stateUpdate |
 	self class agentPath ifNil: [
-		^ self skip: 'Agent path not set. Please set ACP2SmokeTest class variable AgentPath to the path of the TypeScript example agent.'
+		^ self skip: 'Agent path not set. Please set ACP2SmokeTest class variable AgentPath to the path of dual-version-agent.ts.'
 	].
 	client connect.
 
 	"Step 1: Initialize"
-	initResult := client initialize: ACP2InitializeParams new.
-	self assert: initResult protocolVersion equals: 1.
+	initResult := client initializeBy: [ :params |
+		params info
+			name: 'pharo-acp-smoke-test';
+			version: '1.0.0' ].
+	self assert: initResult protocolVersion equals: 2.
 
 	"Step 2: New session"
 	sessionResult := client newSessionBy: [ :params |
@@ -76,16 +82,35 @@ ACP2SmokeTest >> testFullProtocolFlow [
 	self assert: sessionId notNil.
 	self deny: sessionId isEmpty.
 
-	"Step 3: Prompt (blocks until agent completes the turn)"
-	promptResult := client promptBy: [ :params |
+	"Step 3: Prompt. Returns once the agent's request handler resolves, ahead of the
+	turn's own session/update notifications."
+	client promptBy: [ :params |
 		params sessionId: sessionId.
 		params textPrompt: 'Hello, agent!' ].
 
-	self assert: promptResult stopReason equals: 'end_turn'.
+	"Step 4: Wait for the state_update notification that ends the turn."
+	stateUpdate := self waitForFinalStateUpdate.
+	self assert: stateUpdate notNil.
+	self assert: stateUpdate stopReason equals: 'end_turn'.
 
-	"Verify we received session updates"
-	self assert: handler updates notEmpty.
+	"Verify we received the streamed updates for this turn"
+	self assert: (handler updates anySatisfy: [ :each | each isUserMessage ]).
+	self assert: (handler updates anySatisfy: [ :each | each isAgentMessage ])
+]
 
-	"Verify permission was requested and auto-approved"
-	self assert: handler permissionRequest notNil
+{ #category : 'private' }
+ACP2SmokeTest >> waitForFinalStateUpdate [
+	"Poll the handler's received updates until a state_update with a stopReason arrives,
+	or a timeout elapses."
+
+	| deadline |
+	deadline := DateAndTime now + 5 seconds.
+	[ DateAndTime now < deadline ] whileTrue: [
+		| found |
+		found := handler updates
+			detect: [ :each | each isStateUpdate and: [ each stopReason notNil ] ]
+			ifNone: [ nil ].
+		found ifNotNil: [ ^ found ].
+		(Delay forMilliseconds: 50) wait ].
+	^ nil
 ]
