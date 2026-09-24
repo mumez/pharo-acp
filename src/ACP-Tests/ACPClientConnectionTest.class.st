@@ -41,7 +41,7 @@ ACPClientConnectionTest >> testInitializeBySendsCorrectRequest [
 	request := agentTransport readMessage.
 	self assert: (request at: 'method') equals: 'initialize'.
 	self
-		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
+		assert: (((request at: 'params') at: 'clientCapabilities') at: 'terminal')
 		equals: true
 ]
 
@@ -59,7 +59,7 @@ ACPClientConnectionTest >> testInitializeSendsCorrectRequest [
 		assert: ((request at: 'params') at: 'protocolVersion')
 		equals: 1.
 	self
-		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
+		assert: (((request at: 'params') at: 'clientCapabilities') at: 'terminal')
 		equals: true
 ]
 
@@ -69,7 +69,7 @@ ACPClientConnectionTest >> testInitializeWithRawDictionary [
 	| request |
 	[
 	clientConnection initialize:
-		{ ('protocolVersion' -> 1). ('capabilities' -> { ('terminal' -> true) } asDictionary) } asDictionary ]
+		{ ('protocolVersion' -> 1). ('clientCapabilities' -> { ('terminal' -> true) } asDictionary) } asDictionary ]
 		forkAt: Processor userBackgroundPriority.
 	request := agentTransport readMessage.
 	self assert: (request at: 'method') equals: 'initialize'.
