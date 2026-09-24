@@ -3,6 +3,8 @@ Class {
 	#superclass : 'SharedPool',
 	#classVars : [
 		'ACPMethodAuthenticate',
+		'ACPMethodElicitationComplete',
+		'ACPMethodElicitationCreate',
 		'ACPMethodInitialize',
 		'ACPMethodLogout',
 		'ACPMethodReadTextFile',
@@ -51,7 +53,9 @@ ACPConstants class >> initializeAgentToClientMethods [
 	ACPMethodTerminalOutput := 'terminal/output'.
 	ACPMethodTerminalWaitForExit := 'terminal/wait_for_exit'.
 	ACPMethodTerminalKill := 'terminal/kill'.
-	ACPMethodTerminalRelease := 'terminal/release'
+	ACPMethodTerminalRelease := 'terminal/release'.
+	ACPMethodElicitationCreate := 'elicitation/create'.
+	ACPMethodElicitationComplete := 'elicitation/complete'
 ]
 
 { #category : 'class initialization' }
