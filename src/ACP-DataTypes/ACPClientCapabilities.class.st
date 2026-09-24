@@ -43,6 +43,6 @@ ACPClientCapabilities class >> fromDictionary: aDictionary [
 
 	| instance |
 	instance := super fromDictionary: aDictionary.
-	instance rawValues at: 'fs' ifPresent: [ :dict | instance fs: ACPFileSystemCapability fromDictionary: dict ].
+	instance rawValues at: 'fs' ifPresent: [ :dict | instance fs: (ACPFileSystemCapability fromDictionary: dict) ].
 	^ instance
 ]

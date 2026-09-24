@@ -129,7 +129,7 @@ ACPDataTypesTest >> testInitializeParamsBuildByNested [
 		          p capabilities terminal: true.
 		          p clientInfo name: 'pharo-acp'; version: '0.1.0' ].
 	dict := params asDictionary.
-	self assert: ((dict at: 'capabilities') at: 'terminal') equals: true.
+	self assert: ((dict at: 'clientCapabilities') at: 'terminal') equals: true.
 	self assert: ((dict at: 'clientInfo') at: 'name') equals: 'pharo-acp'
 ]
 
@@ -149,6 +149,7 @@ ACPDataTypesTest >> testInitializeParamsEmptyChildOmitted [
 	params := ACPInitializeParams new.
 	params capabilities. "trigger lazy init but don't set anything"
 	dict := params asDictionary.
+	self deny: (dict includesKey: 'clientCapabilities').
 	self deny: (dict includesKey: 'capabilities').
 	self assert: (dict at: 'protocolVersion') equals: 1
 ]
@@ -179,8 +180,9 @@ ACPDataTypesTest >> testInitializeParamsNonEmptyChildIncluded [
 	params := ACPInitializeParams new.
 	params capabilities terminal: true.
 	dict := params asDictionary.
-	self assert: (dict includesKey: 'capabilities').
-	self assert: ((dict at: 'capabilities') at: 'terminal') equals: true.
+	self assert: (dict includesKey: 'clientCapabilities').
+	self deny: (dict includesKey: 'capabilities').
+	self assert: ((dict at: 'clientCapabilities') at: 'terminal') equals: true.
 	self assert: (dict at: 'protocolVersion') equals: 1
 ]
 
@@ -1309,4 +1311,30 @@ ACPDataTypesTest >> testContentChunkMessageId [
 			          ('text' -> 'hello') } asDictionary) } asDictionary.
 	self assert: chunk messageId equals: 'msg-001'.
 	self assert: (ACPContentChunk fromDictionary: Dictionary new) messageId isNil
+]
+
+{ #category : 'tests - composite options' }
+ACPDataTypesTest >> testInitializeParamsFromDictionaryReadsClientCapabilities [
+
+	| params |
+	params := ACPInitializeParams fromDictionary: {
+			          ('protocolVersion' -> 1).
+			          ('clientCapabilities' -> { ('terminal' -> true) } asDictionary).
+			          ('clientInfo' -> { ('name' -> 'pharo-acp') } asDictionary) }
+			          asDictionary.
+	self assert: params capabilities class equals: ACPClientCapabilities.
+	self assert: params capabilities terminal equals: true.
+	self assert: params clientInfo class equals: ACPImplementation
+]
+
+{ #category : 'tests - composite options' }
+ACPDataTypesTest >> testClientCapabilitiesFromDictionaryDecodesFs [
+
+	| caps |
+	caps := ACPClientCapabilities fromDictionary: {
+			        ('fs' -> { ('readTextFile' -> true) } asDictionary).
+			        ('terminal' -> true) } asDictionary.
+	self assert: caps fs class equals: ACPFileSystemCapability.
+	self assert: caps fs readTextFile equals: true.
+	self assert: caps terminal equals: true
 ]
