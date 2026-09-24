@@ -55,6 +55,12 @@ ACPAgentCapabilities >> isResumeSupported [
 	^ self sessionCapabilities resume notNil
 ]
 
+{ #category : 'testing' }
+ACPAgentCapabilities >> isAdditionalDirectoriesSupported [
+
+	^ self sessionCapabilities additionalDirectories notNil
+]
+
 { #category : 'accessing' }
 ACPAgentCapabilities >> loadSession: aBoolean [
 

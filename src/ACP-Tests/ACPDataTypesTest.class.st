@@ -820,6 +820,45 @@ ACPDataTypesTest >> testAgentCapabilitiesIsLoadSupported [
 ]
 
 { #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsAdditionalDirectoriesSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities'
+			         -> { ('additionalDirectories' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isAdditionalDirectoriesSupported.
+	self deny: unsupported isAdditionalDirectoriesSupported
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testSessionParamsAdditionalDirectories [
+
+	| params dict |
+	params := ACPSessionParams buildBy: [ :p |
+		          p cwd: '/home/user/project'.
+		          p additionalDirectories: #( '/home/user/lib' '/home/user/docs' ) ].
+	self
+		assert: params additionalDirectories
+		equals: #( '/home/user/lib' '/home/user/docs' ).
+	dict := params asDictionary.
+	self assert: (dict at: 'cwd') equals: '/home/user/project'.
+	self
+		assert: (dict at: 'additionalDirectories')
+		equals: #( '/home/user/lib' '/home/user/docs' )
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testSessionParamsAdditionalDirectoriesOmittedByDefault [
+
+	| params |
+	params := ACPSessionParams buildBy: [ :p | p cwd: '/home/user/project' ].
+	self assert: params additionalDirectories equals: #(  ).
+	self deny: (params asDictionary includesKey: 'additionalDirectories')
+]
+
+{ #category : 'tests - capabilities' }
 ACPDataTypesTest >> testAgentCapabilitiesIsResumeSupported [
 
 	| supported unsupported |

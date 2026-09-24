@@ -28,15 +28,3 @@ ACPListSessionsParams >> cursor: aString [
 
 	self rawValues at: 'cursor' put: aString
 ]
-
-{ #category : 'accessing' }
-ACPListSessionsParams >> additionalDirectories [
-
-	^ self rawValues at: 'additionalDirectories' ifAbsent: [ #() ]
-]
-
-{ #category : 'accessing' }
-ACPListSessionsParams >> additionalDirectories: anArray [
-
-	self rawValues at: 'additionalDirectories' put: anArray
-]
