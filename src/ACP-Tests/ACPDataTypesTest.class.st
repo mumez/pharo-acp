@@ -38,6 +38,16 @@ ACPDataTypesTest >> testBuildByEmptyBlock [
 ]
 
 { #category : 'tests - leaf options' }
+ACPDataTypesTest >> testSessionIdOnlyParamsShareSuperclass [
+
+	{ ACPCancelParams. ACPCloseSessionParams. ACPDeleteSessionParams } do: [ :each |
+		| params |
+		self assert: each superclass equals: ACPSessionIdParams.
+		params := each buildBy: [ :p | p sessionId: 'abc-123' ].
+		self assert: params asDictionary equals: { ('sessionId' -> 'abc-123') } asDictionary ]
+]
+
+{ #category : 'tests - leaf options' }
 ACPDataTypesTest >> testCancelParamsAsDictionary [
 
 	| opts dict |
@@ -782,7 +792,12 @@ ACPDataTypesTest >> testAgentCapabilitiesTypedAccessors [
 	self assert: mcp http equals: true.
 	self assert: prompt class equals: ACPPromptCapabilities.
 	self assert: prompt audio equals: true.
-	self assert: session class equals: ACPSessionCapabilities
+	self assert: session class equals: ACPSessionCapabilities.
+	self
+		assert: (ACPAgentCapabilities fromDictionary:
+				 { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
+					 asDictionary) auth class
+		equals: ACPAgentAuthCapabilities
 ]
 
 { #category : 'tests - capabilities' }
@@ -793,10 +808,12 @@ ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
 	self assert: caps mcpCapabilities isEmpty.
 	self assert: caps promptCapabilities isEmpty.
 	self assert: caps sessionCapabilities isEmpty.
+	self assert: caps auth isEmpty.
 	dict := caps asDictionary.
 	self deny: (dict includesKey: 'mcpCapabilities').
 	self deny: (dict includesKey: 'promptCapabilities').
-	self deny: (dict includesKey: 'sessionCapabilities')
+	self deny: (dict includesKey: 'sessionCapabilities').
+	self deny: (dict includesKey: 'auth')
 ]
 
 { #category : 'tests - capabilities' }
@@ -817,6 +834,45 @@ ACPDataTypesTest >> testAgentCapabilitiesIsLoadSupported [
 	unsupported := ACPAgentCapabilities new.
 	self assert: supported isLoadSupported.
 	self deny: unsupported isLoadSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsAdditionalDirectoriesSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities'
+			         -> { ('additionalDirectories' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isAdditionalDirectoriesSupported.
+	self deny: unsupported isAdditionalDirectoriesSupported
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testSessionParamsAdditionalDirectories [
+
+	| params dict |
+	params := ACPSessionParams buildBy: [ :p |
+		          p cwd: '/home/user/project'.
+		          p additionalDirectories: #( '/home/user/lib' '/home/user/docs' ) ].
+	self
+		assert: params additionalDirectories
+		equals: #( '/home/user/lib' '/home/user/docs' ).
+	dict := params asDictionary.
+	self assert: (dict at: 'cwd') equals: '/home/user/project'.
+	self
+		assert: (dict at: 'additionalDirectories')
+		equals: #( '/home/user/lib' '/home/user/docs' )
+]
+
+{ #category : 'tests - leaf options' }
+ACPDataTypesTest >> testSessionParamsAdditionalDirectoriesOmittedByDefault [
+
+	| params |
+	params := ACPSessionParams buildBy: [ :p | p cwd: '/home/user/project' ].
+	self assert: params additionalDirectories equals: #(  ).
+	self deny: (params asDictionary includesKey: 'additionalDirectories')
 ]
 
 { #category : 'tests - capabilities' }
@@ -853,6 +909,35 @@ ACPDataTypesTest >> testAgentCapabilitiesIsCloseSupported [
 	unsupported := ACPAgentCapabilities new.
 	self assert: supported isCloseSupported.
 	self deny: unsupported isCloseSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsDeleteSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities' -> { ('delete' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isDeleteSupported.
+	self deny: unsupported isDeleteSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsLogoutSupported [
+
+	| supported authWithoutLogout unsupported |
+	supported := ACPAgentCapabilities fromDictionary:
+		             { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
+			             asDictionary.
+	authWithoutLogout := ACPAgentCapabilities fromDictionary:
+		                     { ('auth' -> Dictionary new) } asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isLogoutSupported.
+	self deny: authWithoutLogout isLogoutSupported.
+	self deny: unsupported isLogoutSupported.
+	self deny: (ACPAgentCapabilities fromDictionary: { ('auth' -> nil) } asDictionary)
+			isLogoutSupported
 ]
 
 { #category : 'tests - agent capabilities' }
@@ -1190,5 +1275,38 @@ ACPDataTypesTest >> testConfigOptionCategoryMutators [
 	self assert: opt category equals: 'mode'.
 
 	opt beThoughtLevelCategory.
-	self assert: opt category equals: 'thought_level'
+	self assert: opt category equals: 'thought_level'.
+
+	opt beModelConfigCategory.
+	self assert: opt category equals: 'model_config'
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionModelConfigCategory [
+
+	| modelConfig model |
+	modelConfig := ACPConfigOption fromDictionary:
+		               { ('category' -> 'model_config') } asDictionary.
+	model := ACPConfigOption fromDictionary: { ('category' -> 'model') }
+		         asDictionary.
+
+	self assert: modelConfig isModelConfigCategory.
+	self deny: modelConfig isModelCategory.
+	self deny: modelConfig isModeCategory.
+	self deny: modelConfig isThoughtLevelCategory.
+
+	self deny: model isModelConfigCategory
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentChunkMessageId [
+
+	| chunk |
+	chunk := ACPContentChunk fromDictionary: {
+		         ('messageId' -> 'msg-001').
+		         ('content' -> {
+			          ('type' -> 'text').
+			          ('text' -> 'hello') } asDictionary) } asDictionary.
+	self assert: chunk messageId equals: 'msg-001'.
+	self assert: (ACPContentChunk fromDictionary: Dictionary new) messageId isNil
 ]

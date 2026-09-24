@@ -197,3 +197,59 @@ ACPClientConnectionTest >> setConfigOptionResponseFor: request [
 				    ('options' -> #()) } asDictionary } asArray) } asDictionary) }
 		  asDictionary
 ]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testCloseSessionBySendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection closeSessionBy: [ :p | p sessionId: 'sess-001' ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/close'.
+	self assert: ((request at: 'params') at: 'sessionId') equals: 'sess-001'.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> Dictionary new) } asDictionary.
+	sem wait
+]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testDeleteSessionBySendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection deleteSessionBy: [ :p | p sessionId: 'sess-001' ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/delete'.
+	self assert: ((request at: 'params') at: 'sessionId') equals: 'sess-001'.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> Dictionary new) } asDictionary.
+	sem wait
+]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testLogoutSendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection logout.
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'logout'.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (request at: 'id')).
+			('result' -> Dictionary new) } asDictionary.
+	sem wait
+]

@@ -4,9 +4,12 @@ Class {
 	#classVars : [
 		'ACPMethodAuthenticate',
 		'ACPMethodInitialize',
+		'ACPMethodLogout',
 		'ACPMethodReadTextFile',
 		'ACPMethodRequestPermission',
 		'ACPMethodSessionCancel',
+		'ACPMethodSessionClose',
+		'ACPMethodSessionDelete',
 		'ACPMethodSessionFork',
 		'ACPMethodSessionList',
 		'ACPMethodSessionLoad',
@@ -65,7 +68,10 @@ ACPConstants class >> initializeClientToAgentMethods [
 	ACPMethodSessionSetModel := 'session/set_model'.
 	ACPMethodSessionList := 'session/list'.
 	ACPMethodSessionFork := 'session/fork'.
-	ACPMethodSessionResume := 'session/resume'
+	ACPMethodSessionResume := 'session/resume'.
+	ACPMethodSessionClose := 'session/close'.
+	ACPMethodSessionDelete := 'session/delete'.
+	ACPMethodLogout := 'logout'
 ]
 
 { #category : 'class initialization' }

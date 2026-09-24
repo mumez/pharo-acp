@@ -183,3 +183,76 @@ ACPSessionUpdateTest >> testConfigOptionsEmptyWhenWrongType [
 		          ('update' -> { ('sessionUpdate' -> 'usage_update') } asDictionary) } asDictionary.
 	self assert: update configOptions isEmpty
 ]
+
+{ #category : 'tests' }
+ACPSessionUpdateTest >> testMessageId [
+
+	| update |
+	update := ACPSessionUpdate fromDictionary: {
+		          ('sessionId' -> 'sess-001').
+		          ('update' -> {
+			           ('sessionUpdate' -> 'agent_message_chunk').
+			           ('messageId' -> 'msg-001').
+			           ('content' -> {
+				            ('type' -> 'text').
+				            ('text' -> 'Hello') } asDictionary) } asDictionary) }
+		          asDictionary.
+	self assert: update messageId equals: 'msg-001'
+]
+
+{ #category : 'tests' }
+ACPSessionUpdateTest >> testMessageIdAbsent [
+
+	| update |
+	update := ACPSessionUpdate fromDictionary: {
+		          ('sessionId' -> 'sess-001').
+		          ('update' -> {
+			           ('sessionUpdate' -> 'agent_message_chunk').
+			           ('content' -> {
+				            ('type' -> 'text').
+				            ('text' -> 'Hello') } asDictionary) } asDictionary) }
+		          asDictionary.
+	self assert: update messageId isNil
+]
+
+{ #category : 'tests' }
+ACPSessionUpdateTest >> testToolCallName [
+
+	| update toolCall |
+	update := ACPSessionUpdate fromDictionary: {
+		          ('sessionId' -> 'sess-001').
+		          ('update' -> {
+			           ('sessionUpdate' -> 'tool_call').
+			           ('toolCallId' -> 'call_001').
+			           ('title' -> 'Reading configuration file').
+			           ('name' -> 'read_file') } asDictionary) } asDictionary.
+	toolCall := update toolCall.
+	self assert: toolCall title equals: 'Reading configuration file'.
+	self assert: toolCall name equals: 'read_file'
+]
+
+{ #category : 'tests' }
+ACPSessionUpdateTest >> testToolCallUpdateName [
+
+	| update toolCallUpdate |
+	update := ACPSessionUpdate fromDictionary: {
+		          ('sessionId' -> 'sess-001').
+		          ('update' -> {
+			           ('sessionUpdate' -> 'tool_call_update').
+			           ('toolCallId' -> 'call_001').
+			           ('name' -> 'write_file') } asDictionary) } asDictionary.
+	toolCallUpdate := update toolCallUpdate.
+	self assert: toolCallUpdate name equals: 'write_file'
+]
+
+{ #category : 'tests' }
+ACPSessionUpdateTest >> testToolCallUpdateNameAbsent [
+
+	| update |
+	update := ACPSessionUpdate fromDictionary: {
+		          ('sessionId' -> 'sess-001').
+		          ('update' -> {
+			           ('sessionUpdate' -> 'tool_call_update').
+			           ('toolCallId' -> 'call_001') } asDictionary) } asDictionary.
+	self assert: update toolCallUpdate name isNil
+]

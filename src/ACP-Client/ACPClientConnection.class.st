@@ -2,7 +2,7 @@
 I implement the ACP (Agent Client Protocol) method layer on top of a bidirectional JSON-RPC connection.
 
 Responsibility:
-- I provide typed methods for every ACP client-to-agent request: initialize, newSession, loadSession, prompt, cancel, authenticate, setSessionMode/Model/ConfigOption
+- I provide typed methods for every ACP client-to-agent request: initialize, newSession, loadSession, prompt, cancel, authenticate, logout, closeSession, deleteSession, setSessionMode/Model/ConfigOption
 - I register server-side callback handlers for agent-initiated requests: session updates, permission requests, and terminal/file operations
 - I translate raw Dictionary results into typed ACPDataTypes response objects
 
@@ -18,6 +18,9 @@ Public API and Key Messages:
 - #prompt: / #promptBy: - send a prompt; blocks until the agent responds
 - #cancel: / #cancelBy: - cancel the current prompt (notification, no response)
 - #loadSession: - resume a prior session by ID
+- #closeSession: / #closeSessionBy: - cancel in-flight work and free a session's resources
+- #deleteSession: / #deleteSessionBy: - remove a session from the agent's history
+- #logout - end the authenticated state
 
 Internal Representation:
 - connection - the ACPConnection used for transport
@@ -94,6 +97,20 @@ ACPClientConnection >> cancelBy: aBlock [
 	^ self cancel: (ACPCancelParams buildBy: aBlock)
 ]
 
+{ #category : 'api' }
+ACPClientConnection >> closeSession: aParamsOrDictionary [
+
+	| request |
+	request := ACPRequest closeSession: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> closeSessionBy: aBlock [
+
+	^ self closeSession: (ACPCloseSessionParams buildBy: aBlock)
+]
+
 { #category : 'accessing' }
 ACPClientConnection >> connection [
 
@@ -104,6 +121,20 @@ ACPClientConnection >> connection [
 ACPClientConnection >> connection: anObject [
 
 	connection := anObject
+]
+
+{ #category : 'api' }
+ACPClientConnection >> deleteSession: aParamsOrDictionary [
+
+	| request |
+	request := ACPRequest deleteSession: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACPClientConnection >> deleteSessionBy: aBlock [
+
+	^ self deleteSession: (ACPDeleteSessionParams buildBy: aBlock)
 ]
 
 { #category : 'accessing' }
@@ -147,6 +178,14 @@ ACPClientConnection >> listSessions: aParamsOrDictionary [
 ACPClientConnection >> listSessionsBy: aBlock [
 
 	^ self listSessions: (ACPListSessionsParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACPClientConnection >> logout [
+
+	| request |
+	request := ACPRequest logout.
+	^ self connection sendRequest: request method params: request params
 ]
 
 { #category : 'api' }
