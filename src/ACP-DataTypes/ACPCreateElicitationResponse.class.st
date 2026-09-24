@@ -48,14 +48,13 @@ ACPCreateElicitationResponse class >> declined [
 { #category : 'actions' }
 ACPCreateElicitationResponse >> accept [
 
-	self rawValues at: 'action' put: 'accept'.
-	self rawValues removeKey: 'content' ifAbsent: [  ]
+	self setAction: 'accept'
 ]
 
 { #category : 'actions' }
 ACPCreateElicitationResponse >> accept: aDictionary [
 
-	self rawValues at: 'action' put: 'accept'.
+	self setAction: 'accept'.
 	self rawValues at: 'content' put: aDictionary
 ]
 
@@ -68,8 +67,7 @@ ACPCreateElicitationResponse >> action [
 { #category : 'actions' }
 ACPCreateElicitationResponse >> cancel [
 
-	self rawValues at: 'action' put: 'cancel'.
-	self rawValues removeKey: 'content' ifAbsent: [  ]
+	self setAction: 'cancel'
 ]
 
 { #category : 'accessing' }
@@ -81,7 +79,14 @@ ACPCreateElicitationResponse >> content [
 { #category : 'actions' }
 ACPCreateElicitationResponse >> decline [
 
-	self rawValues at: 'action' put: 'decline'.
+	self setAction: 'decline'
+]
+
+{ #category : 'private' }
+ACPCreateElicitationResponse >> setAction: anActionString [
+	"Set the action and drop any content from an earlier action; #accept: adds its content afterwards."
+
+	self rawValues at: 'action' put: anActionString.
 	self rawValues removeKey: 'content' ifAbsent: [  ]
 ]
 

@@ -318,3 +318,29 @@ ACPElicitationTest >> testUnknownModeIsNeitherFormNorUrl [
 	self assert: request mode equals: '_custom'.
 	self assert: request urlHost isNil
 ]
+
+{ #category : 'tests - request' }
+ACPElicitationTest >> testUrlHostIsNilForMalformedUrl [
+
+	#( 'http://[::1' 'https://%zz/' 'http://host:99999999999999999999/' ) do: [ :each |
+		| request |
+		request := ACPCreateElicitation fromDictionary: {
+				           ('mode' -> 'url').
+				           ('url' -> each) } asDictionary.
+		self assert: request url equals: each.
+		self assert: request urlHost isNil ]
+]
+
+{ #category : 'tests - schema' }
+ACPElicitationTest >> testTitledChoicesTakePrecedenceOverEnum [
+
+	| property |
+	property := ACPElicitationProperty fromDictionary: {
+			            ('type' -> 'string').
+			            ('enum' -> #( 'a' 'b' )).
+			            ('oneOf' -> { {
+				             ('const' -> 'x').
+				             ('title' -> 'X') } asDictionary }) } asDictionary.
+	self assert: property isSingleSelect.
+	self assert: (property choices collect: [ :each | each value ]) asArray equals: #( 'x' )
+]
