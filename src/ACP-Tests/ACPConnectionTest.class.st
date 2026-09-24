@@ -517,3 +517,20 @@ ACPConnectionTest >> testIncomingRequestHandlerErrorReturnsErrorResponse [
 	self assert: ((response at: 'error') at: 'code') isInteger.
 	self assert: clientConnection incomingRequestProcesses isEmpty
 ]
+
+{ #category : 'tests - incoming' }
+ACPConnectionTest >> testIncomingRequestErrorKeepsRequestErrorCode [
+	"An ACPRequestError signaled by a handler is answered with its own code, message, and data."
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/invalid'
+		block: [ :params |
+			(ACPRequestError code: -32602 message: 'Bad mode' data: 'form') signal ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/invalid' id: 5.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') equals: 5.
+	self assert: ((response at: 'error') at: 'code') equals: -32602.
+	self assert: ((response at: 'error') at: 'message') equals: 'Bad mode'
+]

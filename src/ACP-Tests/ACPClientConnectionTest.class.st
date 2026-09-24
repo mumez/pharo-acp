@@ -253,3 +253,21 @@ ACPClientConnectionTest >> testLogoutSendsCorrectRequest [
 			('result' -> Dictionary new) } asDictionary.
 	sem wait
 ]
+
+{ #category : 'tests' }
+ACPClientConnectionTest >> testUnimplementedTerminalRequestReturnsMethodNotFound [
+
+	| response sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> 1).
+			('method' -> 'terminal/create').
+			('params' -> { ('command' -> 'ls') } asDictionary) } asDictionary.
+	[
+	response := agentTransport readMessage.
+	sem signal ] fork.
+	self deny: (sem waitTimeoutSeconds: 2).
+	self assert: ((response at: 'error') at: 'code') equals: -32601
+]
