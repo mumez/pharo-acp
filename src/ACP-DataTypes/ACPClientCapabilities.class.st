@@ -11,7 +11,20 @@ ACPClientCapabilities >> asDictionary [
 	| dict |
 	dict := super asDictionary.
 	dict at: 'fs' put: self fs asDictionary.
+	self trimNested: self elicitation named: 'elicitation' in: dict.
 	^ dict
+]
+
+{ #category : 'accessing' }
+ACPClientCapabilities >> elicitation [
+
+	^ self rawValues at: 'elicitation' ifAbsentPut: [ ACPElicitationCapabilities new ]
+]
+
+{ #category : 'accessing' }
+ACPClientCapabilities >> elicitation: anObject [
+
+	^ self rawValues at: 'elicitation' put: anObject
 ]
 
 { #category : 'accessing' }
@@ -44,5 +57,9 @@ ACPClientCapabilities class >> fromDictionary: aDictionary [
 	| instance |
 	instance := super fromDictionary: aDictionary.
 	instance rawValues at: 'fs' ifPresent: [ :dict | instance fs: (ACPFileSystemCapability fromDictionary: dict) ].
+	instance rawValues at: 'elicitation' ifPresent: [ :dict |
+		dict
+			ifNil: [ instance rawValues removeKey: 'elicitation' ]
+			ifNotNil: [ instance elicitation: (ACPElicitationCapabilities fromDictionary: dict) ] ].
 	^ instance
 ]
