@@ -1190,5 +1190,38 @@ ACPDataTypesTest >> testConfigOptionCategoryMutators [
 	self assert: opt category equals: 'mode'.
 
 	opt beThoughtLevelCategory.
-	self assert: opt category equals: 'thought_level'
+	self assert: opt category equals: 'thought_level'.
+
+	opt beModelConfigCategory.
+	self assert: opt category equals: 'model_config'
+]
+
+{ #category : 'tests - config option' }
+ACPDataTypesTest >> testConfigOptionModelConfigCategory [
+
+	| modelConfig model |
+	modelConfig := ACPConfigOption fromDictionary:
+		               { ('category' -> 'model_config') } asDictionary.
+	model := ACPConfigOption fromDictionary: { ('category' -> 'model') }
+		         asDictionary.
+
+	self assert: modelConfig isModelConfigCategory.
+	self deny: modelConfig isModelCategory.
+	self deny: modelConfig isModeCategory.
+	self deny: modelConfig isThoughtLevelCategory.
+
+	self deny: model isModelConfigCategory
+]
+
+{ #category : 'tests - content block' }
+ACPDataTypesTest >> testContentChunkMessageId [
+
+	| chunk |
+	chunk := ACPContentChunk fromDictionary: {
+		         ('messageId' -> 'msg-001').
+		         ('content' -> {
+			          ('type' -> 'text').
+			          ('text' -> 'hello') } asDictionary) } asDictionary.
+	self assert: chunk messageId equals: 'msg-001'.
+	self assert: (ACPContentChunk fromDictionary: Dictionary new) messageId isNil
 ]
