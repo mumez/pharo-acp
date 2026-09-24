@@ -86,3 +86,13 @@ ACPClientTest >> testRespondsToInitializeBy [
 
 	self assert: (client respondsTo: #initializeBy:)
 ]
+
+{ #category : 'tests' }
+ACPClientTest >> testRespondsToCloseDeleteLogoutApi [
+
+	self assert: (client respondsTo: #closeSession:).
+	self assert: (client respondsTo: #closeSessionBy:).
+	self assert: (client respondsTo: #deleteSession:).
+	self assert: (client respondsTo: #deleteSessionBy:).
+	self assert: (client respondsTo: #logout)
+]

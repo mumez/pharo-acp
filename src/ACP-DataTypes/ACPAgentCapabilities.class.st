@@ -50,6 +50,19 @@ ACPAgentCapabilities >> isCloseSupported [
 ]
 
 { #category : 'testing' }
+ACPAgentCapabilities >> isDeleteSupported [
+
+	^ self sessionCapabilities delete notNil
+]
+
+{ #category : 'testing' }
+ACPAgentCapabilities >> isLogoutSupported [
+
+	^ ((self rawValues at: 'auth' ifAbsent: [ nil ]) ifNotNil: [ :auth |
+		   auth at: 'logout' ifAbsent: [ nil ] ]) notNil
+]
+
+{ #category : 'testing' }
 ACPAgentCapabilities >> isResumeSupported [
 
 	^ self sessionCapabilities resume notNil
