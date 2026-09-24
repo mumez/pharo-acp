@@ -4,7 +4,9 @@ Class {
 	#instVars : [
 		'lastUpdate',
 		'updates',
-		'permissionRequest'
+		'permissionRequest',
+		'elicitationRequest',
+		'completedElicitationIds'
 	],
 	#category : 'ACP-Tests',
 	#package : 'ACP-Tests'
@@ -14,7 +16,34 @@ Class {
 ACPMockHandler >> initialize [
 
 	super initialize.
-	updates := OrderedCollection new
+	updates := OrderedCollection new.
+	completedElicitationIds := OrderedCollection new
+]
+
+{ #category : 'accessing' }
+ACPMockHandler >> completedElicitationIds [
+
+	^ completedElicitationIds
+]
+
+{ #category : 'agent-callbacks' }
+ACPMockHandler >> completeElicitation: anACPCompleteElicitation [
+
+	completedElicitationIds add: anACPCompleteElicitation elicitationId
+]
+
+{ #category : 'agent-callbacks' }
+ACPMockHandler >> createElicitation: anACPCreateElicitation [
+
+	elicitationRequest := anACPCreateElicitation.
+	^ anACPCreateElicitation makeResponse accept: { ('name' -> 'mock') } asDictionary;
+		  yourself
+]
+
+{ #category : 'accessing' }
+ACPMockHandler >> elicitationRequest [
+
+	^ elicitationRequest
 ]
 
 { #category : 'accessing' }
