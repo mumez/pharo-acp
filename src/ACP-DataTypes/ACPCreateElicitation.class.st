@@ -16,7 +16,7 @@ Public API:
 - sessionId / toolCallId / isSessionScoped - session scope (toolCallId is optional)
 - requestId / isRequestScoped - request scope (outside of a session, e.g. during authentication)
 - requestedSchema - ACPElicitationSchema (form mode), or nil
-- elicitationId / url / urlHost - URL mode fields
+- elicitationId / url / urlHost - URL mode fields (urlHost is nil for a malformed URL)
 - makeResponse - a new ACPCreateElicitationResponse
 
 Implementation Points:
@@ -112,6 +112,10 @@ ACPCreateElicitation >> url [
 
 { #category : 'accessing' }
 ACPCreateElicitation >> urlHost [
+	"The host of #url, or nil when there is no URL or it cannot be parsed (url is agent input)."
 
-	^ self url ifNotNil: [ :aString | aString asZnUrl host ]
+	^ self url ifNotNil: [ :aString |
+		  [ aString asZnUrl host ]
+			  on: Error
+			  do: [ :e | e return: nil ] ]
 ]

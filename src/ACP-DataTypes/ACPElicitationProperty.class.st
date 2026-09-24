@@ -19,6 +19,7 @@ Public API:
 - minimum / maximum - number and integer bounds (inclusive)
 - minItems / maxItems - multi-select bounds
 - choices - Array of ACPElicitationEnumOption for single and multi selects, otherwise empty
+  (when both a titled list and 'enum' are given, the titled list takes precedence)
 
 Implementation Points:
 - Clients SHOULD pre-populate fields with #default
@@ -42,7 +43,8 @@ ACPElicitationProperty >> choices [
 
 { #category : 'private' }
 ACPElicitationProperty >> choicesFrom: aDictionary [
-	"Titled options are in 'oneOf' (single select) or 'anyOf' (multi-select items); untitled ones in 'enum'."
+	"Titled options are in 'oneOf' (single select) or 'anyOf' (multi-select items); untitled ones in 'enum'.
+	 The schema defines these as alternatives; if a property declares both, the titled list takes precedence."
 
 	#( 'oneOf' 'anyOf' ) do: [ :key |
 		(aDictionary at: key ifAbsent: [ nil ]) ifNotNil: [ :options |
