@@ -488,3 +488,32 @@ ACPConnectionTest >> testTerminateIncomingRequests [
 	self assert: clientConnection incomingRequestProcesses isEmpty.
 	self deny: clientConnection isClosed
 ]
+
+{ #category : 'tests - incoming' }
+ACPConnectionTest >> testIncomingRequestForUnknownMethodReturnsErrorResponse [
+
+	| response |
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/unknown' id: 3.
+	response := self agentReadMessage.
+	self assert: (response at: 'jsonrpc') equals: '2.0'.
+	self assert: (response at: 'id') equals: 3.
+	self assert: ((response at: 'error') at: 'code') equals: -32601.
+	self deny: (response includesKey: 'result')
+]
+
+{ #category : 'tests - incoming' }
+ACPConnectionTest >> testIncomingRequestHandlerErrorReturnsErrorResponse [
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/fail'
+		block: [ :params | Error signal: 'boom' ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/fail' id: 4.
+	response := self agentReadMessage.
+	self assert: (response at: 'jsonrpc') equals: '2.0'.
+	self assert: (response at: 'id') equals: 4.
+	self assert: ((response at: 'error') at: 'code') isInteger.
+	self assert: clientConnection incomingRequestProcesses isEmpty
+]

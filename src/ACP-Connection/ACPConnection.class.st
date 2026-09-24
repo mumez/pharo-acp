@@ -13,7 +13,8 @@ Collaborators:
 - ACPNdJsonTransport: my transport layer — I read and write JSON messages through it
 - ACPPendingRequest: one instance per in-flight request; I resolve or reject it when the response arrives
 - JRPCMessageProcessor: I delegate incoming requests and notifications to it for handler dispatch
-- ACPCancellationToken: one per incoming request; bound as ACPCurrentCancellationToken while its handler runs
+- ACPIncomingRequest: one per running incoming request, holding its id, process, and ACPCancellationToken
+- ACPCancellationToken: bound as ACPCurrentCancellationToken while an incoming request's handler runs
 - ACPRequestCancelled: when it escapes from a handler, I respond with error code -32800
 
 Public API and Key Messages:
@@ -34,9 +35,8 @@ Internal Representation:
 - readProcess - the background Process running the read loop
 - isClosed - true once close has been called
 - closeSemaphore - signaled when the connection closes
-- incomingRequests - Dictionary mapping incoming request id → the Process handling it
-- cancellationTokens - Dictionary mapping incoming request id → its ACPCancellationToken
-- incomingRequestsMutex - Mutex guarding incomingRequests and cancellationTokens
+- incomingRequests - Dictionary mapping incoming request id → ACPIncomingRequest
+- incomingRequestsMutex - Mutex guarding incomingRequests
 
 Implementation Points:
 - The read loop runs at lowIOPriority to keep the Pharo IDE responsive
@@ -60,8 +60,10 @@ Class {
 		'isClosed',
 		'closeSemaphore',
 		'incomingRequests',
-		'cancellationTokens',
 		'incomingRequestsMutex'
+	],
+	#pools : [
+		'JRPCConstantsSharedPool'
 	],
 	#category : 'ACP-Connection',
 	#package : 'ACP-Connection'
@@ -86,8 +88,8 @@ ACPConnection >> cancelIncomingRequest: aRequestId [
 	"Cancel the token of a running incoming request. Unknown or finished requests are ignored."
 
 	(incomingRequestsMutex critical: [
-		 cancellationTokens at: aRequestId ifAbsent: [ nil ] ]) ifNotNil: [ :token |
-		token cancel ]
+		 incomingRequests at: aRequestId ifAbsent: [ nil ] ]) ifNotNil: [ :request |
+		request cancel ]
 ]
 
 { #category : 'operations' }
@@ -137,8 +139,8 @@ ACPConnection >> handleCancelRequest: message [
 
 	| params |
 	params := message at: 'params' ifAbsent: [ ^ self ].
-	params isDictionary ifFalse: [ ^ self ].
-	self cancelIncomingRequest: (params at: 'requestId' ifAbsent: [ ^ self ])
+	(params isDictionary and: [ params includesKey: 'requestId' ]) ifTrue: [
+		self cancelIncomingRequest: (params at: 'requestId') ]
 ]
 
 { #category : 'private' }
@@ -168,10 +170,11 @@ ACPConnection >> handleIncomingRequest: message [
 	process
 		priority: Processor userSchedulingPriority;
 		name: 'ACP incoming request ' , requestId printString.
-	(self registerIncomingRequest: requestId process: process token: token) ifFalse: [
+	(self registerIncomingRequest:
+		 (ACPIncomingRequest id: requestId process: process token: token)) ifFalse: [
 		^ self transport writeMessage: (self
 				   errorResponseForId: requestId
-				   code: -32600
+				   code: InvalidRequest
 				   message: 'Duplicate request id: ' , requestId printString) ].
 	process resume
 ]
@@ -180,7 +183,8 @@ ACPConnection >> handleIncomingRequest: message [
 ACPConnection >> incomingRequestProcesses [
 	"Answer a copy of the running incoming request processes, keyed by request id."
 
-	^ incomingRequestsMutex critical: [ incomingRequests copy ]
+	^ incomingRequestsMutex critical: [
+		  incomingRequests collect: [ :each | each process ] ]
 ]
 
 { #category : 'private' }
@@ -199,7 +203,7 @@ ACPConnection >> processIncomingRequest: message token: aToken [
 					             errorResponseForId: requestId
 					             code: ((e isKindOf: ACPRequestCancelled)
 							              ifTrue: [ ACPRequestCancelled code ]
-							              ifFalse: [ -32603 ])
+							              ifFalse: [ InternalError ])
 					             message: e messageText) ].
 	self unregisterIncomingRequest: requestId.
 	[ self transport writeMessage: response ]
@@ -208,15 +212,14 @@ ACPConnection >> processIncomingRequest: message token: aToken [
 ]
 
 { #category : 'private' }
-ACPConnection >> registerIncomingRequest: aRequestId process: aProcess token: aToken [
+ACPConnection >> registerIncomingRequest: anIncomingRequest [
 	"Answer false if a request with the same id is already running."
 
 	^ incomingRequestsMutex critical: [
-		  (incomingRequests includesKey: aRequestId)
+		  (incomingRequests includesKey: anIncomingRequest id)
 			  ifTrue: [ false ]
 			  ifFalse: [
-				  incomingRequests at: aRequestId put: aProcess.
-				  cancellationTokens at: aRequestId put: aToken.
+				  incomingRequests at: anIncomingRequest id put: anIncomingRequest.
 				  true ] ]
 ]
 
@@ -225,22 +228,23 @@ ACPConnection >> responseForIncomingRequest: message [
 	"Dispatch incoming request via JRPCMessageProcessor using object API.
 	 Params are wrapped in an array for JRPCBlockHandler compatibility."
 
-	| request response responseDict |
+	| request response |
 	request := JRPCRequestObject new
 		method: (message at: 'method');
 		id: (message at: 'id');
 		params: { message at: 'params' ifAbsent: [ Dictionary new ] };
 		yourself.
 	response := self messageProcessor handleJRPCRequestObject: request.
-	responseDict := Dictionary new.
-	responseDict at: 'jsonrpc' put: '2.0'.
-	responseDict at: 'id' put: response id.
-	response isError
-		ifTrue: [ responseDict at: 'error' put: {
-			'code' -> response error code.
-			'message' -> response error message } asDictionary ]
-		ifFalse: [ responseDict at: 'result' put: response result ].
-	^ responseDict
+	response isError ifTrue: [
+		^ self
+			  errorResponseForId: response id
+			  code: response error code
+			  message: response error message ].
+	^ {
+		'jsonrpc' -> '2.0'.
+		'id' -> response id.
+		'result' -> response result
+	} asDictionary
 ]
 
 { #category : 'private' }
@@ -278,7 +282,6 @@ ACPConnection >> initialize [
 	closeSemaphore := Semaphore new.
 	messageProcessor := JRPCMessageProcessor new.
 	incomingRequests := Dictionary new.
-	cancellationTokens := Dictionary new.
 	incomingRequestsMutex := Mutex new
 ]
 
@@ -357,14 +360,8 @@ ACPConnection >> readProcess: aProcess [
 { #category : 'private' }
 ACPConnection >> sendErrorResponseForId: anId error: anError [
 
-	self transport writeMessage: {
-		'jsonrpc' -> '2.0'.
-		'id' -> anId.
-		'error' -> {
-			'code' -> -32603.
-			'message' -> anError messageText
-		} asDictionary
-	} asDictionary
+	self transport writeMessage:
+		(self errorResponseForId: anId code: InternalError message: anError messageText)
 ]
 
 { #category : 'sending' }
@@ -405,15 +402,13 @@ ACPConnection >> terminateIncomingRequests [
 	"Terminate all running incoming request processes without responding.
 	 Used on close and as an emergency cleanup; the calling process itself is never terminated."
 
-	| processes |
-	processes := incomingRequestsMutex critical: [
-		             | all |
-		             all := incomingRequests values.
-		             incomingRequests removeAll.
-		             cancellationTokens removeAll.
-		             all ].
-	processes do: [ :each |
-		each == Processor activeProcess ifFalse: [ each terminate ] ]
+	| requests |
+	requests := incomingRequestsMutex critical: [
+		            | all |
+		            all := incomingRequests values.
+		            incomingRequests removeAll.
+		            all ].
+	requests do: [ :each | each terminate ]
 ]
 
 { #category : 'accessing' }
@@ -432,8 +427,7 @@ ACPConnection >> transport: anACPNdJsonTransport [
 ACPConnection >> unregisterIncomingRequest: aRequestId [
 
 	incomingRequestsMutex critical: [
-		incomingRequests removeKey: aRequestId ifAbsent: [  ].
-		cancellationTokens removeKey: aRequestId ifAbsent: [  ] ]
+		incomingRequests removeKey: aRequestId ifAbsent: [  ] ]
 ]
 
 { #category : 'operations' }
