@@ -895,6 +895,33 @@ ACPDataTypesTest >> testAgentCapabilitiesIsCloseSupported [
 ]
 
 { #category : 'tests - agent capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsDeleteSupported [
+
+	| supported unsupported |
+	supported := ACPAgentCapabilities fromDictionary: {
+			        ('sessionCapabilities' -> { ('delete' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isDeleteSupported.
+	self deny: unsupported isDeleteSupported
+]
+
+{ #category : 'tests - agent capabilities' }
+ACPDataTypesTest >> testAgentCapabilitiesIsLogoutSupported [
+
+	| supported authWithoutLogout unsupported |
+	supported := ACPAgentCapabilities fromDictionary:
+		             { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
+			             asDictionary.
+	authWithoutLogout := ACPAgentCapabilities fromDictionary:
+		                     { ('auth' -> Dictionary new) } asDictionary.
+	unsupported := ACPAgentCapabilities new.
+	self assert: supported isLogoutSupported.
+	self deny: authWithoutLogout isLogoutSupported.
+	self deny: unsupported isLogoutSupported
+]
+
+{ #category : 'tests - agent capabilities' }
 ACPDataTypesTest >> testAgentCapabilitiesIsHttpMcpServersSupported [
 
 	| httpSupported sseOnly noCaps |
