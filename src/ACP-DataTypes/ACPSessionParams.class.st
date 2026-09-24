@@ -20,7 +20,7 @@ ACPSessionParams >> cwd: aString [
 { #category : 'accessing' }
 ACPSessionParams >> additionalDirectories [
 
-	^ self rawValues at: 'additionalDirectories' ifAbsent: [ #(  ) ]
+	^ self rawValues at: 'additionalDirectories' ifAbsent: [ #() ]
 ]
 
 { #category : 'accessing' }

@@ -2,31 +2,16 @@
 I represent the parameters of a session/delete request.
 
 Responsibility:
-- I hold the ID of the session to delete.
+- I identify the session to delete (the 'sessionId' field is inherited)
 
 Collaborators:
 - ACPClientConnection: builds me via #deleteSessionBy:
 - ACPRequest: converts me to the request params dictionary
-- ACPValues: my superclass
-
-Public API:
-- sessionId / sessionId: - the target session ID
+- ACPSessionIdParams: my superclass
 "
 Class {
 	#name : 'ACPDeleteSessionParams',
-	#superclass : 'ACPValues',
+	#superclass : 'ACPSessionIdParams',
 	#category : 'ACP-DataTypes',
 	#package : 'ACP-DataTypes'
 }
-
-{ #category : 'accessing' }
-ACPDeleteSessionParams >> sessionId [
-
-	^ self rawValues at: 'sessionId' ifAbsent: []
-]
-
-{ #category : 'accessing' }
-ACPDeleteSessionParams >> sessionId: aString [
-
-	self rawValues at: 'sessionId' put: aString
-]
