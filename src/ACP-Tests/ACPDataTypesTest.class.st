@@ -38,6 +38,16 @@ ACPDataTypesTest >> testBuildByEmptyBlock [
 ]
 
 { #category : 'tests - leaf options' }
+ACPDataTypesTest >> testSessionIdOnlyParamsShareSuperclass [
+
+	{ ACPCancelParams. ACPCloseSessionParams. ACPDeleteSessionParams } do: [ :each |
+		| params |
+		self assert: each superclass equals: ACPSessionIdParams.
+		params := each buildBy: [ :p | p sessionId: 'abc-123' ].
+		self assert: params asDictionary equals: { ('sessionId' -> 'abc-123') } asDictionary ]
+]
+
+{ #category : 'tests - leaf options' }
 ACPDataTypesTest >> testCancelParamsAsDictionary [
 
 	| opts dict |
@@ -782,7 +792,12 @@ ACPDataTypesTest >> testAgentCapabilitiesTypedAccessors [
 	self assert: mcp http equals: true.
 	self assert: prompt class equals: ACPPromptCapabilities.
 	self assert: prompt audio equals: true.
-	self assert: session class equals: ACPSessionCapabilities
+	self assert: session class equals: ACPSessionCapabilities.
+	self
+		assert: (ACPAgentCapabilities fromDictionary:
+				 { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
+					 asDictionary) auth class
+		equals: ACPAgentAuthCapabilities
 ]
 
 { #category : 'tests - capabilities' }
@@ -793,10 +808,12 @@ ACPDataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
 	self assert: caps mcpCapabilities isEmpty.
 	self assert: caps promptCapabilities isEmpty.
 	self assert: caps sessionCapabilities isEmpty.
+	self assert: caps auth isEmpty.
 	dict := caps asDictionary.
 	self deny: (dict includesKey: 'mcpCapabilities').
 	self deny: (dict includesKey: 'promptCapabilities').
-	self deny: (dict includesKey: 'sessionCapabilities')
+	self deny: (dict includesKey: 'sessionCapabilities').
+	self deny: (dict includesKey: 'auth')
 ]
 
 { #category : 'tests - capabilities' }
@@ -894,7 +911,7 @@ ACPDataTypesTest >> testAgentCapabilitiesIsCloseSupported [
 	self deny: unsupported isCloseSupported
 ]
 
-{ #category : 'tests - agent capabilities' }
+{ #category : 'tests - capabilities' }
 ACPDataTypesTest >> testAgentCapabilitiesIsDeleteSupported [
 
 	| supported unsupported |
@@ -906,7 +923,7 @@ ACPDataTypesTest >> testAgentCapabilitiesIsDeleteSupported [
 	self deny: unsupported isDeleteSupported
 ]
 
-{ #category : 'tests - agent capabilities' }
+{ #category : 'tests - capabilities' }
 ACPDataTypesTest >> testAgentCapabilitiesIsLogoutSupported [
 
 	| supported authWithoutLogout unsupported |
@@ -918,7 +935,9 @@ ACPDataTypesTest >> testAgentCapabilitiesIsLogoutSupported [
 	unsupported := ACPAgentCapabilities new.
 	self assert: supported isLogoutSupported.
 	self deny: authWithoutLogout isLogoutSupported.
-	self deny: unsupported isLogoutSupported
+	self deny: unsupported isLogoutSupported.
+	self deny: (ACPAgentCapabilities fromDictionary: { ('auth' -> nil) } asDictionary)
+			isLogoutSupported
 ]
 
 { #category : 'tests - agent capabilities' }
