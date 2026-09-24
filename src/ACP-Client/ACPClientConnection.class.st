@@ -286,19 +286,20 @@ ACPClientConnection >> handleCreateElicitation: aDictionary [
 
 	| request |
 	request := ACPCreateElicitation fromDictionary: aDictionary.
-	(self isElicitationModeAllowed: request mode) ifFalse: [
+	(self isElicitationModeAllowed: request) ifFalse: [
 		^ (ACPRequestError invalidParams:
 			   'Elicitation mode not advertised by the client: ' , request mode printString) signal ].
 	^ (self handler createElicitation: request) asDictionary
 ]
 
 { #category : 'private' }
-ACPClientConnection >> isElicitationModeAllowed: aMode [
+ACPClientConnection >> isElicitationModeAllowed: anACPCreateElicitation [
+	"Form and URL modes must have been advertised; other (custom) modes are left to the handler."
 
-	| elicitation |
-	elicitation := self clientCapabilities elicitation.
-	aMode = 'form' ifTrue: [ ^ elicitation isFormSupported ].
-	aMode = 'url' ifTrue: [ ^ elicitation isUrlSupported ].
+	anACPCreateElicitation isForm ifTrue: [
+		^ self clientCapabilities elicitation isFormSupported ].
+	anACPCreateElicitation isUrl ifTrue: [
+		^ self clientCapabilities elicitation isUrlSupported ].
 	^ true
 ]
 
