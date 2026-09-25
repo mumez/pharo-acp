@@ -17,6 +17,7 @@ Public API and Key Messages:
 - #internalError: - factory for internal errors
 - #authRequired - factory for authentication-required errors
 - #asRpcErrorDictionary - convert to a JSON-RPC error Dictionary for wire transmission
+- #asJRPCResponseWithId: - error response used when a request handler signals me (keeps my code, message, and data)
 
 Internal Representation:
 - code - Integer JSON-RPC error code
@@ -91,6 +92,18 @@ ACPRequestError class >> signalForRpcError: anErrorDictionary [
 		 message: (anErrorDictionary at: 'message')
 		 data: (anErrorDictionary at: 'data' ifAbsent: [ nil ]))
 		signal
+]
+
+{ #category : 'converting' }
+ACPRequestError >> asJRPCResponseWithId: anId [
+	"Called by JRPCMessageProcessor when a handler signals me; keep my code instead of JRPC's generic internal error."
+
+	^ JRPCErrorResponseObject
+		  id: anId
+		  error: (self data
+				   ifNil: [ JRPCErrorObject code: self code message: self rpcMessage ]
+				   ifNotNil: [ :aData |
+				   JRPCErrorObject code: self code message: self rpcMessage data: aData ])
 ]
 
 { #category : 'converting' }

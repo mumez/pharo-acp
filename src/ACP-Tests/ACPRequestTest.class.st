@@ -43,7 +43,7 @@ ACPRequestTest >> testInitializeFactory [
 			           p capabilities terminal: true ]).
 	self assert: request method equals: 'initialize'.
 	self assert: (request params at: 'protocolVersion') equals: 1.
-	self assert: ((request params at: 'capabilities') at: 'terminal') equals: true
+	self assert: ((request params at: 'clientCapabilities') at: 'terminal') equals: true
 ]
 
 { #category : 'tests' }

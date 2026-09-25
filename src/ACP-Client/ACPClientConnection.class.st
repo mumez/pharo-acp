@@ -3,7 +3,8 @@ I implement the ACP (Agent Client Protocol) method layer on top of a bidirection
 
 Responsibility:
 - I provide typed methods for every ACP client-to-agent request: initialize, newSession, loadSession, prompt, cancel, authenticate, logout, closeSession, deleteSession, setSessionMode/Model/ConfigOption
-- I register server-side callback handlers for agent-initiated requests: session updates, permission requests, and terminal/file operations
+- I register server-side callback handlers for agent-initiated requests: session updates, permission requests, terminal/file operations, and elicitation
+- I remember the client capabilities sent in #initialize:, and reject elicitation requests for modes they do not advertise
 - I translate raw Dictionary results into typed ACPDataTypes response objects
 
 Collaborators:
@@ -13,7 +14,7 @@ Collaborators:
 - ACPConstants (SharedPool): I reference ACP method name constants
 
 Public API and Key Messages:
-- #initialize: - handshake with agent; stores ACPInitializeResponse in agentInfo
+- #initialize: - handshake with agent; stores ACPInitializeResponse in agentInfo and the sent client capabilities in clientCapabilities
 - #newSession: / #newSessionBy: - start a new agent session
 - #prompt: / #promptBy: - send a prompt; blocks until the agent responds
 - #cancel: / #cancelBy: - cancel the current prompt (notification, no response)
@@ -26,6 +27,7 @@ Internal Representation:
 - connection - the ACPConnection used for transport
 - handler - the ACPClientHandler that receives agent-initiated callbacks
 - agentInfo - ACPInitializeResponse cached from the initialize handshake
+- clientCapabilities - ACPClientCapabilities sent in the initialize handshake (nothing advertised before it)
 
 Implementation Points:
 - Each ""By:"" variant accepts a builder block for constructing typed params objects
@@ -38,7 +40,8 @@ Class {
 	#instVars : [
 		'connection',
 		'handler',
-		'agentInfo'
+		'agentInfo',
+		'clientCapabilities'
 	],
 	#pools : [
 		'ACPConstants'
@@ -112,6 +115,18 @@ ACPClientConnection >> closeSessionBy: aBlock [
 ]
 
 { #category : 'accessing' }
+ACPClientConnection >> clientCapabilities [
+
+	^ clientCapabilities ifNil: [ clientCapabilities := ACPClientCapabilities new ]
+]
+
+{ #category : 'accessing' }
+ACPClientConnection >> clientCapabilities: anACPClientCapabilities [
+
+	clientCapabilities := anACPClientCapabilities
+]
+
+{ #category : 'accessing' }
 ACPClientConnection >> connection [
 
 	^ connection
@@ -154,6 +169,8 @@ ACPClientConnection >> initialize: aParamsOrDictionary [
 
 	| request result |
 	request := ACPRequest initialize: aParamsOrDictionary.
+	self clientCapabilities: (ACPClientCapabilities fromDictionary:
+			 ((request params at: 'clientCapabilities' ifAbsent: [ nil ]) ifNil: [ Dictionary new ]) copy).
 	result := self connection sendRequest: request method params: request params.
 	self agentInfo: (ACPInitializeResponse fromDictionary: result).
 	^ self agentInfo
@@ -263,12 +280,51 @@ ACPClientConnection >> registerFileHandlers [
 			 block: [ :params | self handler writeTextFile: params ])
 ]
 
+{ #category : 'private' }
+ACPClientConnection >> handleCreateElicitation: aDictionary [
+	"Reject form/url requests for modes the client did not advertise (-32602); pass other modes to the handler."
+
+	| request |
+	request := ACPCreateElicitation fromDictionary: aDictionary.
+	(self isElicitationModeAllowed: request) ifFalse: [
+		^ (ACPRequestError invalidParams:
+			   'Elicitation mode not advertised by the client: ' , request mode printString) signal ].
+	^ (self handler createElicitation: request) asDictionary
+]
+
+{ #category : 'private' }
+ACPClientConnection >> isElicitationModeAllowed: anACPCreateElicitation [
+	"Form and URL modes must have been advertised; other (custom) modes are left to the handler."
+
+	anACPCreateElicitation isForm ifTrue: [
+		^ self clientCapabilities elicitation isFormSupported ].
+	anACPCreateElicitation isUrl ifTrue: [
+		^ self clientCapabilities elicitation isUrlSupported ].
+	^ true
+]
+
+{ #category : 'initialization' }
+ACPClientConnection >> registerElicitationHandlers [
+
+	| processor |
+	processor := self connection messageProcessor.
+
+	processor addHandler: (JRPCBlockHandler
+			 methodName: ACPMethodElicitationCreate
+			 block: [ :params | self handleCreateElicitation: params ]).
+
+	processor addHandler: (JRPCBlockHandler
+			 methodName: ACPMethodElicitationComplete
+			 block: [ :params | self handler completeElicitation: (ACPCompleteElicitation fromDictionary: params) ])
+]
+
 { #category : 'initialization' }
 ACPClientConnection >> registerHandlers [
 
 	self registerSessionHandlers.
 	self registerFileHandlers.
-	self registerTerminalHandlers
+	self registerTerminalHandlers.
+	self registerElicitationHandlers
 ]
 
 { #category : 'initialization' }
