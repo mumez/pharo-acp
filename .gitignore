@@ -1,6 +1,7 @@
 .claude/
 plan/
 CLAUDE.md
+CLAUDE.local.md
 openspec/
 .agent/
 .cursor/
