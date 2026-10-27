@@ -23,9 +23,10 @@ Internal Representation:
 - isClosed - true once close has been called
 - pollDelay - Duration to wait when no data is available on a non-blocking pipe
 - useAtEnd - false for OSSPipe (atEnd is unreliable); true for regular streams
+- processLauncher - the ACPProcessLauncher I was created on, if any; its process exiting ends the read stream
 
 Implementation Points:
-- OSSPipe does not reliably report atEnd when data is temporarily unavailable; useAtEnd: false skips the check
+- OSSPipe does not reliably report atEnd when data is temporarily unavailable; useAtEnd: false skips the check, so the end of a process's stream is detected from the process having exited
 - Streams are set to binary mode so UTF-8 ByteArrays are exchanged without re-encoding
 - Empty lines in the ndjson stream are silently skipped
 - A Mutex is required because multiple Pharo processes may call #writeMessage: concurrently
@@ -40,7 +41,8 @@ Class {
 		'isClosed',
 		'readBuffer',
 		'pollDelay',
-		'useAtEnd'
+		'useAtEnd',
+		'processLauncher'
 	],
 	#category : 'ACP-Transport',
 	#package : 'ACP-Transport'
@@ -56,6 +58,7 @@ ACPNdJsonTransport class >> on: anACPProcessLauncher [
 		             writeStream: anACPProcessLauncher stdinStream;
 		             readStream: anACPProcessLauncher stdoutStream;
 		             useAtEnd: false;
+		             processLauncher: anACPProcessLauncher;
 		             yourself.
 	transport writeStream binary.
 	transport readStream binary.
@@ -92,10 +95,14 @@ ACPNdJsonTransport >> initialize [
 { #category : 'private' }
 ACPNdJsonTransport >> isAtEnd [
 	"Check if the stream has reached EOF.
-	 When useAtEnd is false (OSSPipe), only isClosed is checked because
-	 OSSPipe atEnd unreliably returns true when no data is available yet."
+	 When useAtEnd is false (OSSPipe), atEnd is not checked because OSSPipe
+	 atEnd unreliably returns true when no data is available yet; the stream
+	 has ended once the process behind it has exited."
 
-	^ self isClosed or: [ self useAtEnd and: [ self readStream atEnd ] ]
+	^ self isClosed
+		  or: [
+			  (self useAtEnd and: [ self readStream atEnd ])
+				  or: [ self processLauncher notNil and: [ self processLauncher isRunning not ] ] ]
 ]
 
 { #category : 'testing' }
@@ -120,6 +127,18 @@ ACPNdJsonTransport >> pollDelay [
 ACPNdJsonTransport >> pollDelay: aDuration [
 
 	pollDelay := aDuration
+]
+
+{ #category : 'accessing' }
+ACPNdJsonTransport >> processLauncher [
+
+	^ processLauncher
+]
+
+{ #category : 'accessing' }
+ACPNdJsonTransport >> processLauncher: anACPProcessLauncher [
+
+	processLauncher := anACPProcessLauncher
 ]
 
 { #category : 'private' }

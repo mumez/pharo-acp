@@ -63,6 +63,28 @@ ACPNdJsonTransportTest >> testReadMessageReturnsNilOnEmptyStream [
 ]
 
 { #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageReturnsNilWhenTheProcessExits [
+	"Subprocess pipes do not report atEnd reliably, so the transport must notice
+	that the agent process exited; otherwise readMessage polls forever and a
+	request sent to an agent that failed to start never completes."
+
+	| launcher processTransport result done |
+	launcher := ACPProcessLauncher new
+		            command: '/bin/sh';
+		            arguments: #( '-c' 'exit 1' );
+		            yourself.
+	launcher launch.
+	processTransport := ACPNdJsonTransport on: launcher.
+	done := Semaphore new.
+	[
+	result := processTransport readMessage.
+	done signal ] fork.
+	[
+	self deny: (done waitTimeoutSeconds: 5).
+	self assert: result isNil ] ensure: [ launcher terminate ]
+]
+
+{ #category : 'tests - reading' }
 ACPNdJsonTransportTest >> testReadMessageSkipsInvalidJson [
 
 	| result |
