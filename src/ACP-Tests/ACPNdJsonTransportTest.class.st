@@ -78,6 +78,35 @@ ACPNdJsonTransportTest >> testReadMessageDrainsDataLeftAfterTheProcessExits [
 ]
 
 { #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageSkipsLineWithInvalidUtf8 [
+	"A complete line that is not valid UTF-8 cannot be a message; it is skipped
+	 and the following line is still delivered."
+
+	| result |
+	readStream nextPutAll: #[ 16rFF 16rFE ] , (String lf , '{"jsonrpc":"2.0","method":"test"}' , String lf) utf8Encoded.
+	readStream reset.
+	result := transport readMessage.
+	self assert: (result at: 'method') equals: 'test'
+]
+
+{ #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageEndsWhenTheRemainderIsTruncatedUtf8 [
+	"The agent may exit in the middle of a multi-byte character, leaving an
+	 unterminated remainder that is not valid UTF-8. The transport must end
+	 the stream with nil instead of raising a decoding error."
+
+	| truncatingTransport |
+	truncatingTransport := ACPNdJsonTransport
+		                       writeStream: (ReadWriteStream on: ByteArray new)
+		                       readStream: (ACPScriptedReadStream chunks: {
+					                        ('{"text":"' utf8Encoded , ('あ' utf8Encoded first: 2)) }).
+	truncatingTransport
+		useAtEnd: false;
+		processLauncher: ACPExitedProcessLauncher new.
+	self assert: truncatingTransport readMessage isNil
+]
+
+{ #category : 'tests - reading' }
 ACPNdJsonTransportTest >> testReadMessageParsesJson [
 
 	| result |

@@ -143,16 +143,6 @@ ACPNdJsonTransport >> processLauncher: anACPProcessLauncher [
 ]
 
 { #category : 'private' }
-ACPNdJsonTransport >> readChunkOnError: errorBlock [
-	"Read whatever is currently available in the stream.
-	 On a stream error, answer the value of errorBlock instead."
-
-	^ [ self readStream upToEnd ]
-		  on: Error
-		  do: [ :e | errorBlock value ]
-]
-
-{ #category : 'private' }
 ACPNdJsonTransport >> readLine [
 	"Read one LF-terminated line from the stream, polling with delay for non-blocking pipes.
 	 Return the line content (without LF), or nil on EOF/closed.
@@ -165,11 +155,12 @@ ACPNdJsonTransport >> readLine [
 	[
 		line := self takeBufferedLine.
 		line ifNotNil: [ ^ line ].
-		chunk := self readChunkOnError: [ ^ nil ].
-		(chunk isEmptyOrNil and: [ self isAtEnd ]) ifTrue: [
-			chunk := self readChunkOnError: [ nil ].
+		chunk := self tryReadChunk.
+		chunk ifNil: [ ^ nil ].
+		(chunk isEmpty and: [ self isAtEnd ]) ifTrue: [
+			chunk := self tryReadChunk.
 			chunk isEmptyOrNil ifTrue: [ ^ self takeRemainingLine ] ].
-		chunk isEmptyOrNil
+		chunk isEmpty
 			ifTrue: [ self pollDelay wait ]
 			ifFalse: [ readBuffer := readBuffer , chunk ]
 	] repeat
@@ -206,28 +197,51 @@ ACPNdJsonTransport >> readStream: aStream [
 ]
 
 { #category : 'private' }
+ACPNdJsonTransport >> safeUtf8Decoded: aByteArray [
+	"Answer aByteArray decoded as UTF-8, or nil when it is not valid UTF-8."
+
+	^ [ aByteArray utf8Decoded ]
+		  on: ZnCharacterEncodingError
+		  do: [ :e | nil ]
+]
+
+{ #category : 'private' }
 ACPNdJsonTransport >> takeBufferedLine [
 	"Remove the first LF-terminated line from readBuffer and return it (without LF),
-	 or nil when readBuffer holds no complete line yet."
+	 or nil when readBuffer holds no complete line yet.
+	 A line that is not valid UTF-8 cannot be a valid message, so it is answered
+	 as an empty line, which #readMessage skips."
 
-	| lfIndex line |
+	| lfIndex bytes |
 	lfIndex := readBuffer indexOf: Character lf asciiValue.
 	lfIndex = 0 ifTrue: [ ^ nil ].
-	line := (readBuffer copyFrom: 1 to: lfIndex - 1) utf8Decoded.
+	bytes := readBuffer copyFrom: 1 to: lfIndex - 1.
 	readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
-	^ line
+	^ (self safeUtf8Decoded: bytes) ifNil: [ '' ]
 ]
 
 { #category : 'private' }
 ACPNdJsonTransport >> takeRemainingLine [
 	"Return the unterminated data left in readBuffer as the last line,
-	 or nil when nothing is left."
+	 or nil when nothing is left.
+	 The remainder may have been cut off mid-character when the process exited;
+	 such bytes cannot form a valid message, so they are dropped and nil is answered."
 
-	| line |
+	| bytes |
 	readBuffer ifEmpty: [ ^ nil ].
-	line := readBuffer utf8Decoded.
+	bytes := readBuffer.
 	readBuffer := ByteArray new.
-	^ line
+	^ self safeUtf8Decoded: bytes
+]
+
+{ #category : 'private' }
+ACPNdJsonTransport >> tryReadChunk [
+	"Read whatever is currently available in the stream.
+	 Answer an empty collection when no data is available yet, or nil on a stream error."
+
+	^ [ self readStream upToEnd ]
+		  on: Error
+		  do: [ :e | nil ]
 ]
 
 { #category : 'accessing' }
