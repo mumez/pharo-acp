@@ -50,9 +50,39 @@ ACP2AgentCapabilities >> isCloseSupported [
 ]
 
 { #category : 'testing' }
+ACP2AgentCapabilities >> isDeleteSupported [
+
+	^ self sessionCapabilities delete notNil
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isLogoutSupported [
+
+	^ self auth logout notNil
+]
+
+{ #category : 'testing' }
 ACP2AgentCapabilities >> isResumeSupported [
 
 	^ self sessionCapabilities resume notNil
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isAdditionalDirectoriesSupported [
+
+	^ self sessionCapabilities additionalDirectories notNil
+]
+
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> auth [
+
+	^ self rawValues at: 'auth' ifAbsentPut: [ ACP2AgentAuthCapabilities new ]
+]
+
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> auth: anObject [
+
+	self rawValues at: 'auth' put: anObject
 ]
 
 { #category : 'accessing' }
@@ -105,6 +135,10 @@ ACP2AgentCapabilities class >> fromDictionary: aDictionary [
 	instance rawValues at: 'mcpCapabilities' ifPresent: [ :dict | instance mcpCapabilities: (ACP2McpCapabilities fromDictionary: dict) ].
 	instance rawValues at: 'promptCapabilities' ifPresent: [ :dict | instance promptCapabilities: (ACP2PromptCapabilities fromDictionary: dict) ].
 	instance rawValues at: 'sessionCapabilities' ifPresent: [ :dict | instance sessionCapabilities: (ACP2SessionCapabilities fromDictionary: dict) ].
+	instance rawValues at: 'auth' ifPresent: [ :dict |
+		dict
+			ifNil: [ instance rawValues removeKey: 'auth' ]
+			ifNotNil: [ instance auth: (ACP2AgentAuthCapabilities fromDictionary: dict) ] ].
 	^ instance
 ]
 
@@ -115,5 +149,6 @@ ACP2AgentCapabilities >> asDictionary [
 	self trimNested: self mcpCapabilities named: 'mcpCapabilities' in: dict.
 	self trimNested: self promptCapabilities named: 'promptCapabilities' in: dict.
 	self trimNested: self sessionCapabilities named: 'sessionCapabilities' in: dict.
+	self trimNested: self auth named: 'auth' in: dict.
 	^ dict
 ]

@@ -10,8 +10,8 @@ ACP2InitializeParams class >> fromDictionary: aDictionary [
 
 	| instance |
 	instance := super fromDictionary: aDictionary.
-	instance rawValues at: 'capabilities' ifPresent: [ :dict | instance capabilities: ACP2ClientCapabilities fromDictionary: dict ].
-	instance rawValues at: 'info' ifPresent: [ :dict | instance info: ACP2Implementation fromDictionary: dict ].
+	instance rawValues at: 'capabilities' ifPresent: [ :dict | instance capabilities: (ACP2ClientCapabilities fromDictionary: dict) ].
+	instance rawValues at: 'info' ifPresent: [ :dict | instance info: (ACP2Implementation fromDictionary: dict) ].
 	^ instance
 ]
 

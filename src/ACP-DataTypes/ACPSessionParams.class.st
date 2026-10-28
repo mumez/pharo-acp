@@ -18,6 +18,18 @@ ACPSessionParams >> cwd: aString [
 ]
 
 { #category : 'accessing' }
+ACPSessionParams >> additionalDirectories [
+
+	^ self rawValues at: 'additionalDirectories' ifAbsent: [ #() ]
+]
+
+{ #category : 'accessing' }
+ACPSessionParams >> additionalDirectories: anArray [
+
+	self rawValues at: 'additionalDirectories' put: anArray
+]
+
+{ #category : 'accessing' }
 ACPSessionParams >> sessionId [
 
 	^ self rawValues at: 'sessionId' ifAbsent: []

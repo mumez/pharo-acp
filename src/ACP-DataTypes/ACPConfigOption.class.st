@@ -78,6 +78,12 @@ ACPConfigOption >> isModelCategory [
 ]
 
 { #category : 'testing' }
+ACPConfigOption >> isModelConfigCategory [
+
+	^ self category = 'model_config'
+]
+
+{ #category : 'testing' }
 ACPConfigOption >> isModeCategory [
 
 	^ self category = 'mode'
@@ -93,6 +99,13 @@ ACPConfigOption >> isThoughtLevelCategory [
 ACPConfigOption >> beModelCategory [
 
 	self category: 'model'.
+	^ self
+]
+
+{ #category : 'accessing' }
+ACPConfigOption >> beModelConfigCategory [
+
+	self category: 'model_config'.
 	^ self
 ]
 

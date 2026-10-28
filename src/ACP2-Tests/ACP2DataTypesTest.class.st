@@ -34,6 +34,16 @@ ACP2DataTypesTest >> testBuildByEmptyBlock [
 ]
 
 { #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testSessionIdOnlyParamsShareSuperclass [
+
+	{ ACP2CancelParams. ACP2CloseSessionParams. ACP2DeleteSessionParams } do: [ :each |
+		| params |
+		self assert: each superclass equals: ACP2SessionIdParams.
+		params := each buildBy: [ :p | p sessionId: 'abc-123' ].
+		self assert: params asDictionary equals: { ('sessionId' -> 'abc-123') } asDictionary ]
+]
+
+{ #category : 'tests - leaf options' }
 ACP2DataTypesTest >> testCancelParamsAsDictionary [
 
 	| opts dict |
@@ -135,6 +145,7 @@ ACP2DataTypesTest >> testInitializeParamsEmptyChildOmitted [
 	params := ACP2InitializeParams new.
 	params capabilities. "trigger lazy init but don't set anything"
 	dict := params asDictionary.
+	self deny: (dict includesKey: 'clientCapabilities').
 	self deny: (dict includesKey: 'capabilities').
 	self assert: (dict at: 'protocolVersion') equals: 2
 ]
@@ -354,7 +365,7 @@ ACP2DataTypesTest >> testSessionResumeParamsAsDictionary [
 ACP2DataTypesTest >> testSessionCloseParamsAsDictionary [
 
 	| opts dict |
-	opts := ACP2SessionCloseParams new.
+	opts := ACP2CloseSessionParams new.
 	opts sessionId: 'abc'.
 	dict := opts asDictionary.
 	self assert: dict equals: { ('sessionId' -> 'abc') } asDictionary
@@ -640,7 +651,12 @@ ACP2DataTypesTest >> testAgentCapabilitiesTypedAccessors [
 	self assert: mcp http equals: true.
 	self assert: prompt class equals: ACP2PromptCapabilities.
 	self assert: prompt audio equals: true.
-	self assert: session class equals: ACP2SessionCapabilities
+	self assert: session class equals: ACP2SessionCapabilities.
+	self
+		assert: (ACP2AgentCapabilities fromDictionary:
+				 { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
+					 asDictionary) auth class
+		equals: ACP2AgentAuthCapabilities
 ]
 
 { #category : 'tests - capabilities' }
@@ -651,10 +667,12 @@ ACP2DataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
 	self assert: caps mcpCapabilities isEmpty.
 	self assert: caps promptCapabilities isEmpty.
 	self assert: caps sessionCapabilities isEmpty.
+	self assert: caps auth isEmpty.
 	dict := caps asDictionary.
 	self deny: (dict includesKey: 'mcpCapabilities').
 	self deny: (dict includesKey: 'promptCapabilities').
-	self deny: (dict includesKey: 'sessionCapabilities')
+	self deny: (dict includesKey: 'sessionCapabilities').
+	self deny: (dict includesKey: 'auth')
 ]
 
 { #category : 'tests - capabilities' }
@@ -675,6 +693,45 @@ ACP2DataTypesTest >> testAgentCapabilitiesIsLoadSupported [
 	unsupported := ACP2AgentCapabilities new.
 	self assert: supported isLoadSupported.
 	self deny: unsupported isLoadSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACP2DataTypesTest >> testAgentCapabilitiesIsAdditionalDirectoriesSupported [
+
+	| supported unsupported |
+	supported := ACP2AgentCapabilities fromDictionary: {
+			        ('sessionCapabilities'
+			         -> { ('additionalDirectories' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACP2AgentCapabilities new.
+	self assert: supported isAdditionalDirectoriesSupported.
+	self deny: unsupported isAdditionalDirectoriesSupported
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testSessionParamsAdditionalDirectories [
+
+	| params dict |
+	params := ACP2SessionParams buildBy: [ :p |
+		          p cwd: '/home/user/project'.
+		          p additionalDirectories: #( '/home/user/lib' '/home/user/docs' ) ].
+	self
+		assert: params additionalDirectories
+		equals: #( '/home/user/lib' '/home/user/docs' ).
+	dict := params asDictionary.
+	self assert: (dict at: 'cwd') equals: '/home/user/project'.
+	self
+		assert: (dict at: 'additionalDirectories')
+		equals: #( '/home/user/lib' '/home/user/docs' )
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testSessionParamsAdditionalDirectoriesOmittedByDefault [
+
+	| params |
+	params := ACP2SessionParams buildBy: [ :p | p cwd: '/home/user/project' ].
+	self assert: params additionalDirectories equals: #(  ).
+	self deny: (params asDictionary includesKey: 'additionalDirectories')
 ]
 
 { #category : 'tests - capabilities' }
@@ -711,6 +768,35 @@ ACP2DataTypesTest >> testAgentCapabilitiesIsCloseSupported [
 	unsupported := ACP2AgentCapabilities new.
 	self assert: supported isCloseSupported.
 	self deny: unsupported isCloseSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACP2DataTypesTest >> testAgentCapabilitiesIsDeleteSupported [
+
+	| supported unsupported |
+	supported := ACP2AgentCapabilities fromDictionary: {
+			        ('sessionCapabilities' -> { ('delete' -> Dictionary new) } asDictionary) }
+		             asDictionary.
+	unsupported := ACP2AgentCapabilities new.
+	self assert: supported isDeleteSupported.
+	self deny: unsupported isDeleteSupported
+]
+
+{ #category : 'tests - capabilities' }
+ACP2DataTypesTest >> testAgentCapabilitiesIsLogoutSupported [
+
+	| supported authWithoutLogout unsupported |
+	supported := ACP2AgentCapabilities fromDictionary:
+		             { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
+			             asDictionary.
+	authWithoutLogout := ACP2AgentCapabilities fromDictionary:
+		                     { ('auth' -> Dictionary new) } asDictionary.
+	unsupported := ACP2AgentCapabilities new.
+	self assert: supported isLogoutSupported.
+	self deny: authWithoutLogout isLogoutSupported.
+	self deny: unsupported isLogoutSupported.
+	self deny: (ACP2AgentCapabilities fromDictionary: { ('auth' -> nil) } asDictionary)
+			isLogoutSupported
 ]
 
 { #category : 'tests - agent capabilities' }
@@ -1048,5 +1134,64 @@ ACP2DataTypesTest >> testConfigOptionCategoryMutators [
 	self assert: opt category equals: 'mode'.
 
 	opt beThoughtLevelCategory.
-	self assert: opt category equals: 'thought_level'
+	self assert: opt category equals: 'thought_level'.
+
+	opt beModelConfigCategory.
+	self assert: opt category equals: 'model_config'
+]
+
+{ #category : 'tests - config option' }
+ACP2DataTypesTest >> testConfigOptionModelConfigCategory [
+
+	| modelConfig model |
+	modelConfig := ACP2ConfigOption fromDictionary:
+		               { ('category' -> 'model_config') } asDictionary.
+	model := ACP2ConfigOption fromDictionary: { ('category' -> 'model') }
+		         asDictionary.
+
+	self assert: modelConfig isModelConfigCategory.
+	self deny: modelConfig isModelCategory.
+	self deny: modelConfig isModeCategory.
+	self deny: modelConfig isThoughtLevelCategory.
+
+	self deny: model isModelConfigCategory
+]
+
+{ #category : 'tests - content block' }
+ACP2DataTypesTest >> testContentChunkMessageId [
+
+	| chunk |
+	chunk := ACP2ContentChunk fromDictionary: {
+		         ('messageId' -> 'msg-001').
+		         ('content' -> {
+			          ('type' -> 'text').
+			          ('text' -> 'hello') } asDictionary) } asDictionary.
+	self assert: chunk messageId equals: 'msg-001'.
+	self assert: (ACP2ContentChunk fromDictionary: Dictionary new) messageId isNil
+]
+
+{ #category : 'tests - composite options' }
+ACP2DataTypesTest >> testInitializeParamsFromDictionaryReadsCapabilities [
+
+	| params |
+	params := ACP2InitializeParams fromDictionary: {
+			          ('protocolVersion' -> 2).
+			          ('capabilities' -> { ('terminal' -> true) } asDictionary).
+			          ('info' -> { ('name' -> 'pharo-acp') } asDictionary) }
+			          asDictionary.
+	self assert: params capabilities class equals: ACP2ClientCapabilities.
+	self assert: params capabilities terminal equals: true.
+	self assert: params info class equals: ACP2Implementation
+]
+
+{ #category : 'tests - composite options' }
+ACP2DataTypesTest >> testClientCapabilitiesFromDictionaryDecodesFs [
+
+	| caps |
+	caps := ACP2ClientCapabilities fromDictionary: {
+			        ('fs' -> { ('readTextFile' -> true) } asDictionary).
+			        ('terminal' -> true) } asDictionary.
+	self assert: caps fs class equals: ACP2FileSystemCapability.
+	self assert: caps fs readTextFile equals: true.
+	self assert: caps terminal equals: true
 ]

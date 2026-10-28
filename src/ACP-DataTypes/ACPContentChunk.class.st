@@ -12,6 +12,7 @@ Collaborators:
 
 Public API:
 - content - returns ACPContentBlock wrapping 'content', or nil if absent
+- messageId - returns the agent-generated message ID, or nil if absent
 "
 Class {
 	#name : 'ACPContentChunk',
@@ -25,4 +26,10 @@ ACPContentChunk >> content [
 
 	^ (self rawValues at: 'content' ifAbsent: [ ^ nil ])
 		  ifNotNil: [ :dict | ACPContentBlock fromDictionary: dict ]
+]
+
+{ #category : 'accessing' }
+ACPContentChunk >> messageId [
+
+	^ self rawValues at: 'messageId' ifAbsent: []
 ]

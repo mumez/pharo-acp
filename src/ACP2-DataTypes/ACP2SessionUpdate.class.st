@@ -31,6 +31,12 @@ ACP2SessionUpdate >> stopReason [
 ]
 
 { #category : 'accessing' }
+ACP2SessionUpdate >> messageId [
+
+	^ self rawValues at: 'messageId' ifAbsent: []
+]
+
+{ #category : 'accessing' }
 ACP2SessionUpdate >> availableCommands [
 
 	self isAvailableCommandsUpdate ifFalse: [ ^ #() ].

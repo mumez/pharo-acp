@@ -16,3 +16,15 @@ ACP2SessionParams >> cwd: aString [
 
 	self rawValues at: 'cwd' put: aString
 ]
+
+{ #category : 'accessing' }
+ACP2SessionParams >> additionalDirectories [
+
+	^ self rawValues at: 'additionalDirectories' ifAbsent: [ #() ]
+]
+
+{ #category : 'accessing' }
+ACP2SessionParams >> additionalDirectories: anArray [
+
+	self rawValues at: 'additionalDirectories' put: anArray
+]

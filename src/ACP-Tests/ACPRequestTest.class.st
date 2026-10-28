@@ -43,7 +43,7 @@ ACPRequestTest >> testInitializeFactory [
 			           p capabilities terminal: true ]).
 	self assert: request method equals: 'initialize'.
 	self assert: (request params at: 'protocolVersion') equals: 1.
-	self assert: ((request params at: 'capabilities') at: 'terminal') equals: true
+	self assert: ((request params at: 'clientCapabilities') at: 'terminal') equals: true
 ]
 
 { #category : 'tests' }
@@ -151,4 +151,33 @@ ACPRequestTest >> testSetSessionModelFactory [
 			           p modelId: 'claude-opus-4-6' ]).
 	self assert: request method equals: 'session/set_model'.
 	self assert: (request params at: 'modelId') equals: 'claude-opus-4-6'
+]
+
+{ #category : 'tests' }
+ACPRequestTest >> testCloseSessionFactory [
+
+	| request |
+	request := ACPRequest closeSession:
+		           (ACPCloseSessionParams buildBy: [ :p | p sessionId: 'abc' ]).
+	self assert: request method equals: 'session/close'.
+	self assert: (request params at: 'sessionId') equals: 'abc'
+]
+
+{ #category : 'tests' }
+ACPRequestTest >> testDeleteSessionFactory [
+
+	| request |
+	request := ACPRequest deleteSession:
+		           (ACPDeleteSessionParams buildBy: [ :p | p sessionId: 'abc' ]).
+	self assert: request method equals: 'session/delete'.
+	self assert: (request params at: 'sessionId') equals: 'abc'
+]
+
+{ #category : 'tests' }
+ACPRequestTest >> testLogoutFactory [
+
+	| request |
+	request := ACPRequest logout.
+	self assert: request method equals: 'logout'.
+	self assert: request params isEmpty
 ]

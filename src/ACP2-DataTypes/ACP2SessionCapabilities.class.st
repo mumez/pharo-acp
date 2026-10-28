@@ -3,7 +3,8 @@ I represent the session-level capabilities advertised by an ACP agent in its ini
 
 Responsibility:
 - I decode the 'sessionCapabilities' sub-dictionary of ACP2AgentCapabilities,
-  exposing raw nested dictionaries for fork, list, and resume capabilities.
+  exposing raw nested dictionaries for fork, list, delete, resume, and
+  additionalDirectories capabilities.
 - Values are returned as raw dictionaries (not further decoded) as each
   sub-capability may carry additional fields not yet modelled.
 
@@ -14,7 +15,9 @@ Collaborators:
 Public API:
 - fork   - raw fork-capability dictionary, or nil
 - list   - raw list-capability dictionary, or nil
+- delete - raw delete-capability dictionary, or nil
 - resume - raw resume-capability dictionary, or nil
+- additionalDirectories - raw additionalDirectories-capability dictionary, or nil
 "
 Class {
 	#name : 'ACP2SessionCapabilities',
@@ -36,6 +39,12 @@ ACP2SessionCapabilities >> close [
 ]
 
 { #category : 'accessing' }
+ACP2SessionCapabilities >> delete [
+
+	^ self rawValues at: 'delete' ifAbsent: []
+]
+
+{ #category : 'accessing' }
 ACP2SessionCapabilities >> list [
 
 	^ self rawValues at: 'list' ifAbsent: []
@@ -45,4 +54,10 @@ ACP2SessionCapabilities >> list [
 ACP2SessionCapabilities >> resume [
 
 	^ self rawValues at: 'resume' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2SessionCapabilities >> additionalDirectories [
+
+	^ self rawValues at: 'additionalDirectories' ifAbsent: []
 ]

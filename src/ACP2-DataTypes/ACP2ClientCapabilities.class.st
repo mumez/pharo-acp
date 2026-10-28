@@ -11,7 +11,20 @@ ACP2ClientCapabilities >> asDictionary [
 	| dict |
 	dict := super asDictionary.
 	dict at: 'fs' put: self fs asDictionary.
+	self trimNested: self elicitation named: 'elicitation' in: dict.
 	^ dict
+]
+
+{ #category : 'accessing' }
+ACP2ClientCapabilities >> elicitation [
+
+	^ self rawValues at: 'elicitation' ifAbsentPut: [ ACP2ElicitationCapabilities new ]
+]
+
+{ #category : 'accessing' }
+ACP2ClientCapabilities >> elicitation: anObject [
+
+	^ self rawValues at: 'elicitation' put: anObject
 ]
 
 { #category : 'accessing' }
@@ -43,6 +56,10 @@ ACP2ClientCapabilities class >> fromDictionary: aDictionary [
 
 	| instance |
 	instance := super fromDictionary: aDictionary.
-	instance rawValues at: 'fs' ifPresent: [ :dict | instance fs: ACP2FileSystemCapability fromDictionary: dict ].
+	instance rawValues at: 'fs' ifPresent: [ :dict | instance fs: (ACP2FileSystemCapability fromDictionary: dict) ].
+	instance rawValues at: 'elicitation' ifPresent: [ :dict |
+		dict
+			ifNil: [ instance rawValues removeKey: 'elicitation' ]
+			ifNotNil: [ instance elicitation: (ACP2ElicitationCapabilities fromDictionary: dict) ] ].
 	^ instance
 ]

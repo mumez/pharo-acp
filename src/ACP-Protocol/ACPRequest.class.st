@@ -40,6 +40,18 @@ ACPRequest class >> cancel: aParamsOrDictionary [
 ]
 
 { #category : 'instance creation' }
+ACPRequest class >> closeSession: aParamsOrDictionary [
+
+	^ self method: ACPMethodSessionClose params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
+ACPRequest class >> deleteSession: aParamsOrDictionary [
+
+	^ self method: ACPMethodSessionDelete params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
 ACPRequest class >> initialize: aParamsOrDictionary [
 
 	^ self method: ACPMethodInitialize params: aParamsOrDictionary asDictionary
@@ -55,6 +67,12 @@ ACPRequest class >> listSessions: aParamsOrDictionary [
 ACPRequest class >> loadSession: aParamsOrDictionary [
 
 	^ self method: ACPMethodSessionLoad params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
+ACPRequest class >> logout [
+
+	^ self method: ACPMethodLogout params: Dictionary new
 ]
 
 { #category : 'instance creation' }
