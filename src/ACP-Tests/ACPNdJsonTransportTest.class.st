@@ -21,6 +21,17 @@ ACPNdJsonTransportTest >> feedLine: aString [
 	readStream position: pos
 ]
 
+{ #category : 'helpers' }
+ACPNdJsonTransportTest >> launchShellScript: aString [
+	"Launch /bin/sh running aString and return the launched ACPProcessLauncher."
+
+	^ ACPProcessLauncher new
+		  command: '/bin/sh';
+		  arguments: { '-c'. aString };
+		  launch;
+		  yourself
+]
+
 { #category : 'running' }
 ACPNdJsonTransportTest >> setUp [
 
@@ -46,6 +57,56 @@ ACPNdJsonTransportTest >> testIsClosedInitiallyFalse [
 ]
 
 { #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageDrainsDataLeftAfterTheProcessExits [
+	"The agent may write its last line right after an empty read and then exit.
+	 Seeing the exited process, the transport must still drain the pipe once
+	 instead of dropping that line."
+
+	| drainingTransport result |
+	drainingTransport := ACPNdJsonTransport
+		                     writeStream: (ReadWriteStream on: ByteArray new)
+		                     readStream: (ACPScriptedReadStream chunks: {
+					                      ByteArray new.
+					                      ('{"jsonrpc":"2.0","id":1,"result":{}}' , String lf) utf8Encoded }).
+	drainingTransport
+		useAtEnd: false;
+		processLauncher: ACPExitedProcessLauncher new.
+	result := drainingTransport readMessage.
+	self assert: result notNil.
+	self assert: (result at: 'id') equals: 1.
+	self assert: drainingTransport readMessage isNil
+]
+
+{ #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageSkipsLineWithInvalidUtf8 [
+	"A complete line that is not valid UTF-8 cannot be a message; it is skipped
+	 and the following line is still delivered."
+
+	| result |
+	readStream nextPutAll: #[ 16rFF 16rFE ] , (String lf , '{"jsonrpc":"2.0","method":"test"}' , String lf) utf8Encoded.
+	readStream reset.
+	result := transport readMessage.
+	self assert: (result at: 'method') equals: 'test'
+]
+
+{ #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageEndsWhenTheRemainderIsTruncatedUtf8 [
+	"The agent may exit in the middle of a multi-byte character, leaving an
+	 unterminated remainder that is not valid UTF-8. The transport must end
+	 the stream with nil instead of raising a decoding error."
+
+	| truncatingTransport |
+	truncatingTransport := ACPNdJsonTransport
+		                       writeStream: (ReadWriteStream on: ByteArray new)
+		                       readStream: (ACPScriptedReadStream chunks: {
+					                        ('{"text":"' utf8Encoded , ('あ' utf8Encoded first: 2)) }).
+	truncatingTransport
+		useAtEnd: false;
+		processLauncher: ACPExitedProcessLauncher new.
+	self assert: truncatingTransport readMessage isNil
+]
+
+{ #category : 'tests - reading' }
 ACPNdJsonTransportTest >> testReadMessageParsesJson [
 
 	| result |
@@ -55,11 +116,55 @@ ACPNdJsonTransportTest >> testReadMessageParsesJson [
 ]
 
 { #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageReturnsLastLineWrittenBeforeTheProcessExits [
+	"A response written just before the agent exits (e.g. an error response)
+	 must still be delivered, followed by nil for the ended stream."
+
+	| launcher processTransport result next done |
+	launcher := self launchShellScript:
+		            'printf ''{"jsonrpc":"2.0","id":1,"result":{}}\n''; exit 1'.
+	processTransport := ACPNdJsonTransport on: launcher.
+	done := Semaphore new.
+	[
+	result := processTransport readMessage.
+	next := processTransport readMessage.
+	done signal ] fork.
+	[
+	self deny: (done waitTimeoutSeconds: 5).
+	self assert: result notNil.
+	self assert: (result at: 'id') equals: 1.
+	self assert: (result at: 'result') equals: Dictionary new.
+	self assert: next isNil ] ensure: [ launcher terminate ]
+]
+
+{ #category : 'tests - reading' }
 ACPNdJsonTransportTest >> testReadMessageReturnsNilOnEmptyStream [
 
 	| result |
 	result := transport readMessage.
 	self assert: result isNil
+]
+
+{ #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageReturnsNilWhenTheProcessExits [
+	"Subprocess pipes do not report atEnd reliably, so the transport must notice
+	that the agent process exited; otherwise readMessage polls forever and a
+	request sent to an agent that failed to start never completes."
+
+	| launcher processTransport result done |
+	launcher := ACPProcessLauncher new
+		            command: '/bin/sh';
+		            arguments: #( '-c' 'exit 1' );
+		            yourself.
+	launcher launch.
+	processTransport := ACPNdJsonTransport on: launcher.
+	done := Semaphore new.
+	[
+	result := processTransport readMessage.
+	done signal ] fork.
+	[
+	self deny: (done waitTimeoutSeconds: 5).
+	self assert: result isNil ] ensure: [ launcher terminate ]
 ]
 
 { #category : 'tests - reading' }
