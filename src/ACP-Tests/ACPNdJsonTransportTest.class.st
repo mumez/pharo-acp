@@ -21,6 +21,17 @@ ACPNdJsonTransportTest >> feedLine: aString [
 	readStream position: pos
 ]
 
+{ #category : 'helpers' }
+ACPNdJsonTransportTest >> launchShellScript: aString [
+	"Launch /bin/sh running aString and return the launched ACPProcessLauncher."
+
+	^ ACPProcessLauncher new
+		  command: '/bin/sh';
+		  arguments: { '-c'. aString };
+		  launch;
+		  yourself
+]
+
 { #category : 'running' }
 ACPNdJsonTransportTest >> setUp [
 
@@ -46,12 +57,55 @@ ACPNdJsonTransportTest >> testIsClosedInitiallyFalse [
 ]
 
 { #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageDrainsDataLeftAfterTheProcessExits [
+	"The agent may write its last line right after an empty read and then exit.
+	 Seeing the exited process, the transport must still drain the pipe once
+	 instead of dropping that line."
+
+	| drainingTransport result |
+	drainingTransport := ACPNdJsonTransport
+		                     writeStream: (ReadWriteStream on: ByteArray new)
+		                     readStream: (ACPScriptedReadStream chunks: {
+					                      ByteArray new.
+					                      ('{"jsonrpc":"2.0","id":1,"result":{}}' , String lf) utf8Encoded }).
+	drainingTransport
+		useAtEnd: false;
+		processLauncher: ACPExitedProcessLauncher new.
+	result := drainingTransport readMessage.
+	self assert: result notNil.
+	self assert: (result at: 'id') equals: 1.
+	self assert: drainingTransport readMessage isNil
+]
+
+{ #category : 'tests - reading' }
 ACPNdJsonTransportTest >> testReadMessageParsesJson [
 
 	| result |
 	self feedLine: '{"jsonrpc":"2.0","method":"test"}'.
 	result := transport readMessage.
 	self assert: (result at: 'method') equals: 'test'
+]
+
+{ #category : 'tests - reading' }
+ACPNdJsonTransportTest >> testReadMessageReturnsLastLineWrittenBeforeTheProcessExits [
+	"A response written just before the agent exits (e.g. an error response)
+	 must still be delivered, followed by nil for the ended stream."
+
+	| launcher processTransport result next done |
+	launcher := self launchShellScript:
+		            'printf ''{"jsonrpc":"2.0","id":1,"result":{}}\n''; exit 1'.
+	processTransport := ACPNdJsonTransport on: launcher.
+	done := Semaphore new.
+	[
+	result := processTransport readMessage.
+	next := processTransport readMessage.
+	done signal ] fork.
+	[
+	self deny: (done waitTimeoutSeconds: 5).
+	self assert: result notNil.
+	self assert: (result at: 'id') equals: 1.
+	self assert: (result at: 'result') equals: Dictionary new.
+	self assert: next isNil ] ensure: [ launcher terminate ]
 ]
 
 { #category : 'tests - reading' }

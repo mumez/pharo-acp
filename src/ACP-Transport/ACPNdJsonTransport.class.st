@@ -27,6 +27,7 @@ Internal Representation:
 
 Implementation Points:
 - OSSPipe does not reliably report atEnd when data is temporarily unavailable; useAtEnd: false skips the check, so the end of a process's stream is detected from the process having exited
+- Once the stream has ended (e.g. the process exited), it is drained one final time, because the process may write its last line (such as an error response) just before exiting; drained lines are delivered before nil
 - Streams are set to binary mode so UTF-8 ByteArrays are exchanged without re-encoding
 - Empty lines in the ndjson stream are silently skipped
 - A Mutex is required because multiple Pharo processes may call #writeMessage: concurrently
@@ -79,6 +80,16 @@ ACPNdJsonTransport >> close [
 
 	self isClosed: true.
 	self writeStream close
+]
+
+{ #category : 'private' }
+ACPNdJsonTransport >> drainAfterEnd [
+	"Read whatever is still left in the stream once it has ended,
+	 e.g. bytes the process wrote just before exiting. Return nil on error."
+
+	^ [ self readStream upToEnd ]
+		  on: Error
+		  do: [ :e | nil ]
 ]
 
 { #category : 'initialization' }
@@ -144,26 +155,22 @@ ACPNdJsonTransport >> processLauncher: anACPProcessLauncher [
 { #category : 'private' }
 ACPNdJsonTransport >> readLine [
 	"Read one LF-terminated line from the stream, polling with delay for non-blocking pipes.
-	 Return the line content (without LF), or nil on EOF/closed."
+	 Return the line content (without LF), or nil on EOF/closed.
+	 The process may write its last bytes and exit between an empty read and
+	 the isAtEnd check, so the stream is drained once more before giving up."
 
-	| lfIndex chunk line |
+	| chunk line |
 	[
-		lfIndex := readBuffer indexOf: Character lf asciiValue.
-		lfIndex > 0 ifTrue: [
-			line := (readBuffer copyFrom: 1 to: lfIndex - 1) utf8Decoded.
-			readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
-			^ line ].
+		line := self takeBufferedLine.
+		line ifNotNil: [ ^ line ].
 		[ chunk := self readStream upToEnd ]
 			on: Error
 			do: [ :e | ^ nil ].
+		(chunk isEmptyOrNil and: [ self isAtEnd ]) ifTrue: [
+			chunk := self drainAfterEnd.
+			chunk isEmptyOrNil ifTrue: [ ^ self takeRemainingLine ] ].
 		chunk isEmptyOrNil
-			ifTrue: [
-				self isAtEnd ifTrue: [
-					readBuffer ifEmpty: [ ^ nil ].
-					line := readBuffer utf8Decoded.
-					readBuffer := ByteArray new.
-					^ line ].
-				self pollDelay wait ]
+			ifTrue: [ self pollDelay wait ]
 			ifFalse: [ readBuffer := readBuffer , chunk ]
 	] repeat
 ]
@@ -196,6 +203,31 @@ ACPNdJsonTransport >> readStream [
 ACPNdJsonTransport >> readStream: aStream [
 
 	readStream := aStream
+]
+
+{ #category : 'private' }
+ACPNdJsonTransport >> takeBufferedLine [
+	"Remove the first LF-terminated line from readBuffer and return it (without LF),
+	 or nil when readBuffer holds no complete line yet."
+
+	| lfIndex line |
+	lfIndex := readBuffer indexOf: Character lf asciiValue.
+	lfIndex = 0 ifTrue: [ ^ nil ].
+	line := (readBuffer copyFrom: 1 to: lfIndex - 1) utf8Decoded.
+	readBuffer := readBuffer copyFrom: lfIndex + 1 to: readBuffer size.
+	^ line
+]
+
+{ #category : 'private' }
+ACPNdJsonTransport >> takeRemainingLine [
+	"Return the unterminated data left in readBuffer as the last line,
+	 or nil when nothing is left."
+
+	| line |
+	readBuffer ifEmpty: [ ^ nil ].
+	line := readBuffer utf8Decoded.
+	readBuffer := ByteArray new.
+	^ line
 ]
 
 { #category : 'accessing' }
