@@ -1,6 +1,7 @@
 .claude/
 plan/
 CLAUDE.md
+CLAUDE.local.md
 openspec/
 .agent/
 .cursor/
@@ -8,4 +9,3 @@ openspec/
 .devin/
 .agents/
 .git/
-CLAUDE.local.md

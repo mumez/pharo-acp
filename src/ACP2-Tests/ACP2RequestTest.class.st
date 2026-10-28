@@ -75,16 +75,6 @@ ACP2RequestTest >> testResumeSessionFactory [
 ]
 
 { #category : 'tests' }
-ACP2RequestTest >> testCloseSessionFactory [
-
-	| request |
-	request := ACP2Request closeSession: (ACP2SessionCloseParams buildBy: [ :p |
-			           p sessionId: 'abc' ]).
-	self assert: request method equals: 'session/close'.
-	self assert: (request params at: 'sessionId') equals: 'abc'
-]
-
-{ #category : 'tests' }
 ACP2RequestTest >> testLogoutFactory [
 
 	| request |
@@ -111,5 +101,25 @@ ACP2RequestTest >> testPromptFactory [
 			           p sessionId: 'abc'.
 			           p prompt: #() ]).
 	self assert: request method equals: 'session/prompt'.
+	self assert: (request params at: 'sessionId') equals: 'abc'
+]
+
+{ #category : 'tests' }
+ACP2RequestTest >> testDeleteSessionFactory [
+
+	| request |
+	request := ACP2Request deleteSession:
+		           (ACP2DeleteSessionParams buildBy: [ :p | p sessionId: 'abc' ]).
+	self assert: request method equals: 'session/delete'.
+	self assert: (request params at: 'sessionId') equals: 'abc'
+]
+
+{ #category : 'tests' }
+ACP2RequestTest >> testCloseSessionFactory [
+
+	| request |
+	request := ACP2Request closeSession:
+		           (ACP2CloseSessionParams buildBy: [ :p | p sessionId: 'abc' ]).
+	self assert: request method equals: 'session/close'.
 	self assert: (request params at: 'sessionId') equals: 'abc'
 ]

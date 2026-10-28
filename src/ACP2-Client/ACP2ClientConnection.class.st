@@ -2,8 +2,9 @@
 I implement the ACP (Agent Client Protocol) v2 method layer on top of a bidirectional JSON-RPC connection.
 
 Responsibility:
-- I provide typed methods for every ACP v2 client-to-agent request: initialize, newSession, listSessions, resumeSession, closeSession, prompt, cancel, logout
-- I register server-side callback handlers for agent-initiated requests: session updates and permission requests
+- I provide typed methods for every ACP v2 client-to-agent request: initialize, newSession, listSessions, resumeSession, closeSession, deleteSession, prompt, cancel, logout
+- I register server-side callback handlers for agent-initiated requests: session updates, permission requests, and elicitation
+- I remember the client capabilities sent in #initialize:, and reject elicitation requests for modes they do not advertise
 - I translate raw Dictionary results into typed ACP2DataTypes response objects
 
 Collaborators:
@@ -13,16 +14,19 @@ Collaborators:
 - ACP2Constants (SharedPool): I reference ACP method name constants
 
 Public API and Key Messages:
-- #initialize: - handshake with agent; stores ACP2InitializeResponse in agentInfo
+- #initialize: - handshake with agent; stores ACP2InitializeResponse in agentInfo and the sent client capabilities in clientCapabilities
 - #newSession: / #newSessionBy: - start a new agent session
 - #prompt: / #promptBy: - send a prompt; returns once the agent's request handler completes (the turn's outcome arrives asynchronously via a session/update state_update notification)
 - #cancel: / #cancelBy: - cancel the current prompt (notification, no response)
-- #resumeSession: / #closeSession: / #listSessions: / #logout: - remaining v2 session/auth lifecycle operations
+- #resumeSession: / #listSessions: / #logout: - remaining v2 session/auth lifecycle operations
+- #closeSession: / #closeSessionBy: - cancel in-flight work and free a session's resources
+- #deleteSession: / #deleteSessionBy: - remove a session from the agent's history
 
 Internal Representation:
 - connection - the ACP2Connection used for transport
 - handler - the ACP2ClientHandler that receives agent-initiated callbacks
 - agentInfo - ACP2InitializeResponse cached from the initialize handshake
+- clientCapabilities - ACP2ClientCapabilities sent in the initialize handshake (nothing advertised before it)
 
 Implementation Points:
 - Each ""By:"" variant accepts a builder block for constructing typed params objects
@@ -35,7 +39,8 @@ Class {
 	#instVars : [
 		'connection',
 		'handler',
-		'agentInfo'
+		'agentInfo',
+		'clientCapabilities'
 	],
 	#pools : [
 		'ACP2Constants'
@@ -91,7 +96,19 @@ ACP2ClientConnection >> closeSession: aParamsOrDictionary [
 { #category : 'api - builder' }
 ACP2ClientConnection >> closeSessionBy: aBlock [
 
-	^ self closeSession: (ACP2SessionCloseParams buildBy: aBlock)
+	^ self closeSession: (ACP2CloseSessionParams buildBy: aBlock)
+]
+
+{ #category : 'accessing' }
+ACP2ClientConnection >> clientCapabilities [
+
+	^ clientCapabilities ifNil: [ clientCapabilities := ACP2ClientCapabilities new ]
+]
+
+{ #category : 'accessing' }
+ACP2ClientConnection >> clientCapabilities: anACPClientCapabilities [
+
+	clientCapabilities := anACPClientCapabilities
 ]
 
 { #category : 'accessing' }
@@ -104,6 +121,20 @@ ACP2ClientConnection >> connection [
 ACP2ClientConnection >> connection: anObject [
 
 	connection := anObject
+]
+
+{ #category : 'api' }
+ACP2ClientConnection >> deleteSession: aParamsOrDictionary [
+
+	| request |
+	request := ACP2Request deleteSession: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACP2ClientConnection >> deleteSessionBy: aBlock [
+
+	^ self deleteSession: (ACP2DeleteSessionParams buildBy: aBlock)
 ]
 
 { #category : 'accessing' }
@@ -123,6 +154,8 @@ ACP2ClientConnection >> initialize: aParamsOrDictionary [
 
 	| request result |
 	request := ACP2Request initialize: aParamsOrDictionary.
+	self clientCapabilities: (ACP2ClientCapabilities fromDictionary:
+			 ((request params at: 'capabilities' ifAbsent: [ nil ]) ifNil: [ Dictionary new ]) copy).
 	result := self connection sendRequest: request method params: request params.
 	self agentInfo: (ACP2InitializeResponse fromDictionary: result).
 	^ self agentInfo
@@ -202,10 +235,49 @@ ACP2ClientConnection >> resumeSessionBy: aBlock [
 	^ self resumeSession: (ACP2SessionResumeParams buildBy: aBlock)
 ]
 
+{ #category : 'private' }
+ACP2ClientConnection >> handleCreateElicitation: aDictionary [
+	"Reject form/url requests for modes the client did not advertise (-32602); pass other modes to the handler."
+
+	| request |
+	request := ACP2CreateElicitation fromDictionary: aDictionary.
+	(self isElicitationModeAllowed: request) ifFalse: [
+		^ (ACP2RequestError invalidParams:
+			   'Elicitation mode not advertised by the client: ' , request mode printString) signal ].
+	^ (self handler createElicitation: request) asDictionary
+]
+
+{ #category : 'private' }
+ACP2ClientConnection >> isElicitationModeAllowed: anACPCreateElicitation [
+	"Form and URL modes must have been advertised; other (custom) modes are left to the handler."
+
+	anACPCreateElicitation isForm ifTrue: [
+		^ self clientCapabilities elicitation isFormSupported ].
+	anACPCreateElicitation isUrl ifTrue: [
+		^ self clientCapabilities elicitation isUrlSupported ].
+	^ true
+]
+
+{ #category : 'initialization' }
+ACP2ClientConnection >> registerElicitationHandlers [
+
+	| processor |
+	processor := self connection messageProcessor.
+
+	processor addHandler: (JRPCBlockHandler
+			 methodName: ACP2MethodElicitationCreate
+			 block: [ :params | self handleCreateElicitation: params ]).
+
+	processor addHandler: (JRPCBlockHandler
+			 methodName: ACP2MethodElicitationComplete
+			 block: [ :params | self handler completeElicitation: (ACP2CompleteElicitation fromDictionary: params) ])
+]
+
 { #category : 'initialization' }
 ACP2ClientConnection >> registerHandlers [
 
-	self registerSessionHandlers
+	self registerSessionHandlers.
+	self registerElicitationHandlers
 ]
 
 { #category : 'initialization' }

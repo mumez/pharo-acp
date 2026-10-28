@@ -3,10 +3,13 @@ Class {
 	#superclass : 'SharedPool',
 	#classVars : [
 		'ACP2MethodAuthLogout',
+		'ACP2MethodElicitationComplete',
+		'ACP2MethodElicitationCreate',
 		'ACP2MethodInitialize',
 		'ACP2MethodRequestPermission',
 		'ACP2MethodSessionCancel',
 		'ACP2MethodSessionClose',
+		'ACP2MethodSessionDelete',
 		'ACP2MethodSessionList',
 		'ACP2MethodSessionNew',
 		'ACP2MethodSessionPrompt',
@@ -30,7 +33,9 @@ ACP2Constants class >> initialize [
 ACP2Constants class >> initializeAgentToClientMethods [
 
 	ACP2MethodSessionUpdate := 'session/update'.
-	ACP2MethodRequestPermission := 'session/request_permission'
+	ACP2MethodRequestPermission := 'session/request_permission'.
+	ACP2MethodElicitationCreate := 'elicitation/create'.
+	ACP2MethodElicitationComplete := 'elicitation/complete'
 ]
 
 { #category : 'class initialization' }
@@ -41,6 +46,7 @@ ACP2Constants class >> initializeClientToAgentMethods [
 	ACP2MethodSessionList := 'session/list'.
 	ACP2MethodSessionResume := 'session/resume'.
 	ACP2MethodSessionClose := 'session/close'.
+	ACP2MethodSessionDelete := 'session/delete'.
 	ACP2MethodSessionPrompt := 'session/prompt'.
 	ACP2MethodSessionCancel := 'session/cancel'.
 	ACP2MethodAuthLogout := 'auth/logout'

@@ -61,6 +61,18 @@ ACP2Client >> cancelBy: aBlock [
 	^ self clientConnection cancelBy: aBlock
 ]
 
+{ #category : 'api' }
+ACP2Client >> closeSession: aParamsOrDictionary [
+
+	^ self clientConnection closeSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACP2Client >> closeSessionBy: aBlock [
+
+	^ self clientConnection closeSessionBy: aBlock
+]
+
 { #category : 'accessing' }
 ACP2Client >> clientConnection [
 
@@ -93,6 +105,18 @@ ACP2Client >> connection [
 ACP2Client >> connection: anObject [
 
 	connection := anObject
+]
+
+{ #category : 'api' }
+ACP2Client >> deleteSession: aParamsOrDictionary [
+
+	^ self clientConnection deleteSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACP2Client >> deleteSessionBy: aBlock [
+
+	^ self clientConnection deleteSessionBy: aBlock
 ]
 
 { #category : 'defaults' }
@@ -167,18 +191,6 @@ ACP2Client >> newSession: aParamsOrDictionary [
 ACP2Client >> newSessionBy: aBlock [
 
 	^ self clientConnection newSessionBy: aBlock
-]
-
-{ #category : 'api' }
-ACP2Client >> closeSession: aParamsOrDictionary [
-
-	^ self clientConnection closeSession: aParamsOrDictionary
-]
-
-{ #category : 'api - builder' }
-ACP2Client >> closeSessionBy: aBlock [
-
-	^ self clientConnection closeSessionBy: aBlock
 ]
 
 { #category : 'api' }

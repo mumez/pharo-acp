@@ -30,6 +30,12 @@ ACPSessionUpdate >> content [
 ]
 
 { #category : 'accessing' }
+ACPSessionUpdate >> messageId [
+
+	^ self updateDict at: 'messageId' ifAbsent: []
+]
+
+{ #category : 'accessing' }
 ACPSessionUpdate >> availableCommands [
 
 	self isAvailableCommandsUpdate ifFalse: [ ^ #() ].

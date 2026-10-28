@@ -208,3 +208,64 @@ ACP2SessionUpdateTest >> testStateUpdateIdleCarriesStopReason [
 	self assert: update state equals: 'idle'.
 	self assert: update stopReason equals: 'end_turn'
 ]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testMessageId [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'agent_message_chunk').
+		          ('messageId' -> 'msg-001').
+		          ('content' -> {
+			           ('type' -> 'text').
+			           ('text' -> 'Hello') } asDictionary) } asDictionary.
+	self assert: update messageId equals: 'msg-001'
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testMessageIdAbsent [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'agent_message_chunk').
+		          ('content' -> {
+			           ('type' -> 'text').
+			           ('text' -> 'Hello') } asDictionary) } asDictionary.
+	self assert: update messageId isNil
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallName [
+
+	| update toolCall |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call').
+		          ('toolCallId' -> 'call_001').
+		          ('title' -> 'Reading configuration file').
+		          ('name' -> 'read_file') } asDictionary.
+	toolCall := update toolCall.
+	self assert: toolCall title equals: 'Reading configuration file'.
+	self assert: toolCall name equals: 'read_file'
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallUpdateName [
+
+	| update toolCallUpdate |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001').
+		          ('name' -> 'write_file') } asDictionary.
+	toolCallUpdate := update toolCallUpdate.
+	self assert: toolCallUpdate name equals: 'write_file'
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallUpdateNameAbsent [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001') } asDictionary.
+	self assert: update toolCallUpdate name isNil
+]

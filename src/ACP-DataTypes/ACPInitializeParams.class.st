@@ -10,21 +10,21 @@ ACPInitializeParams class >> fromDictionary: aDictionary [
 
 	| instance |
 	instance := super fromDictionary: aDictionary.
-	instance rawValues at: 'capabilities' ifPresent: [ :dict | instance capabilities: ACPClientCapabilities fromDictionary: dict ].
-	instance rawValues at: 'clientInfo' ifPresent: [ :dict | instance clientInfo: ACPImplementation fromDictionary: dict ].
+	instance rawValues at: 'clientCapabilities' ifPresent: [ :dict | instance capabilities: (ACPClientCapabilities fromDictionary: dict) ].
+	instance rawValues at: 'clientInfo' ifPresent: [ :dict | instance clientInfo: (ACPImplementation fromDictionary: dict) ].
 	^ instance
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> capabilities [
 
-	^ self rawValues at: 'capabilities' ifAbsentPut: [ ACPClientCapabilities new ]
+	^ self rawValues at: 'clientCapabilities' ifAbsentPut: [ ACPClientCapabilities new ]
 ]
 
 { #category : 'accessing' }
 ACPInitializeParams >> capabilities: anObject [
 
-	self rawValues at: 'capabilities' put: anObject
+	self rawValues at: 'clientCapabilities' put: anObject
 ]
 
 { #category : 'accessing' }
@@ -64,7 +64,7 @@ ACPInitializeParams >> asDictionary [
 
 	| dict |
 	dict := super asDictionary.
-	self trimNested: self capabilities named: 'capabilities' in: dict.
+	self trimNested: self capabilities named: 'clientCapabilities' in: dict.
 	self trimNested: self clientInfo named: 'clientInfo' in: dict.
 	^ dict
 ]

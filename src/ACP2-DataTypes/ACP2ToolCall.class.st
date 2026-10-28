@@ -12,6 +12,12 @@ ACP2ToolCall >> kind [
 ]
 
 { #category : 'accessing' }
+ACP2ToolCall >> name [
+
+	^ self rawValues at: 'name' ifAbsent: []
+]
+
+{ #category : 'accessing' }
 ACP2ToolCall >> status [
 
 	^ self rawValues at: 'status' ifAbsent: []

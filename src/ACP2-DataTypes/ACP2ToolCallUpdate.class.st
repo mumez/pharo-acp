@@ -12,6 +12,12 @@ ACP2ToolCallUpdate >> content [
 ]
 
 { #category : 'accessing' }
+ACP2ToolCallUpdate >> name [
+
+	^ self rawValues at: 'name' ifAbsent: []
+]
+
+{ #category : 'accessing' }
 ACP2ToolCallUpdate >> status [
 
 	^ self rawValues at: 'status' ifAbsent: []

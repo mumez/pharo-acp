@@ -61,6 +61,18 @@ ACPClient >> cancelBy: aBlock [
 	^ self clientConnection cancelBy: aBlock
 ]
 
+{ #category : 'api' }
+ACPClient >> closeSession: aParamsOrDictionary [
+
+	^ self clientConnection closeSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> closeSessionBy: aBlock [
+
+	^ self clientConnection closeSessionBy: aBlock
+]
+
 { #category : 'accessing' }
 ACPClient >> clientConnection [
 
@@ -93,6 +105,18 @@ ACPClient >> connection [
 ACPClient >> connection: anObject [
 
 	connection := anObject
+]
+
+{ #category : 'api' }
+ACPClient >> deleteSession: aParamsOrDictionary [
+
+	^ self clientConnection deleteSession: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACPClient >> deleteSessionBy: aBlock [
+
+	^ self clientConnection deleteSessionBy: aBlock
 ]
 
 { #category : 'defaults' }
@@ -155,6 +179,12 @@ ACPClient >> listSessions: aParamsOrDictionary [
 ACPClient >> listSessionsBy: aBlock [
 
 	^ self clientConnection listSessionsBy: aBlock
+]
+
+{ #category : 'api' }
+ACPClient >> logout [
+
+	^ self clientConnection logout
 ]
 
 { #category : 'api' }

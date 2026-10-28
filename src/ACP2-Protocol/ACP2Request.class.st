@@ -40,6 +40,12 @@ ACP2Request class >> closeSession: aParamsOrDictionary [
 ]
 
 { #category : 'instance creation' }
+ACP2Request class >> deleteSession: aParamsOrDictionary [
+
+	^ self method: ACP2MethodSessionDelete params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
 ACP2Request class >> initialize: aParamsOrDictionary [
 
 	^ self method: ACP2MethodInitialize params: aParamsOrDictionary asDictionary

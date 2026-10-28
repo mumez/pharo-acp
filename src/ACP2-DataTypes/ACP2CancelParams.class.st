@@ -1,18 +1,16 @@
+"
+I represent the parameters of a session/cancel notification.
+
+Responsibility:
+- I identify the session whose prompt turn should be cancelled (the 'sessionId' field is inherited)
+
+Collaborators:
+- ACP2ClientConnection: builds me via #cancelBy:
+- ACP2SessionIdParams: my superclass
+"
 Class {
 	#name : 'ACP2CancelParams',
-	#superclass : 'ACP2Values',
+	#superclass : 'ACP2SessionIdParams',
 	#category : 'ACP2-DataTypes',
 	#package : 'ACP2-DataTypes'
 }
-
-{ #category : 'accessing' }
-ACP2CancelParams >> sessionId [
-
-	^ self rawValues at: 'sessionId' ifAbsent: []
-]
-
-{ #category : 'accessing' }
-ACP2CancelParams >> sessionId: aString [
-
-	self rawValues at: 'sessionId' put: aString
-]
