@@ -12,7 +12,6 @@ Collaborators:
 Public API and Key Messages:
 - ACPScriptedReadStream class >> #chunks: - create me with a sequence of ByteArray chunks
 - #upToEnd - answer the next chunk, or an empty ByteArray when none is left
-- #binary - no-op, as for a real pipe stream
 
 Internal Representation:
 - chunks - OrderedCollection of ByteArrays still to be answered
@@ -33,10 +32,6 @@ ACPScriptedReadStream class >> chunks: aCollectionOfByteArrays [
 	^ self new
 		  chunks: aCollectionOfByteArrays asOrderedCollection;
 		  yourself
-]
-
-{ #category : 'accessing' }
-ACPScriptedReadStream >> binary [
 ]
 
 { #category : 'accessing' }

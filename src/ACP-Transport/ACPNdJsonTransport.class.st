@@ -82,16 +82,6 @@ ACPNdJsonTransport >> close [
 	self writeStream close
 ]
 
-{ #category : 'private' }
-ACPNdJsonTransport >> drainAfterEnd [
-	"Read whatever is still left in the stream once it has ended,
-	 e.g. bytes the process wrote just before exiting. Return nil on error."
-
-	^ [ self readStream upToEnd ]
-		  on: Error
-		  do: [ :e | nil ]
-]
-
 { #category : 'initialization' }
 ACPNdJsonTransport >> initialize [
 
@@ -153,21 +143,31 @@ ACPNdJsonTransport >> processLauncher: anACPProcessLauncher [
 ]
 
 { #category : 'private' }
+ACPNdJsonTransport >> readChunkOnError: errorBlock [
+	"Read whatever is currently available in the stream.
+	 On a stream error, answer the value of errorBlock instead."
+
+	^ [ self readStream upToEnd ]
+		  on: Error
+		  do: [ :e | errorBlock value ]
+]
+
+{ #category : 'private' }
 ACPNdJsonTransport >> readLine [
 	"Read one LF-terminated line from the stream, polling with delay for non-blocking pipes.
 	 Return the line content (without LF), or nil on EOF/closed.
 	 The process may write its last bytes and exit between an empty read and
-	 the isAtEnd check, so the stream is drained once more before giving up."
+	 the isAtEnd check, so the stream is drained once more before giving up.
+	 A stream error aborts the first read (otherwise the loop would spin forever),
+	 while an error in the final drain just ends with the buffered remainder."
 
 	| chunk line |
 	[
 		line := self takeBufferedLine.
 		line ifNotNil: [ ^ line ].
-		[ chunk := self readStream upToEnd ]
-			on: Error
-			do: [ :e | ^ nil ].
+		chunk := self readChunkOnError: [ ^ nil ].
 		(chunk isEmptyOrNil and: [ self isAtEnd ]) ifTrue: [
-			chunk := self drainAfterEnd.
+			chunk := self readChunkOnError: [ nil ].
 			chunk isEmptyOrNil ifTrue: [ ^ self takeRemainingLine ] ].
 		chunk isEmptyOrNil
 			ifTrue: [ self pollDelay wait ]
