@@ -5,6 +5,7 @@ Responsibility:
 - I provide typed methods for every ACP v2 client-to-agent request: initialize, newSession, listSessions, resumeSession, closeSession, deleteSession, prompt, cancel, logout
 - I register server-side callback handlers for agent-initiated requests: session updates, permission requests, and elicitation
 - I remember the client capabilities sent in #initialize:, and reject elicitation requests for modes they do not advertise
+- I reject a systemPrompt on session/new or session/resume that the agent did not advertise (session.systemPrompt and its mode), or whose content is empty or not text-only, before sending it
 - I translate raw Dictionary results into typed ACP2DataTypes response objects
 
 Collaborators:
@@ -195,6 +196,7 @@ ACP2ClientConnection >> newSession: aParamsOrDictionary [
 
 	| request result |
 	request := ACP2Request newSession: aParamsOrDictionary.
+	self validateSystemPromptIn: request params.
 	result := self connection sendRequest: request method params: request params.
 	^ ACP2SessionSetupResponse fromDictionary: result
 ]
@@ -225,6 +227,7 @@ ACP2ClientConnection >> resumeSession: aParamsOrDictionary [
 
 	| request result |
 	request := ACP2Request resumeSession: aParamsOrDictionary.
+	self validateSystemPromptIn: request params.
 	result := self connection sendRequest: request method params: request params.
 	^ ACP2SessionSetupResponse fromDictionary: result
 ]
@@ -256,6 +259,46 @@ ACP2ClientConnection >> isElicitationModeAllowed: anACPCreateElicitation [
 	anACPCreateElicitation isUrl ifTrue: [
 		^ self clientCapabilities elicitation isUrlSupported ].
 	^ true
+]
+
+{ #category : 'accessing' }
+ACP2ClientConnection >> agentCapabilities [
+	"Capabilities the agent advertised in the initialize response (empty before initialize)."
+
+	^ self agentInfo
+		  ifNil: [ ACP2AgentCapabilities new ]
+		  ifNotNil: [ :info | info capabilities ]
+]
+
+{ #category : 'private' }
+ACP2ClientConnection >> validateSystemPromptIn: aParamsDictionary [
+	"Reject (-32602) a systemPrompt the agent cannot accept, before sending session/new or session/resume:
+	the agent must advertise session.systemPrompt and the mode, and content must be non-empty text blocks."
+
+	| raw systemPrompt capabilities |
+	raw := aParamsDictionary at: 'systemPrompt' ifAbsent: [ ^ self ].
+	raw ifNil: [ ^ self ].
+	raw isDictionary ifFalse: [
+		^ (ACP2RequestError invalidParams: 'System prompt must be an object')
+			  signal ].
+	systemPrompt := ACP2SystemPrompt fromDictionary: raw.
+	capabilities := self agentCapabilities systemPromptCapabilities.
+	capabilities ifNil: [
+		^ (ACP2RequestError invalidParams:
+			   'System prompt not advertised by the agent') signal ].
+	systemPrompt mode isString ifFalse: [
+		^ (ACP2RequestError invalidParams: 'System prompt mode is required')
+			  signal ].
+	(capabilities isModeSupported: systemPrompt mode) ifFalse: [
+		^ (ACP2RequestError invalidParams:
+			   'System prompt mode not advertised by the agent: '
+			   , systemPrompt mode printString) signal ].
+	systemPrompt content ifEmpty: [
+		^ (ACP2RequestError invalidParams: 'System prompt content must not be empty')
+			  signal ].
+	systemPrompt hasOnlyTextContent ifFalse: [
+		^ (ACP2RequestError invalidParams:
+			   'System prompt content must contain only text blocks') signal ]
 ]
 
 { #category : 'initialization' }
