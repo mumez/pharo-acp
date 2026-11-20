@@ -9,14 +9,16 @@ to convert any nested ACP2Values objects stored in rawValues to plain dictionari
 
 ## Nested object pattern
 
-Subclass getters for nested ACP2Values use ifAbsentPut: for lazy initialization, enabling fluent
-access like `params capabilities fs: something` without explicit construction. On serialization,
-trimNested:named:in: omits any nested object whose isEmpty returns true, keeping the wire format
-clean when sub-objects were never populated.
+Nested ACP2Values fields follow one of two patterns:
 
-v2 capabilities are presence-based: an empty object ({}) means 'supported' and nil/absent means
-'not supported'. Such fields are not lazily created; they are serialized with includeNested:named:in:,
-which keeps empty objects and omits only nil.
+- Lazily created (objects the client builds and sends, e.g. client capabilities): the getter uses
+  ifAbsentPut:, enabling fluent access like `params capabilities elicitation enableForm` without
+  explicit construction. On serialization, trimNested:named:in: omits any nested object whose
+  isEmpty returns true, keeping the wire format clean when sub-objects were never populated.
+- Presence-based (v2 agent capabilities): an empty object ({}) means 'supported' and nil/absent
+  means 'not supported'. These fields are not lazily created; fromDictionary: decodes them with
+  decode:as:, and they are serialized with includeNested:named:in:, which keeps empty objects
+  and omits only nil.
 
 ## Subclass responsibilities
 
