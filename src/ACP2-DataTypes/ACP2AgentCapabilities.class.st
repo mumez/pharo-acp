@@ -73,6 +73,37 @@ ACP2AgentCapabilities >> isAdditionalDirectoriesSupported [
 	^ self sessionCapabilities additionalDirectories notNil
 ]
 
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isSystemPromptSupported [
+
+	^ self systemPromptCapabilities notNil
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isSystemPromptOverrideSupported [
+
+	^ self isSystemPromptSupported and: [
+		  self systemPromptCapabilities isOverrideSupported ]
+]
+
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> session [
+	"Raw v2 'session' capabilities dictionary, or nil.
+	Only 'systemPrompt' is decoded for now (see #systemPromptCapabilities)."
+
+	^ self rawValues at: 'session' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> systemPromptCapabilities [
+	"ACP2SessionSystemPromptCapabilities decoded from session.systemPrompt, or nil when not advertised."
+
+	| raw |
+	raw := self session ifNil: [ ^ nil ].
+	raw := raw at: 'systemPrompt' ifAbsent: [ nil ].
+	^ raw ifNotNil: [ ACP2SessionSystemPromptCapabilities fromDictionary: raw ]
+]
+
 { #category : 'accessing' }
 ACP2AgentCapabilities >> auth [
 
