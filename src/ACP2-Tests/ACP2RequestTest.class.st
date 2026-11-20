@@ -30,10 +30,10 @@ ACP2RequestTest >> testInitializeFactory [
 	| request |
 	request := ACP2Request initialize: (ACP2InitializeParams buildBy: [ :p |
 			           p protocolVersion: 2.
-			           p capabilities terminal: true ]).
+			           p capabilities auth enableTerminal ]).
 	self assert: request method equals: 'initialize'.
 	self assert: (request params at: 'protocolVersion') equals: 2.
-	self assert: ((request params at: 'capabilities') at: 'terminal') equals: true
+	self assert: (((request params at: 'capabilities') at: 'auth') at: 'terminal') equals: Dictionary new
 ]
 
 { #category : 'tests' }

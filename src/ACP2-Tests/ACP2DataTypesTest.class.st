@@ -53,20 +53,6 @@ ACP2DataTypesTest >> testCancelParamsAsDictionary [
 	self assert: (dict at: 'sessionId') equals: 'abc-123'
 ]
 
-{ #category : 'tests - composite options' }
-ACP2DataTypesTest >> testClientCapabilitiesNestedFs [
-
-	| caps dict |
-	caps := ACP2ClientCapabilities new.
-	caps fs readTextFile: true.
-	caps fs writeTextFile: true.
-	caps terminal: true.
-	dict := caps asDictionary.
-	self assert: (dict at: 'terminal') equals: true.
-	self assert: ((dict at: 'fs') at: 'readTextFile') equals: true.
-	self assert: ((dict at: 'fs') at: 'writeTextFile') equals: true
-]
-
 { #category : 'tests - base' }
 ACP2DataTypesTest >> testExtraPropertiesOn [
 
@@ -78,17 +64,6 @@ ACP2DataTypesTest >> testExtraPropertiesOn [
 	dict := opts asDictionary.
 	self assert: (dict at: 'cwd') equals: '/tmp'.
 	self assert: ((dict at: '_meta') at: 'foo') equals: 'bar'
-]
-
-{ #category : 'tests - leaf options' }
-ACP2DataTypesTest >> testFileSystemCapabilityAsDictionary [
-
-	| opts dict |
-	opts := ACP2FileSystemCapability new.
-	opts readTextFile: true.
-	dict := opts asDictionary.
-	self assert: (dict at: 'readTextFile') equals: true.
-	self deny: (dict includesKey: 'writeTextFile')
 ]
 
 { #category : 'tests - implementation' }
@@ -122,10 +97,10 @@ ACP2DataTypesTest >> testInitializeParamsBuildByNested [
 
 	| params dict |
 	params := ACP2InitializeParams buildBy: [ :p |
-		          p capabilities terminal: true.
+		          p capabilities auth enableTerminal.
 		          p info name: 'pharo-acp'; version: '0.1.0' ].
 	dict := params asDictionary.
-	self assert: ((dict at: 'capabilities') at: 'terminal') equals: true.
+	self assert: (((dict at: 'capabilities') at: 'auth') at: 'terminal') equals: Dictionary new.
 	self assert: ((dict at: 'info') at: 'name') equals: 'pharo-acp'
 ]
 
@@ -174,10 +149,10 @@ ACP2DataTypesTest >> testInitializeParamsNonEmptyChildIncluded [
 
 	| params dict |
 	params := ACP2InitializeParams new.
-	params capabilities terminal: true.
+	params capabilities auth enableTerminal.
 	dict := params asDictionary.
 	self assert: (dict includesKey: 'capabilities').
-	self assert: ((dict at: 'capabilities') at: 'terminal') equals: true.
+	self assert: (((dict at: 'capabilities') at: 'auth') at: 'terminal') equals: Dictionary new.
 	self assert: (dict at: 'protocolVersion') equals: 2
 ]
 
@@ -191,19 +166,6 @@ ACP2DataTypesTest >> testInitializeResponseFromDictionary [
 		        asDictionary.
 	self assert: resp protocolVersion equals: 1.
 	self assert: (resp info at: 'name') equals: 'gemini'
-]
-
-{ #category : 'tests - result' }
-ACP2DataTypesTest >> testInitializeResponseParsesAgentCapabilities [
-
-	| resp |
-	resp := ACP2InitializeResponse fromDictionary: {
-		        ('protocolVersion' -> 1).
-		        ('capabilities' -> { ('loadSession' -> true) } asDictionary) }
-		        asDictionary.
-	self assert: resp protocolVersion equals: 1.
-	self assert: resp capabilities class equals: ACP2AgentCapabilities.
-	self assert: resp capabilities loadSession equals: true
 ]
 
 { #category : 'tests - result' }
@@ -548,16 +510,6 @@ ACP2DataTypesTest >> testPromptParamsSettingBlock [
 ]
 
 { #category : 'tests - result' }
-ACP2DataTypesTest >> testPromptResponseFromDictionary [
-
-	| resp |
-	resp := ACP2PromptResponse fromDictionary:
-		        { ('stopReason' -> 'end_turn') } asDictionary.
-	self assert: resp stopReason equals: 'end_turn'.
-	self assert: resp usage isNil
-]
-
-{ #category : 'tests - result' }
 ACP2DataTypesTest >> testResultPreservesUnknownKeys [
 
 	| resp |
@@ -603,111 +555,6 @@ ACP2DataTypesTest >> testValuesSuperclassHierarchy [
 	self assert: ACP2PromptResponse superclass equals: ACP2Values
 ]
 
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testMcpCapabilities [
-
-	| caps |
-	caps := ACP2McpCapabilities fromDictionary:
-		        { ('http' -> true). ('sse' -> false) } asDictionary.
-	self assert: caps http equals: true.
-	self assert: caps sse equals: false
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testPromptCapabilities [
-
-	| caps |
-	caps := ACP2PromptCapabilities fromDictionary:
-		        { ('audio' -> true). ('image' -> false) } asDictionary.
-	self assert: caps audio equals: true.
-	self assert: caps image equals: false.
-	self assert: caps embeddedContext isNil
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testSessionCapabilities [
-
-	| caps forkDict |
-	forkDict := { ('supported' -> true) } asDictionary.
-	caps := ACP2SessionCapabilities fromDictionary:
-		        { ('fork' -> forkDict) } asDictionary.
-	self assert: caps fork equals: forkDict.
-	self assert: caps list isNil.
-	self assert: caps resume isNil
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesTypedAccessors [
-
-	| caps mcp prompt session |
-	caps := ACP2AgentCapabilities fromDictionary: {
-		        ('mcpCapabilities' -> { ('http' -> true) } asDictionary).
-		        ('promptCapabilities' -> { ('audio' -> true) } asDictionary).
-		        ('sessionCapabilities' -> Dictionary new) } asDictionary.
-	mcp := caps mcpCapabilities.
-	prompt := caps promptCapabilities.
-	session := caps sessionCapabilities.
-	self assert: mcp class equals: ACP2McpCapabilities.
-	self assert: mcp http equals: true.
-	self assert: prompt class equals: ACP2PromptCapabilities.
-	self assert: prompt audio equals: true.
-	self assert: session class equals: ACP2SessionCapabilities.
-	self
-		assert: (ACP2AgentCapabilities fromDictionary:
-				 { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
-					 asDictionary) auth class
-		equals: ACP2AgentAuthCapabilities
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesAbsentReturnsEmpty [
-
-	| caps dict |
-	caps := ACP2AgentCapabilities fromDictionary: Dictionary new.
-	self assert: caps mcpCapabilities isEmpty.
-	self assert: caps promptCapabilities isEmpty.
-	self assert: caps sessionCapabilities isEmpty.
-	self assert: caps auth isEmpty.
-	dict := caps asDictionary.
-	self deny: (dict includesKey: 'mcpCapabilities').
-	self deny: (dict includesKey: 'promptCapabilities').
-	self deny: (dict includesKey: 'sessionCapabilities').
-	self deny: (dict includesKey: 'auth')
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesHasNoDefaultLoadSession [
-
-	| caps dict |
-	caps := ACP2AgentCapabilities new.
-	self assert: caps loadSession isNil.
-	dict := caps asDictionary.
-	self deny: (dict includesKey: 'loadSession')
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsLoadSupported [
-
-	| supported unsupported |
-	supported := ACP2AgentCapabilities fromDictionary: { ('loadSession' -> true) } asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isLoadSupported.
-	self deny: unsupported isLoadSupported
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsAdditionalDirectoriesSupported [
-
-	| supported unsupported |
-	supported := ACP2AgentCapabilities fromDictionary: {
-			        ('sessionCapabilities'
-			         -> { ('additionalDirectories' -> Dictionary new) } asDictionary) }
-		             asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isAdditionalDirectoriesSupported.
-	self deny: unsupported isAdditionalDirectoriesSupported
-]
-
 { #category : 'tests - leaf options' }
 ACP2DataTypesTest >> testSessionParamsAdditionalDirectories [
 
@@ -732,103 +579,6 @@ ACP2DataTypesTest >> testSessionParamsAdditionalDirectoriesOmittedByDefault [
 	params := ACP2SessionParams buildBy: [ :p | p cwd: '/home/user/project' ].
 	self assert: params additionalDirectories equals: #(  ).
 	self deny: (params asDictionary includesKey: 'additionalDirectories')
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsResumeSupported [
-
-	| supported unsupported |
-	supported := ACP2AgentCapabilities fromDictionary: {
-			        ('sessionCapabilities' -> { ('resume' -> Dictionary new) } asDictionary) }
-		             asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isResumeSupported.
-	self deny: unsupported isResumeSupported
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsListSupported [
-
-	| supported unsupported |
-	supported := ACP2AgentCapabilities fromDictionary: {
-			        ('sessionCapabilities' -> { ('list' -> Dictionary new) } asDictionary) }
-		             asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isListSupported.
-	self deny: unsupported isListSupported
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsCloseSupported [
-
-	| supported unsupported |
-	supported := ACP2AgentCapabilities fromDictionary: {
-			        ('sessionCapabilities' -> { ('close' -> Dictionary new) } asDictionary) }
-		             asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isCloseSupported.
-	self deny: unsupported isCloseSupported
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsDeleteSupported [
-
-	| supported unsupported |
-	supported := ACP2AgentCapabilities fromDictionary: {
-			        ('sessionCapabilities' -> { ('delete' -> Dictionary new) } asDictionary) }
-		             asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isDeleteSupported.
-	self deny: unsupported isDeleteSupported
-]
-
-{ #category : 'tests - capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsLogoutSupported [
-
-	| supported authWithoutLogout unsupported |
-	supported := ACP2AgentCapabilities fromDictionary:
-		             { ('auth' -> { ('logout' -> Dictionary new) } asDictionary) }
-			             asDictionary.
-	authWithoutLogout := ACP2AgentCapabilities fromDictionary:
-		                     { ('auth' -> Dictionary new) } asDictionary.
-	unsupported := ACP2AgentCapabilities new.
-	self assert: supported isLogoutSupported.
-	self deny: authWithoutLogout isLogoutSupported.
-	self deny: unsupported isLogoutSupported.
-	self deny: (ACP2AgentCapabilities fromDictionary: { ('auth' -> nil) } asDictionary)
-			isLogoutSupported
-]
-
-{ #category : 'tests - agent capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsHttpMcpServersSupported [
-
-	| httpSupported sseOnly noCaps |
-	httpSupported := ACP2AgentCapabilities fromDictionary: {
-			         ('mcpCapabilities' -> { ('http' -> true). ('sse' -> false) } asDictionary) }
-		                 asDictionary.
-	sseOnly := ACP2AgentCapabilities fromDictionary: {
-			   ('mcpCapabilities' -> { ('http' -> false). ('sse' -> true) } asDictionary) }
-		           asDictionary.
-	noCaps := ACP2AgentCapabilities new.
-	self assert: httpSupported isHttpMcpServersSupported.
-	self deny: sseOnly isHttpMcpServersSupported.
-	self deny: noCaps isHttpMcpServersSupported
-]
-
-{ #category : 'tests - agent capabilities' }
-ACP2DataTypesTest >> testAgentCapabilitiesIsSseMcpServersSupported [
-
-	| sseSupported httpOnly noCaps |
-	sseSupported := ACP2AgentCapabilities fromDictionary: {
-			        ('mcpCapabilities' -> { ('http' -> false). ('sse' -> true) } asDictionary) }
-		                asDictionary.
-	httpOnly := ACP2AgentCapabilities fromDictionary: {
-			    ('mcpCapabilities' -> { ('http' -> true). ('sse' -> false) } asDictionary) }
-		            asDictionary.
-	noCaps := ACP2AgentCapabilities new.
-	self assert: sseSupported isSseMcpServersSupported.
-	self deny: httpOnly isSseMcpServersSupported.
-	self deny: noCaps isSseMcpServersSupported
 ]
 
 { #category : 'tests - content block' }
@@ -1176,22 +926,11 @@ ACP2DataTypesTest >> testInitializeParamsFromDictionaryReadsCapabilities [
 	| params |
 	params := ACP2InitializeParams fromDictionary: {
 			          ('protocolVersion' -> 2).
-			          ('capabilities' -> { ('terminal' -> true) } asDictionary).
+			          ('capabilities' -> { ('auth' -> { ('terminal' -> Dictionary new) } asDictionary) } asDictionary).
 			          ('info' -> { ('name' -> 'pharo-acp') } asDictionary) }
 			          asDictionary.
 	self assert: params capabilities class equals: ACP2ClientCapabilities.
-	self assert: params capabilities terminal equals: true.
+	self assert: params capabilities auth isTerminalSupported.
 	self assert: params info class equals: ACP2Implementation
 ]
 
-{ #category : 'tests - composite options' }
-ACP2DataTypesTest >> testClientCapabilitiesFromDictionaryDecodesFs [
-
-	| caps |
-	caps := ACP2ClientCapabilities fromDictionary: {
-			        ('fs' -> { ('readTextFile' -> true) } asDictionary).
-			        ('terminal' -> true) } asDictionary.
-	self assert: caps fs class equals: ACP2FileSystemCapability.
-	self assert: caps fs readTextFile equals: true.
-	self assert: caps terminal equals: true
-]

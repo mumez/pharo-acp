@@ -36,13 +36,13 @@ ACP2ClientConnectionTest >> testInitializeBySendsCorrectRequest [
 	| request |
 	[
 	clientConnection initializeBy: [ :p |
-		p capabilities terminal: true ] ]
+		p capabilities auth enableTerminal ] ]
 		forkAt: Processor userBackgroundPriority.
 	request := agentTransport readMessage.
 	self assert: (request at: 'method') equals: 'initialize'.
 	self
-		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
-		equals: true
+		assert: ((((request at: 'params') at: 'capabilities') at: 'auth') at: 'terminal')
+		equals: Dictionary new
 ]
 
 { #category : 'tests' }
@@ -53,7 +53,7 @@ ACP2ClientConnectionTest >> testInitializeSendsCorrectRequest [
 	connection startReadLoop.
 	[
 	response := clientConnection initialize: (ACP2InitializeParams buildBy: [ :p |
-			 p capabilities terminal: true ]).
+			 p capabilities auth enableTerminal ]).
 	sem signal ] forkAt: Processor userBackgroundPriority.
 	request := agentTransport readMessage.
 	self assert: (request at: 'method') equals: 'initialize'.
@@ -61,8 +61,8 @@ ACP2ClientConnectionTest >> testInitializeSendsCorrectRequest [
 		assert: ((request at: 'params') at: 'protocolVersion')
 		equals: 2.
 	self
-		assert: (((request at: 'params') at: 'capabilities') at: 'terminal')
-		equals: true.
+		assert: ((((request at: 'params') at: 'capabilities') at: 'auth') at: 'terminal')
+		equals: Dictionary new.
 	agentTransport writeMessage: {
 			('jsonrpc' -> '2.0').
 			('id' -> (request at: 'id')).
@@ -80,7 +80,7 @@ ACP2ClientConnectionTest >> testInitializeWithRawDictionary [
 	| request |
 	[
 	clientConnection initialize:
-		{ ('protocolVersion' -> 2). ('capabilities' -> { ('terminal' -> true) } asDictionary) } asDictionary ]
+		{ ('protocolVersion' -> 2). ('capabilities' -> { ('auth' -> { ('terminal' -> Dictionary new) } asDictionary) } asDictionary) } asDictionary ]
 		forkAt: Processor userBackgroundPriority.
 	request := agentTransport readMessage.
 	self assert: (request at: 'method') equals: 'initialize'.
@@ -239,7 +239,8 @@ ACP2ClientConnectionTest >> testBasicExchangeMimicsDualVersionAgent [
 			('id' -> (request at: 'id')).
 			('result' -> {
 				 ('protocolVersion' -> 2).
-				 ('info' -> { ('name' -> 'dual-version-example') } asDictionary) }
+				 ('info' -> { ('name' -> 'dual-version-example') } asDictionary).
+				 ('capabilities' -> { ('session' -> Dictionary new) } asDictionary) }
 				 asDictionary) } asDictionary.
 
 	"session/new"
@@ -283,13 +284,14 @@ ACP2ClientConnectionTest >> testBasicExchangeMimicsDualVersionAgent [
 	agentTransport writeMessage: {
 			('jsonrpc' -> '2.0').
 			('id' -> (request at: 'id')).
-			('result' -> Dictionary new) } asDictionary.
+			('result' -> { ('messageId' -> 'msg-001') } asDictionary) } asDictionary.
 
 	sem wait.
 
 	self assert: initResult protocolVersion equals: 2.
+	self assert: initResult capabilities isSessionSupported.
 	self assert: sessionResult sessionId equals: sessionId.
-	self assert: promptResult notNil.
+	self assert: promptResult messageId equals: 'msg-001'.
 
 	self assert: handler updates size equals: 3.
 	self assert: handler updates first sessionUpdate equals: 'user_message'.

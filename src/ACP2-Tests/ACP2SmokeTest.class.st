@@ -62,7 +62,7 @@ ACP2SmokeTest >> testFullProtocolFlow [
 	response - it arrives later via a session/update notification with sessionUpdate:
 	'state_update', so we poll the handler for it after prompt: returns."
 
-	| initResult sessionResult sessionId stateUpdate |
+	| initResult sessionResult sessionId promptResult stateUpdate |
 	self class agentPath ifNil: [
 		^ self skip: 'Agent path not set. Please set ACP2SmokeTest class variable AgentPath to the path of dual-version-agent.ts.'
 	].
@@ -74,6 +74,7 @@ ACP2SmokeTest >> testFullProtocolFlow [
 			name: 'pharo-acp-smoke-test';
 			version: '1.0.0' ].
 	self assert: initResult protocolVersion equals: 2.
+	self assert: initResult capabilities isSessionSupported.
 
 	"Step 2: New session"
 	sessionResult := client newSessionBy: [ :params |
@@ -84,9 +85,10 @@ ACP2SmokeTest >> testFullProtocolFlow [
 
 	"Step 3: Prompt. Returns once the agent's request handler resolves, ahead of the
 	turn's own session/update notifications."
-	client promptBy: [ :params |
+	promptResult := client promptBy: [ :params |
 		params sessionId: sessionId.
 		params textPrompt: 'Hello, agent!' ].
+	self assert: promptResult messageId notNil.
 
 	"Step 4: Wait for the state_update notification that ends the turn."
 	stateUpdate := self waitForFinalStateUpdate.

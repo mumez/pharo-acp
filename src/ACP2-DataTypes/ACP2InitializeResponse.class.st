@@ -28,6 +28,26 @@ ACP2InitializeResponse >> capabilities: anObject [
 ]
 
 { #category : 'accessing' }
+ACP2InitializeResponse >> authMethods [
+	"Raw authentication method dictionaries; empty when the agent advertises none."
+
+	^ (self rawValues at: 'authMethods' ifAbsent: [ nil ]) ifNil: [ #(  ) ]
+]
+
+{ #category : 'testing' }
+ACP2InitializeResponse >> isLoginSupported [
+	"A non-empty authMethods list means the agent supports both auth/login and auth/logout."
+
+	^ self authMethods notEmpty
+]
+
+{ #category : 'testing' }
+ACP2InitializeResponse >> isLogoutSupported [
+
+	^ self isLoginSupported
+]
+
+{ #category : 'accessing' }
 ACP2InitializeResponse >> info [
 
 	^ self rawValues at: 'info' ifAbsent: []
