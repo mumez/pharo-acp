@@ -278,11 +278,17 @@ ACP2ClientConnection >> validateSystemPromptIn: aParamsDictionary [
 	| raw systemPrompt capabilities |
 	raw := aParamsDictionary at: 'systemPrompt' ifAbsent: [ ^ self ].
 	raw ifNil: [ ^ self ].
+	raw isDictionary ifFalse: [
+		^ (ACP2RequestError invalidParams: 'System prompt must be an object')
+			  signal ].
 	systemPrompt := ACP2SystemPrompt fromDictionary: raw.
 	capabilities := self agentCapabilities systemPromptCapabilities.
 	capabilities ifNil: [
 		^ (ACP2RequestError invalidParams:
 			   'System prompt not advertised by the agent') signal ].
+	systemPrompt mode isString ifFalse: [
+		^ (ACP2RequestError invalidParams: 'System prompt mode is required')
+			  signal ].
 	(capabilities isModeSupported: systemPrompt mode) ifFalse: [
 		^ (ACP2RequestError invalidParams:
 			   'System prompt mode not advertised by the agent: '

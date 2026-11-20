@@ -68,9 +68,12 @@ ACP2SystemPrompt >> contentBlockClass [
 
 { #category : 'testing' }
 ACP2SystemPrompt >> hasOnlyTextContent [
+	"Text blocks must carry a 'text' string, not just the 'text' type discriminator."
 
 	^ self content allSatisfy: [ :each |
-		  each isDictionary and: [ (each at: 'type' ifAbsent: [ nil ]) = 'text' ] ]
+		  each isDictionary and: [
+			  (each at: 'type' ifAbsent: [ nil ]) = 'text' and: [
+				  (each at: 'text' ifAbsent: [ nil ]) isString ] ] ]
 ]
 
 { #category : 'testing' }

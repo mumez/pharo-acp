@@ -47,6 +47,17 @@ ACP2SystemPromptTest >> agentReadMessage [
 ]
 
 { #category : 'helpers' }
+ACP2SystemPromptTest >> assertInvalidParams: aBlock [
+	"The block must signal ACP2RequestError with the InvalidParams (-32602) code."
+
+	| error |
+	error := nil.
+	aBlock on: ACP2RequestError do: [ :e | error := e ].
+	self assert: error notNil description: 'Expected ACP2RequestError'.
+	self assert: error code equals: -32602
+]
+
+{ #category : 'helpers' }
 ACP2SystemPromptTest >> overrideModeCapability [
 
 	^ { ('mode' -> { ('override' -> Dictionary new) } asDictionary) } asDictionary
@@ -269,44 +280,37 @@ ACP2SystemPromptTest >> testNewSessionSendsAdvertisedOverrideSystemPrompt [
 { #category : 'tests - connection' }
 ACP2SystemPromptTest >> testNewSessionRejectsSystemPromptWithoutCapability [
 
-	self
-		should: [
+	self assertInvalidParams: [
 			clientConnection newSessionBy: [ :p |
 				p cwd: '/tmp'.
 				p systemPrompt: (ACP2SystemPrompt append: 'Be concise.') ] ]
-		raise: ACP2RequestError
 ]
 
 { #category : 'tests - connection' }
 ACP2SystemPromptTest >> testNewSessionRejectsUnadvertisedOverrideMode [
 
 	self agentAdvertisesSystemPrompt: Dictionary new.
-	self
-		should: [
+	self assertInvalidParams: [
 			clientConnection newSessionBy: [ :p |
 				p cwd: '/tmp'.
 				p systemPrompt: (ACP2SystemPrompt override: 'Only Smalltalk.') ] ]
-		raise: ACP2RequestError
 ]
 
 { #category : 'tests - connection' }
 ACP2SystemPromptTest >> testNewSessionRejectsEmptySystemPromptContent [
 
 	self agentAdvertisesSystemPrompt: Dictionary new.
-	self
-		should: [
+	self assertInvalidParams: [
 			clientConnection newSessionBy: [ :p |
 				p cwd: '/tmp'.
 				p systemPrompt: (ACP2SystemPrompt buildBy: [ :sp | sp mode: 'append' ]) ] ]
-		raise: ACP2RequestError
 ]
 
 { #category : 'tests - connection' }
 ACP2SystemPromptTest >> testNewSessionRejectsNonTextSystemPromptContent [
 
 	self agentAdvertisesSystemPrompt: Dictionary new.
-	self
-		should: [
+	self assertInvalidParams: [
 			clientConnection newSession: {
 					('cwd' -> '/tmp').
 					('systemPrompt' -> {
@@ -316,19 +320,47 @@ ACP2SystemPromptTest >> testNewSessionRejectsNonTextSystemPromptContent [
 							  ('data' -> 'AAAA').
 							  ('mimeType' -> 'image/png') } asDictionary }) } asDictionary) }
 					asDictionary ]
-		raise: ACP2RequestError
+]
+
+{ #category : 'tests - connection' }
+ACP2SystemPromptTest >> testNewSessionRejectsNonDictionarySystemPrompt [
+
+	self agentAdvertisesSystemPrompt: Dictionary new.
+	self assertInvalidParams: [
+		clientConnection newSession: {
+				('cwd' -> '/tmp').
+				('systemPrompt' -> 'Be concise.') } asDictionary ]
+]
+
+{ #category : 'tests - connection' }
+ACP2SystemPromptTest >> testNewSessionRejectsSystemPromptWithoutMode [
+
+	self agentAdvertisesSystemPrompt: Dictionary new.
+	self assertInvalidParams: [
+		clientConnection newSession: {
+				('cwd' -> '/tmp').
+				('systemPrompt' -> { ('content' -> { (ACP2ContentBlock text: 'Hi') asDictionary }) } asDictionary) }
+				asDictionary ]
+]
+
+{ #category : 'tests - data types' }
+ACP2SystemPromptTest >> testSystemPromptTextBlockWithoutTextIsNotText [
+
+	| prompt |
+	prompt := ACP2SystemPrompt fromDictionary: {
+			          ('mode' -> 'append').
+			          ('content' -> { { ('type' -> 'text') } asDictionary }) } asDictionary.
+	self deny: prompt hasOnlyTextContent
 ]
 
 { #category : 'tests - connection' }
 ACP2SystemPromptTest >> testResumeSessionRejectsSystemPromptWithoutCapability [
 
-	self
-		should: [
+	self assertInvalidParams: [
 			clientConnection resumeSessionBy: [ :p |
 				p sessionId: 'sess-001'.
 				p cwd: '/tmp'.
 				p systemPrompt: (ACP2SystemPrompt append: 'Be concise.') ] ]
-		raise: ACP2RequestError
 ]
 
 { #category : 'tests - connection' }
