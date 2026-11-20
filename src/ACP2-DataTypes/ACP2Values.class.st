@@ -9,10 +9,16 @@ to convert any nested ACP2Values objects stored in rawValues to plain dictionari
 
 ## Nested object pattern
 
-Subclass getters for nested ACP2Values use ifAbsentPut: for lazy initialization, enabling fluent
-access like `params capabilities fs: something` without explicit construction. On serialization,
-trimNested:named:in: omits any nested object whose isEmpty returns true, keeping the wire format
-clean when sub-objects were never populated.
+Nested ACP2Values fields follow one of two patterns:
+
+- Lazily created (objects the client builds and sends, e.g. client capabilities): the getter uses
+  ifAbsentPut:, enabling fluent access like `params capabilities elicitation enableForm` without
+  explicit construction. On serialization, trimNested:named:in: omits any nested object whose
+  isEmpty returns true, keeping the wire format clean when sub-objects were never populated.
+- Presence-based (v2 agent capabilities): an empty object ({}) means 'supported' and nil/absent
+  means 'not supported'. These fields are not lazily created; fromDictionary: decodes them with
+  decode:as:, and they are serialized with includeNested:named:in:, which keeps empty objects
+  and omits only nil.
 
 ## Subclass responsibilities
 
@@ -110,6 +116,27 @@ ACP2Values >> trimNested: nestedValues named: propName in: aDictionary [
 	(nestedValues isNil or: [ nestedValues isEmpty ])
 		ifTrue: [ aDictionary removeKey: propName ifAbsent: [] ]
 		ifFalse: [ aDictionary at: propName put: nestedValues asDictionary ]
+]
+
+{ #category : 'private' }
+ACP2Values >> decode: propName as: valueClass [
+	"Replace the raw dictionary at propName with an instance of valueClass; drop an explicit null.
+	Leave the field absent when it is absent (presence-based fields are not lazily created)."
+
+	self rawValues at: propName ifPresent: [ :raw |
+		raw
+			ifNil: [ self rawValues removeKey: propName ]
+			ifNotNil: [ self rawValues at: propName put: (valueClass fromDictionary: raw) ] ]
+]
+
+{ #category : 'private' }
+ACP2Values >> includeNested: nestedValues named: propName in: aDictionary [
+	"For v2 presence-based capabilities, where an empty object ({}) still means 'supported':
+	omit the field only when it is nil, otherwise serialize it even if empty."
+
+	nestedValues
+		ifNil: [ aDictionary removeKey: propName ifAbsent: [  ] ]
+		ifNotNil: [ aDictionary at: propName put: nestedValues asDictionary ]
 ]
 
 { #category : 'private' }

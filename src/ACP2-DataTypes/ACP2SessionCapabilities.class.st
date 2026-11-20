@@ -1,23 +1,26 @@
 "
-I represent the session-level capabilities advertised by an ACP agent in its initialize response.
+I represent the session capabilities of an ACP v2 agent (capabilities.session).
 
 Responsibility:
-- I decode the 'sessionCapabilities' sub-dictionary of ACP2AgentCapabilities,
-  exposing raw nested dictionaries for fork, list, delete, resume, and
-  additionalDirectories capabilities.
-- Values are returned as raw dictionaries (not further decoded) as each
-  sub-capability may carry additional fields not yet modelled.
+- My presence (even as {}) means the agent supports the baseline session methods:
+  session/new, session/list, session/resume, session/close, session/prompt, session/cancel, session/update
+- I decode the optional extensions: prompt content types, MCP transports, session/delete,
+  additionalDirectories, and client-provided systemPrompt
 
 Collaborators:
-- ACP2AgentCapabilities: creates me via fromDictionary:
+- ACP2AgentCapabilities: holds me under 'session'
+- ACP2PromptCapabilities, ACP2McpCapabilities, ACP2SessionSystemPromptCapabilities: my typed sub-capabilities
 - ACP2Values: my superclass
 
 Public API:
-- fork   - raw fork-capability dictionary, or nil
-- list   - raw list-capability dictionary, or nil
-- delete - raw delete-capability dictionary, or nil
-- resume - raw resume-capability dictionary, or nil
-- additionalDirectories - raw additionalDirectories-capability dictionary, or nil
+- prompt / mcp / systemPrompt - typed sub-capabilities, or nil when not advertised
+- delete / additionalDirectories - raw capability dictionaries, or nil
+- isDeleteSupported / isAdditionalDirectoriesSupported - whether an extension is advertised
+- enableDelete / enableAdditionalDirectories, prompt: / mcp: / systemPrompt: - build capabilities
+
+Implementation Points:
+- Sub-capabilities are presence-based: nil means not advertised, {} means advertised.
+  They are therefore not lazily created and are serialized with includeNested:named:in:.
 "
 Class {
 	#name : 'ACP2SessionCapabilities',
@@ -26,16 +29,33 @@ Class {
 	#package : 'ACP2-DataTypes'
 }
 
-{ #category : 'accessing' }
-ACP2SessionCapabilities >> fork [
+{ #category : 'instance creation' }
+ACP2SessionCapabilities class >> fromDictionary: aDictionary [
 
-	^ self rawValues at: 'fork' ifAbsent: []
+	| instance |
+	instance := super fromDictionary: aDictionary.
+	instance
+		decode: 'prompt' as: ACP2PromptCapabilities;
+		decode: 'mcp' as: ACP2McpCapabilities;
+		decode: 'systemPrompt' as: ACP2SessionSystemPromptCapabilities.
+	^ instance
 ]
 
 { #category : 'accessing' }
-ACP2SessionCapabilities >> close [
+ACP2SessionCapabilities >> additionalDirectories [
 
-	^ self rawValues at: 'close' ifAbsent: []
+	^ self rawValues at: 'additionalDirectories' ifAbsent: []
+]
+
+{ #category : 'converting' }
+ACP2SessionCapabilities >> asDictionary [
+
+	| dict |
+	dict := super asDictionary.
+	self includeNested: self prompt named: 'prompt' in: dict.
+	self includeNested: self mcp named: 'mcp' in: dict.
+	self includeNested: self systemPrompt named: 'systemPrompt' in: dict.
+	^ dict
 ]
 
 { #category : 'accessing' }
@@ -44,20 +64,62 @@ ACP2SessionCapabilities >> delete [
 	^ self rawValues at: 'delete' ifAbsent: []
 ]
 
-{ #category : 'accessing' }
-ACP2SessionCapabilities >> list [
+{ #category : 'actions' }
+ACP2SessionCapabilities >> enableAdditionalDirectories [
 
-	^ self rawValues at: 'list' ifAbsent: []
+	self rawValues at: 'additionalDirectories' put: Dictionary new
+]
+
+{ #category : 'actions' }
+ACP2SessionCapabilities >> enableDelete [
+
+	self rawValues at: 'delete' put: Dictionary new
+]
+
+{ #category : 'testing' }
+ACP2SessionCapabilities >> isAdditionalDirectoriesSupported [
+
+	^ self additionalDirectories notNil
+]
+
+{ #category : 'testing' }
+ACP2SessionCapabilities >> isDeleteSupported [
+
+	^ self delete notNil
 ]
 
 { #category : 'accessing' }
-ACP2SessionCapabilities >> resume [
+ACP2SessionCapabilities >> mcp [
 
-	^ self rawValues at: 'resume' ifAbsent: []
+	^ self rawValues at: 'mcp' ifAbsent: []
 ]
 
 { #category : 'accessing' }
-ACP2SessionCapabilities >> additionalDirectories [
+ACP2SessionCapabilities >> mcp: anACP2McpCapabilities [
 
-	^ self rawValues at: 'additionalDirectories' ifAbsent: []
+	self rawValues at: 'mcp' put: anACP2McpCapabilities
+]
+
+{ #category : 'accessing' }
+ACP2SessionCapabilities >> prompt [
+
+	^ self rawValues at: 'prompt' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2SessionCapabilities >> prompt: anACP2PromptCapabilities [
+
+	self rawValues at: 'prompt' put: anACP2PromptCapabilities
+]
+
+{ #category : 'accessing' }
+ACP2SessionCapabilities >> systemPrompt [
+
+	^ self rawValues at: 'systemPrompt' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2SessionCapabilities >> systemPrompt: anACP2SessionSystemPromptCapabilities [
+
+	self rawValues at: 'systemPrompt' put: anACP2SessionSystemPromptCapabilities
 ]

@@ -1,15 +1,14 @@
 "
-I represent the authentication-related capabilities advertised by an ACP agent in its initialize response.
+I represent the authentication-related extension capabilities of an ACP v2 agent (capabilities.auth).
 
 Responsibility:
-- I decode the 'auth' sub-dictionary of ACP2AgentCapabilities, exposing the raw logout capability.
+- I keep the raw 'auth' object. ACP v2 defines no fields in it yet, so I only preserve unknown keys.
+- I do NOT advertise auth/login or auth/logout: those are advertised by a non-empty authMethods
+  list in the initialize response (see ACP2InitializeResponse >> isLoginSupported).
 
 Collaborators:
-- ACP2AgentCapabilities: creates me via fromDictionary:
+- ACP2AgentCapabilities: holds me under 'auth'
 - ACP2Values: my superclass
-
-Public API:
-- logout - raw logout-capability dictionary, or nil
 "
 Class {
 	#name : 'ACP2AgentAuthCapabilities',
@@ -17,9 +16,3 @@ Class {
 	#category : 'ACP2-DataTypes',
 	#package : 'ACP2-DataTypes'
 }
-
-{ #category : 'accessing' }
-ACP2AgentAuthCapabilities >> logout [
-
-	^ self rawValues at: 'logout' ifAbsent: []
-]

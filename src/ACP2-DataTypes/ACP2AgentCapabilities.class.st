@@ -1,3 +1,31 @@
+"
+I represent the capabilities an ACP v2 agent advertises in its initialize response (capabilities).
+
+Responsibility:
+- I decode the v2 structure: { session: ACP2SessionCapabilities, auth: ACP2AgentAuthCapabilities }
+- I answer whether session methods and their extensions may be used
+
+Collaborators:
+- ACP2InitializeResponse: holds me under 'capabilities'
+- ACP2SessionCapabilities: the session capabilities and their extensions
+- ACP2AgentAuthCapabilities: authentication-related extension capabilities
+- ACP2ClientConnection: asks me before sending capability-gated requests (e.g. systemPrompt)
+- ACP2Values: my superclass
+
+Public API:
+- session / auth - typed sub-capabilities, or nil when not advertised
+- isSessionSupported - session present: session/new, list, resume, close, prompt, cancel, update are supported
+- isListSupported / isResumeSupported / isCloseSupported - same as isSessionSupported (baseline methods)
+- isDeleteSupported / isAdditionalDirectoriesSupported / isSystemPromptSupported / isSystemPromptOverrideSupported
+- isImagePromptSupported / isAudioPromptSupported / isEmbeddedContextPromptSupported
+- isStdioMcpServersSupported / isHttpMcpServersSupported
+- promptCapabilities / mcpCapabilities / systemPromptCapabilities - shortcuts into session, or nil
+
+Implementation Points:
+- Capabilities are presence-based: nil means not advertised, {} means advertised.
+  They are therefore not lazily created and are serialized with includeNested:named:in:.
+- auth/login and auth/logout are advertised by ACP2InitializeResponse >> authMethods, not by auth.
+"
 Class {
 	#name : 'ACP2AgentCapabilities',
 	#superclass : 'ACP2Values',
@@ -5,78 +33,105 @@ Class {
 	#package : 'ACP2-DataTypes'
 }
 
+{ #category : 'instance creation' }
+ACP2AgentCapabilities class >> fromDictionary: aDictionary [
+
+	| instance |
+	instance := super fromDictionary: aDictionary.
+	instance
+		decode: 'session' as: ACP2SessionCapabilities;
+		decode: 'auth' as: ACP2AgentAuthCapabilities.
+	^ instance
+]
+
+{ #category : 'converting' }
+ACP2AgentCapabilities >> asDictionary [
+
+	| dict |
+	dict := super asDictionary.
+	self includeNested: self session named: 'session' in: dict.
+	self includeNested: self auth named: 'auth' in: dict.
+	^ dict
+]
+
 { #category : 'accessing' }
-ACP2AgentCapabilities >> loadSession [
+ACP2AgentCapabilities >> auth [
 
-	^ self rawValues at: 'loadSession' ifAbsent: []
+	^ self rawValues at: 'auth' ifAbsent: []
 ]
 
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isLoadSupported [
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> auth: anACP2AgentAuthCapabilities [
 
-	^ self loadSession = true
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isMcpServersSupported [
-
-	| caps |
-	caps := self rawValues at: 'mcpCapabilities' ifAbsent: [ nil ].
-	^ (caps isNil or: [ caps isEmpty ]) not
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isHttpMcpServersSupported [
-
-	^ self isMcpServersSupported and: [ self mcpCapabilities http = true ]
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isSseMcpServersSupported [
-
-	^ self isMcpServersSupported and: [ self mcpCapabilities sse = true ]
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isListSupported [
-
-	^ self sessionCapabilities list notNil
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isCloseSupported [
-
-	^ self sessionCapabilities close notNil
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isDeleteSupported [
-
-	^ self sessionCapabilities delete notNil
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isLogoutSupported [
-
-	^ self auth logout notNil
-]
-
-{ #category : 'testing' }
-ACP2AgentCapabilities >> isResumeSupported [
-
-	^ self sessionCapabilities resume notNil
+	self rawValues at: 'auth' put: anACP2AgentAuthCapabilities
 ]
 
 { #category : 'testing' }
 ACP2AgentCapabilities >> isAdditionalDirectoriesSupported [
 
-	^ self sessionCapabilities additionalDirectories notNil
+	^ self session notNil and: [ self session isAdditionalDirectoriesSupported ]
 ]
 
 { #category : 'testing' }
-ACP2AgentCapabilities >> isSystemPromptSupported [
+ACP2AgentCapabilities >> isAudioPromptSupported [
 
-	^ self systemPromptCapabilities notNil
+	^ self promptCapabilities notNil and: [ self promptCapabilities isAudioSupported ]
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isCloseSupported [
+
+	^ self isSessionSupported
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isDeleteSupported [
+
+	^ self session notNil and: [ self session isDeleteSupported ]
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isEmbeddedContextPromptSupported [
+
+	^ self promptCapabilities notNil and: [
+		  self promptCapabilities isEmbeddedContextSupported ]
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isHttpMcpServersSupported [
+
+	^ self mcpCapabilities notNil and: [ self mcpCapabilities isHttpSupported ]
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isImagePromptSupported [
+
+	^ self promptCapabilities notNil and: [ self promptCapabilities isImageSupported ]
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isListSupported [
+
+	^ self isSessionSupported
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isResumeSupported [
+
+	^ self isSessionSupported
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isSessionSupported [
+	"A present session object, even {}, means the baseline session methods are supported."
+
+	^ self session notNil
+]
+
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isStdioMcpServersSupported [
+
+	^ self mcpCapabilities notNil and: [ self mcpCapabilities isStdioSupported ]
 ]
 
 { #category : 'testing' }
@@ -86,100 +141,41 @@ ACP2AgentCapabilities >> isSystemPromptOverrideSupported [
 		  self systemPromptCapabilities isOverrideSupported ]
 ]
 
+{ #category : 'testing' }
+ACP2AgentCapabilities >> isSystemPromptSupported [
+
+	^ self systemPromptCapabilities notNil
+]
+
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> mcpCapabilities [
+	"ACP2McpCapabilities from session.mcp, or nil when not advertised."
+
+	^ self session ifNotNil: [ :session | session mcp ]
+]
+
+{ #category : 'accessing' }
+ACP2AgentCapabilities >> promptCapabilities [
+	"ACP2PromptCapabilities from session.prompt, or nil when not advertised."
+
+	^ self session ifNotNil: [ :session | session prompt ]
+]
+
 { #category : 'accessing' }
 ACP2AgentCapabilities >> session [
-	"Raw v2 'session' capabilities dictionary, or nil.
-	Only 'systemPrompt' is decoded for now (see #systemPromptCapabilities)."
 
 	^ self rawValues at: 'session' ifAbsent: []
 ]
 
 { #category : 'accessing' }
+ACP2AgentCapabilities >> session: anACP2SessionCapabilities [
+
+	self rawValues at: 'session' put: anACP2SessionCapabilities
+]
+
+{ #category : 'accessing' }
 ACP2AgentCapabilities >> systemPromptCapabilities [
-	"ACP2SessionSystemPromptCapabilities decoded from session.systemPrompt, or nil when not advertised."
+	"ACP2SessionSystemPromptCapabilities from session.systemPrompt, or nil when not advertised."
 
-	| raw |
-	raw := self session ifNil: [ ^ nil ].
-	raw := raw at: 'systemPrompt' ifAbsent: [ nil ].
-	^ raw ifNotNil: [ ACP2SessionSystemPromptCapabilities fromDictionary: raw ]
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> auth [
-
-	^ self rawValues at: 'auth' ifAbsentPut: [ ACP2AgentAuthCapabilities new ]
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> auth: anObject [
-
-	self rawValues at: 'auth' put: anObject
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> loadSession: aBoolean [
-
-	self rawValues at: 'loadSession' put: aBoolean
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> mcpCapabilities [
-
-	^ self rawValues at: 'mcpCapabilities' ifAbsentPut: [ ACP2McpCapabilities new ]
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> mcpCapabilities: anObject [
-
-	self rawValues at: 'mcpCapabilities' put: anObject
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> promptCapabilities [
-
-	^ self rawValues at: 'promptCapabilities' ifAbsentPut: [ ACP2PromptCapabilities new ]
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> promptCapabilities: anObject [
-
-	self rawValues at: 'promptCapabilities' put: anObject
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> sessionCapabilities [
-
-	^ self rawValues at: 'sessionCapabilities' ifAbsentPut: [ ACP2SessionCapabilities new ]
-]
-
-{ #category : 'accessing' }
-ACP2AgentCapabilities >> sessionCapabilities: anObject [
-
-	self rawValues at: 'sessionCapabilities' put: anObject
-]
-
-{ #category : 'instance creation' }
-ACP2AgentCapabilities class >> fromDictionary: aDictionary [
-
-	| instance |
-	instance := super fromDictionary: aDictionary.
-	instance rawValues at: 'mcpCapabilities' ifPresent: [ :dict | instance mcpCapabilities: (ACP2McpCapabilities fromDictionary: dict) ].
-	instance rawValues at: 'promptCapabilities' ifPresent: [ :dict | instance promptCapabilities: (ACP2PromptCapabilities fromDictionary: dict) ].
-	instance rawValues at: 'sessionCapabilities' ifPresent: [ :dict | instance sessionCapabilities: (ACP2SessionCapabilities fromDictionary: dict) ].
-	instance rawValues at: 'auth' ifPresent: [ :dict |
-		dict
-			ifNil: [ instance rawValues removeKey: 'auth' ]
-			ifNotNil: [ instance auth: (ACP2AgentAuthCapabilities fromDictionary: dict) ] ].
-	^ instance
-]
-
-{ #category : 'converting' }
-ACP2AgentCapabilities >> asDictionary [
-	| dict |
-	dict := super asDictionary.
-	self trimNested: self mcpCapabilities named: 'mcpCapabilities' in: dict.
-	self trimNested: self promptCapabilities named: 'promptCapabilities' in: dict.
-	self trimNested: self sessionCapabilities named: 'sessionCapabilities' in: dict.
-	self trimNested: self auth named: 'auth' in: dict.
-	^ dict
+	^ self session ifNotNil: [ :session | session systemPrompt ]
 ]
