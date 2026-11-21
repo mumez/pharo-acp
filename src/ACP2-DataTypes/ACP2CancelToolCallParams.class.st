@@ -10,7 +10,7 @@ Collaborators:
 - ACP2SessionIdParams: my superclass
 
 Public API:
-- toolCallId / toolCallId: - the tool call to cancel; it should currently advertise capabilities.cancel (see ACP2ToolCallUpdate>>isCancellable)
+- toolCallId / toolCallId: - the tool call to cancel; it should currently advertise capabilities.cancel (not checked by the client; see ACP2ToolCallUpdate>>isCancellable)
 "
 Class {
 	#name : 'ACP2CancelToolCallParams',

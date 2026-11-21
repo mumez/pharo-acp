@@ -22,8 +22,8 @@ Public API and Key Messages:
 - #resumeSession: / #listSessions: / #logout: - remaining v2 session/auth lifecycle operations
 - #login: / #loginBy: - authenticate with one of the agent's advertised authMethods
 - #setConfigOption: / #setConfigOptionBy: - change a session config option; returns the agent's complete updated option list
-- #cancelToolCall: / #cancelToolCallBy: - cancel one tool call that advertises capabilities.cancel
-- #cancelTerminal: / #cancelTerminalBy: - stop the process of one terminal that advertises capabilities.cancel
+- #cancelToolCall: / #cancelToolCallBy: - cancel one tool call (best-effort; no client-side check is made, and the agent may reject a call that does not advertise capabilities.cancel)
+- #cancelTerminal: / #cancelTerminalBy: - stop the process of one terminal (best-effort; no client-side check is made, and the agent may reject a terminal that does not advertise capabilities.cancel)
 - #closeSession: / #closeSessionBy: - cancel in-flight work and free a session's resources
 - #deleteSession: / #deleteSessionBy: - remove a session from the agent's history
 

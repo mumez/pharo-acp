@@ -21,7 +21,7 @@ Public API and Key Messages:
 - #cancel: / #cancelBy: - cancel the current prompt
 - #setConfigOption: / #setConfigOptionBy: - change a session config option
 - #login: / #loginBy: - authenticate with an advertised auth method
-- #cancelToolCall: / #cancelToolCallBy: / #cancelTerminal: / #cancelTerminalBy: - cancel one tool call or terminal
+- #cancelToolCall: / #cancelToolCallBy: / #cancelTerminal: / #cancelTerminalBy: - cancel one tool call or terminal (best-effort; no client-side capabilities.cancel check)
 - #agentCommand:arguments: - configure the agent executable and its arguments
 - #workingDirectory: - set the agent working directory
 - #environmentAt:put: - add environment variables for the subprocess

@@ -10,7 +10,7 @@ Collaborators:
 - ACP2SessionIdParams: my superclass
 
 Public API:
-- terminalId / terminalId: - the terminal to stop; it should currently advertise capabilities.cancel in its terminal_update
+- terminalId / terminalId: - the terminal to stop; it should currently advertise capabilities.cancel in its terminal_update (not checked by the client)
 "
 Class {
 	#name : 'ACP2CancelTerminalParams',
