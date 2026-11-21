@@ -1,3 +1,31 @@
+"
+I represent the update object of a v2 session/update notification: one event reported by the agent while a session exists.
+
+Responsibility:
+- I tell which kind of update this is (the sessionUpdate discriminator) through is* tests
+- I expose the fields shared by several kinds (content, messageId, compactionId, ...)
+- I hand out a typed object for kinds with their own structure
+
+Collaborators:
+- ACP2ClientConnection: creates me from the params of each session/update notification
+- ACP2ClientHandler: receives me in #sessionUpdate:
+- ACP2StateUpdate, ACP2ToolCall, ACP2ToolCallUpdate, ACP2TerminalUpdate, ACP2Notice, ACP2CompactionUpdate,
+  ACP2SubagentUpdate, ACP2SessionMessage: the typed views I return
+
+Public API:
+- sessionUpdate - the raw kind string
+- is* - kind tests (isAgentMessageChunk, isStateUpdate, isToolCallUpdate, isTerminalUpdate, isNotice,
+  isCompactionUpdate, isCompactionSummaryChunk, isReplayComplete, isSubagentUpdate, isSessionMessage,
+  isSessionMessageChunk, ...)
+- stateUpdate / toolCall / toolCallUpdate / terminalUpdate / notice / compactionUpdate / subagentUpdate /
+  sessionMessage - typed view for the matching kind, nil for any other kind
+- content / messageId / compactionId - shared fields of chunk kinds (e.g. session_message_chunk, compaction_summary_chunk)
+- state / stopReason - shortcuts into a state_update
+
+Implementation Points:
+- I keep the raw dictionary; typed views are built on demand from the same rawValues
+- Unknown kinds are kept as-is so that clients can ignore them
+"
 Class {
 	#name : 'ACP2SessionUpdate',
 	#superclass : 'ACP2Values',
@@ -271,4 +299,17 @@ ACP2SessionUpdate >> isSessionMessageChunk [
 ACP2SessionUpdate >> isSubagentUpdate [
 
 	^ self sessionUpdate = 'subagent_update'
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> terminalUpdate [
+
+	self isTerminalUpdate ifFalse: [ ^ nil ].
+	^ ACP2TerminalUpdate fromDictionary: self rawValues
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isTerminalUpdate [
+
+	^ self sessionUpdate = 'terminal_update'
 ]

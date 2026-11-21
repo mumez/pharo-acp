@@ -16,3 +16,15 @@ ACP2ToolCallContent >> type [
 
 	^ self rawValues at: 'type' ifAbsent: []
 ]
+
+{ #category : 'testing' }
+ACP2ToolCallContent >> isSession [
+
+	^ self type = 'session'
+]
+
+{ #category : 'accessing' }
+ACP2ToolCallContent >> sessionId [
+
+	^ self rawValues at: 'sessionId' ifAbsent: [ nil ]
+]

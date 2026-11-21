@@ -556,32 +556,29 @@ ACP2SessionUpdateTest >> testReplayComplete [
 { #category : 'tests - new kinds' }
 ACP2SessionUpdateTest >> testSubagentUpdate [
 
-	| update subagent |
-	update := ACP2SessionUpdate fromDictionary: {
-		          ('sessionUpdate' -> 'subagent_update').
-		          ('sessionId' -> 'sess-child').
-		          ('title' -> 'Researcher').
-		          ('description' -> 'Looks things up').
-		          ('capabilities' -> { ('cancel' -> Dictionary new) } asDictionary).
-		          ('state' -> {
-			           ('state' -> 'idle').
-			           ('stopReason' -> 'end_turn') } asDictionary).
-		          ('cwd' -> '/work/child').
-		          ('additionalDirectories' -> #( '/work/shared' )) } asDictionary.
-	self assert: update isSubagentUpdate.
-	subagent := update subagentUpdate.
+	| subagent |
+	subagent := self fullSubagentUpdate subagentUpdate.
 	self assert: subagent class equals: ACP2SubagentUpdate.
 	self assert: subagent sessionId equals: 'sess-child'.
 	self assert: subagent title equals: 'Researcher'.
 	self assert: subagent description equals: 'Looks things up'.
 	self assert: subagent hasCapabilities.
 	self assert: subagent isCancellable.
+	self assert: subagent cwd equals: '/work/child'.
+	self assert: subagent additionalDirectories equals: #( '/work/shared' )
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testSubagentUpdateState [
+
+	| update subagent |
+	update := self fullSubagentUpdate.
+	self assert: update isSubagentUpdate.
+	subagent := update subagentUpdate.
 	self assert: subagent hasState.
 	self assert: subagent state class equals: ACP2StateUpdate.
 	self assert: subagent state isIdle.
-	self assert: subagent state stopReason equals: 'end_turn'.
-	self assert: subagent cwd equals: '/work/child'.
-	self assert: subagent additionalDirectories equals: #( '/work/shared' )
+	self assert: subagent state stopReason equals: 'end_turn'
 ]
 
 { #category : 'tests - new kinds' }
@@ -654,4 +651,132 @@ ACP2SessionUpdateTest >> testSessionMessageChunk [
 	self deny: update isSessionMessage.
 	self assert: update messageId equals: 'msg-1'.
 	self assert: update content text equals: 'Please'
+]
+
+{ #category : 'tests - tool call' }
+ACP2SessionUpdateTest >> testToolCallUpdatePausedStatus [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001').
+		          ('status' -> 'paused') } asDictionary.
+	self assert: update toolCallUpdate status equals: 'paused'
+]
+
+{ #category : 'tests - tool call' }
+ACP2SessionUpdateTest >> testToolCallContentSessionReference [
+
+	| content |
+	content := (ACP2SessionUpdate fromDictionary: {
+		            ('sessionUpdate' -> 'tool_call_update').
+		            ('toolCallId' -> 'call_001').
+		            ('content' -> {
+			             { ('type' -> 'session'). ('sessionId' -> 'sess-child') } asDictionary.
+			             { ('type' -> 'content').
+				             ('content' -> { ('type' -> 'text'). ('text' -> 'done') } asDictionary) }
+				             asDictionary }) } asDictionary) toolCallUpdate content.
+	self assert: content first isSession.
+	self assert: content first sessionId equals: 'sess-child'.
+	self deny: content second isSession.
+	self assert: content second sessionId isNil.
+	self assert: content second content text equals: 'done'
+]
+
+{ #category : 'tests - terminal' }
+ACP2SessionUpdateTest >> testTerminalUpdate [
+
+	| update terminal |
+	update := self fullTerminalUpdate.
+	self assert: update isTerminalUpdate.
+	terminal := update terminalUpdate.
+	self assert: terminal class equals: ACP2TerminalUpdate.
+	self assert: terminal terminalId equals: 'term-1'.
+	self assert: terminal command equals: 'npm test'.
+	self assert: terminal cwd equals: '/work'.
+	self assert: terminal outputData equals: 'PASS'.
+	self assert: terminal hasExited.
+	self assert: terminal exitCode equals: 0.
+	self assert: terminal signal isNil
+]
+
+{ #category : 'tests - terminal' }
+ACP2SessionUpdateTest >> testTerminalUpdateSizeAndCapabilities [
+
+	| terminal |
+	terminal := self fullTerminalUpdate terminalUpdate.
+	self assert: terminal hasSize.
+	self assert: terminal columns equals: 120.
+	self assert: terminal rows equals: 40.
+	self assert: terminal hasCapabilities.
+	self assert: terminal isCancellable
+]
+
+{ #category : 'tests - terminal' }
+ACP2SessionUpdateTest >> testTerminalUpdatePatchSemantics [
+
+	| absent cleared |
+	absent := (ACP2SessionUpdate fromDictionary: {
+		           ('sessionUpdate' -> 'terminal_update').
+		           ('terminalId' -> 'term-1') } asDictionary) terminalUpdate.
+	self deny: absent hasCapabilities.
+	self deny: absent isCancellable.
+	self deny: absent hasSize.
+	self assert: absent columns isNil.
+	self assert: absent rows isNil.
+	self deny: absent hasExited.
+	self assert: absent exitCode isNil.
+	self assert: absent outputData isNil.
+	cleared := (ACP2SessionUpdate fromDictionary: {
+		            ('sessionUpdate' -> 'terminal_update').
+		            ('terminalId' -> 'term-1').
+		            ('size' -> nil).
+		            ('capabilities' -> { ('cancel' -> nil) } asDictionary) } asDictionary)
+		           terminalUpdate.
+	self assert: cleared hasSize.
+	self assert: cleared columns isNil.
+	self assert: cleared hasCapabilities.
+	self deny: cleared isCancellable
+]
+
+{ #category : 'tests - terminal' }
+ACP2SessionUpdateTest >> testTerminalUpdateNilForOtherKinds [
+
+	self assert: (ACP2SessionUpdate fromDictionary:
+			 { ('sessionUpdate' -> 'tool_call_update') } asDictionary) terminalUpdate isNil
+]
+
+{ #category : 'fixtures' }
+ACP2SessionUpdateTest >> fullSubagentUpdate [
+
+	^ ACP2SessionUpdate fromDictionary: {
+			  ('sessionUpdate' -> 'subagent_update').
+			  ('sessionId' -> 'sess-child').
+			  ('title' -> 'Researcher').
+			  ('description' -> 'Looks things up').
+			  ('capabilities' -> { ('cancel' -> Dictionary new) } asDictionary).
+			  ('state' -> {
+				   ('state' -> 'idle').
+				   ('stopReason' -> 'end_turn') } asDictionary).
+			  ('cwd' -> '/work/child').
+			  ('additionalDirectories' -> #( '/work/shared' )) } asDictionary
+]
+
+{ #category : 'fixtures' }
+ACP2SessionUpdateTest >> fullTerminalUpdate [
+
+	^ ACP2SessionUpdate fromDictionary: {
+			  ('sessionUpdate' -> 'terminal_update').
+			  ('terminalId' -> 'term-1').
+			  ('command' -> 'npm test').
+			  ('cwd' -> '/work').
+			  ('output' -> { ('data' -> 'PASS') } asDictionary).
+			  ('exitStatus' -> {
+				   ('exitCode' -> 0).
+				   ('signal' -> nil) } asDictionary).
+			  ('size' -> {
+				   ('cols' -> 120).
+				   ('rows' -> 40) } asDictionary).
+			  ('capabilities' -> { ('cancel' -> Dictionary new) } asDictionary) }
+			  asDictionary
 ]
