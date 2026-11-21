@@ -448,3 +448,210 @@ ACP2SessionUpdateTest >> testStateUpdateBackgroundAbsentOrNull [
 	self assert: absent background isEmpty.
 	self assert: null background isEmpty
 ]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testNotice [
+
+	| update notice |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'notice').
+		          ('severity' -> 'warning').
+		          ('title' -> 'Rate limited').
+		          ('description' -> 'Retrying in 10s') } asDictionary.
+	self assert: update isNotice.
+	notice := update notice.
+	self assert: notice class equals: ACP2Notice.
+	self assert: notice severity equals: 'warning'.
+	self assert: notice isWarning.
+	self deny: notice isError.
+	self deny: notice isInfo.
+	self assert: notice title equals: 'Rate limited'.
+	self assert: notice description equals: 'Retrying in 10s'
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testNoticeNilForOtherKinds [
+
+	self assert: (ACP2SessionUpdate fromDictionary:
+			 { ('sessionUpdate' -> 'agent_message_chunk') } asDictionary) notice isNil
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testCompactionUpdate [
+
+	| update compaction |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'compaction_update').
+		          ('compactionId' -> 'cmp-1').
+		          ('status' -> 'completed').
+		          ('summary' -> {
+			           { ('type' -> 'text'). ('text' -> 'Earlier we...') } asDictionary }) }
+		          asDictionary.
+	self assert: update isCompactionUpdate.
+	compaction := update compactionUpdate.
+	self assert: compaction class equals: ACP2CompactionUpdate.
+	self assert: compaction compactionId equals: 'cmp-1'.
+	self assert: compaction status equals: 'completed'.
+	self assert: compaction isCompleted.
+	self deny: compaction isInProgress.
+	self assert: compaction summary size equals: 1.
+	self assert: compaction summary first class equals: ACP2ContentBlock.
+	self assert: compaction summary first text equals: 'Earlier we...'.
+	self assert: compaction error isNil
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testCompactionUpdateFailed [
+
+	| compaction |
+	compaction := (ACP2SessionUpdate fromDictionary: {
+		               ('sessionUpdate' -> 'compaction_update').
+		               ('compactionId' -> 'cmp-1').
+		               ('status' -> 'failed').
+		               ('error' -> 'context too large') } asDictionary) compactionUpdate.
+	self assert: compaction isFailed.
+	self assert: compaction error equals: 'context too large'.
+	self assert: compaction summary isEmpty
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testCompactionUpdateStatuses [
+
+	| statusOf |
+	statusOf := [ :status |
+	            (ACP2SessionUpdate fromDictionary: {
+			             ('sessionUpdate' -> 'compaction_update').
+			             ('compactionId' -> 'cmp-1').
+			             ('status' -> status) } asDictionary) compactionUpdate ].
+	self assert: (statusOf value: 'in_progress') isInProgress.
+	self assert: (statusOf value: 'cancelled') isCancelled.
+	self deny: (statusOf value: 'in_progress') isCancelled
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testCompactionSummaryChunk [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'compaction_summary_chunk').
+		          ('compactionId' -> 'cmp-1').
+		          ('content' -> {
+			           ('type' -> 'text').
+			           ('text' -> 'Earlier') } asDictionary) } asDictionary.
+	self assert: update isCompactionSummaryChunk.
+	self assert: update compactionId equals: 'cmp-1'.
+	self assert: update content text equals: 'Earlier'
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testReplayComplete [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary:
+		          { ('sessionUpdate' -> 'replay_complete') } asDictionary.
+	self assert: update isReplayComplete.
+	self deny: update isNotice
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testSubagentUpdate [
+
+	| update subagent |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'subagent_update').
+		          ('sessionId' -> 'sess-child').
+		          ('title' -> 'Researcher').
+		          ('description' -> 'Looks things up').
+		          ('capabilities' -> { ('cancel' -> Dictionary new) } asDictionary).
+		          ('state' -> {
+			           ('state' -> 'idle').
+			           ('stopReason' -> 'end_turn') } asDictionary).
+		          ('cwd' -> '/work/child').
+		          ('additionalDirectories' -> #( '/work/shared' )) } asDictionary.
+	self assert: update isSubagentUpdate.
+	subagent := update subagentUpdate.
+	self assert: subagent class equals: ACP2SubagentUpdate.
+	self assert: subagent sessionId equals: 'sess-child'.
+	self assert: subagent title equals: 'Researcher'.
+	self assert: subagent description equals: 'Looks things up'.
+	self assert: subagent hasCapabilities.
+	self assert: subagent isCancellable.
+	self assert: subagent hasState.
+	self assert: subagent state class equals: ACP2StateUpdate.
+	self assert: subagent state isIdle.
+	self assert: subagent state stopReason equals: 'end_turn'.
+	self assert: subagent cwd equals: '/work/child'.
+	self assert: subagent additionalDirectories equals: #( '/work/shared' )
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testSubagentUpdatePatchSemantics [
+
+	| absent cleared |
+	absent := (ACP2SessionUpdate fromDictionary: {
+		           ('sessionUpdate' -> 'subagent_update').
+		           ('sessionId' -> 'sess-child') } asDictionary) subagentUpdate.
+	self deny: absent hasCapabilities.
+	self deny: absent isCancellable.
+	self deny: absent hasState.
+	self assert: absent state isNil.
+	cleared := (ACP2SessionUpdate fromDictionary: {
+		            ('sessionUpdate' -> 'subagent_update').
+		            ('sessionId' -> 'sess-child').
+		            ('capabilities' -> nil).
+		            ('state' -> nil) } asDictionary) subagentUpdate.
+	self assert: cleared hasCapabilities.
+	self deny: cleared isCancellable.
+	self assert: cleared hasState.
+	self assert: cleared state isNil
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testSessionMessage [
+
+	| update message |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'session_message').
+		          ('messageId' -> 'msg-1').
+		          ('senderSessionId' -> 'sess-parent').
+		          ('recipientSessionId' -> 'sess-child').
+		          ('senderMessageId' -> 'msg-0').
+		          ('recipientMessageId' -> 'msg-9').
+		          ('content' -> {
+			           { ('type' -> 'text'). ('text' -> 'Please check') } asDictionary }) }
+		          asDictionary.
+	self assert: update isSessionMessage.
+	message := update sessionMessage.
+	self assert: message class equals: ACP2SessionMessage.
+	self assert: message messageId equals: 'msg-1'.
+	self assert: message senderSessionId equals: 'sess-parent'.
+	self assert: message recipientSessionId equals: 'sess-child'.
+	self assert: message senderMessageId equals: 'msg-0'.
+	self assert: message recipientMessageId equals: 'msg-9'.
+	self assert: message content size equals: 1.
+	self assert: message content first text equals: 'Please check'
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testSessionMessageNilForOtherKinds [
+
+	self assert: (ACP2SessionUpdate fromDictionary:
+			 { ('sessionUpdate' -> 'session_message_chunk') } asDictionary)
+			sessionMessage isNil
+]
+
+{ #category : 'tests - new kinds' }
+ACP2SessionUpdateTest >> testSessionMessageChunk [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'session_message_chunk').
+		          ('messageId' -> 'msg-1').
+		          ('content' -> {
+			           ('type' -> 'text').
+			           ('text' -> 'Please') } asDictionary) } asDictionary.
+	self assert: update isSessionMessageChunk.
+	self deny: update isSessionMessage.
+	self assert: update messageId equals: 'msg-1'.
+	self assert: update content text equals: 'Please'
+]

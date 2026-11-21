@@ -196,3 +196,79 @@ ACP2SessionUpdate >> used [
 
 	^ self rawValues at: 'used' ifAbsent: []
 ]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> compactionId [
+
+	^ self rawValues at: 'compactionId' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> compactionUpdate [
+
+	self isCompactionUpdate ifFalse: [ ^ nil ].
+	^ ACP2CompactionUpdate fromDictionary: self rawValues
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> notice [
+
+	self isNotice ifFalse: [ ^ nil ].
+	^ ACP2Notice fromDictionary: self rawValues
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> sessionMessage [
+
+	self isSessionMessage ifFalse: [ ^ nil ].
+	^ ACP2SessionMessage fromDictionary: self rawValues
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> subagentUpdate [
+
+	self isSubagentUpdate ifFalse: [ ^ nil ].
+	^ ACP2SubagentUpdate fromDictionary: self rawValues
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isCompactionSummaryChunk [
+
+	^ self sessionUpdate = 'compaction_summary_chunk'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isCompactionUpdate [
+
+	^ self sessionUpdate = 'compaction_update'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isNotice [
+
+	^ self sessionUpdate = 'notice'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isReplayComplete [
+
+	^ self sessionUpdate = 'replay_complete'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isSessionMessage [
+
+	^ self sessionUpdate = 'session_message'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isSessionMessageChunk [
+
+	^ self sessionUpdate = 'session_message_chunk'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isSubagentUpdate [
+
+	^ self sessionUpdate = 'subagent_update'
+]
