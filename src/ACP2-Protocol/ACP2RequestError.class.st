@@ -189,7 +189,7 @@ ACP2RequestError >> data: anObject [
 { #category : 'testing' }
 ACP2RequestError >> isMethodNotFound [
 
-	^ code = MethodNotFound
+	^ self code = MethodNotFound
 ]
 
 { #category : 'testing' }
@@ -202,22 +202,24 @@ ACP2RequestError >> isSessionNotFound [
 { #category : 'testing' }
 ACP2RequestError >> isUnsupportedProtocolVersion [
 
-	^ code = self class unsupportedProtocolVersionCode
+	^ self code = self class unsupportedProtocolVersionCode
 ]
 
 { #category : 'accessing' }
 ACP2RequestError >> sessionNotFoundData [
 
-	(code = self class resourceNotFoundCode and: [
-		 data isDictionary and: [ data includesKey: 'sessionId' ] ]) ifFalse: [ ^ nil ].
-	^ ACP2SessionNotFoundErrorData fromDictionary: data
+	(self code = self class resourceNotFoundCode and: [
+		 self data isDictionary and: [ self data includesKey: 'sessionId' ] ]) ifFalse: [
+		^ nil ].
+	^ ACP2SessionNotFoundErrorData fromDictionary: self data
 ]
 
 { #category : 'accessing' }
 ACP2RequestError >> unsupportedProtocolVersionData [
 
-	(self isUnsupportedProtocolVersion and: [ data isDictionary ]) ifFalse: [ ^ nil ].
-	^ ACP2UnsupportedProtocolVersionErrorData fromDictionary: data
+	(self isUnsupportedProtocolVersion and: [ self data isDictionary ]) ifFalse: [
+		^ nil ].
+	^ ACP2UnsupportedProtocolVersionErrorData fromDictionary: self data
 ]
 
 { #category : 'accessing' }
