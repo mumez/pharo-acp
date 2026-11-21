@@ -15,7 +15,7 @@ Public API:
 - isString / isNumber / isInteger / isBoolean / isMultiSelect / isSingleSelect - type predicates
   (a single select is a string with enum or oneOf; a multi select is an array)
 - title / description / default - common fields (default may be nil)
-- minLength / maxLength / pattern / format - string constraints (format: email, uri, date, date-time)
+- minLength / maxLength / format - string constraints (format: email, uri, date, date-time)
 - minimum / maximum - number and integer bounds (inclusive)
 - minItems / maxItems - multi-select bounds
 - choices - Array of ACP2ElicitationEnumOption for single and multi selects, otherwise empty
@@ -143,12 +143,6 @@ ACP2ElicitationProperty >> minLength [
 ACP2ElicitationProperty >> minimum [
 
 	^ self rawValues at: 'minimum' ifAbsent: []
-]
-
-{ #category : 'accessing' }
-ACP2ElicitationProperty >> pattern [
-
-	^ self rawValues at: 'pattern' ifAbsent: []
 ]
 
 { #category : 'accessing' }

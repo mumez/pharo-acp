@@ -396,6 +396,31 @@ ACP2DataTypesTest >> testSessionSetupResponseAvailableCommandsDefaultToEmpty [
 			isEmpty
 ]
 
+{ #category : 'tests - mcp server' }
+ACP2DataTypesTest >> testMcpServerHttpGetsUrlAndHeaders [
+
+	| dict |
+	dict := (ACP2McpServer buildBy: [ :server |
+		         server
+			         name: 'docs';
+			         type: 'http' ]) asDictionary.
+	self assert: (dict at: 'url') equals: ''.
+	self assert: (dict at: 'headers') equals: #(  )
+]
+
+{ #category : 'tests - mcp server' }
+ACP2DataTypesTest >> testMcpServerSseIsNotAV2Transport [
+	"ACP v2 has only http and stdio MCP transports; sse gets no http defaults."
+
+	| dict |
+	dict := (ACP2McpServer buildBy: [ :server |
+		         server
+			         name: 'docs';
+			         type: 'sse' ]) asDictionary.
+	self deny: (dict includesKey: 'url').
+	self deny: (dict includesKey: 'headers')
+]
+
 { #category : 'tests - leaf options' }
 ACP2DataTypesTest >> testPromptParamsIdempotencyKey [
 

@@ -307,13 +307,20 @@ ACP2ClientConnection >> setConfigOptionBy: aBlock [
 
 { #category : 'private' }
 ACP2ClientConnection >> handleCreateElicitation: aDictionary [
-	"Reject form/url requests for modes the client did not advertise (-32602); pass other modes to the handler."
+	"Reject form/url requests for modes the client did not advertise, and form requests
+	 without a valid requestedSchema (-32602); pass other requests to the handler."
 
 	| request |
 	request := ACP2CreateElicitation fromDictionary: aDictionary.
 	(self isElicitationModeAllowed: request) ifFalse: [
 		^ (ACP2RequestError invalidParams:
 			   'Elicitation mode not advertised by the client: ' , request mode printString) signal ].
+	(request isForm and: [
+		 request requestedSchema isNil or: [ request requestedSchema isValid not ] ])
+		ifTrue: [
+			^ (ACP2RequestError invalidParams:
+				   'Elicitation requestedSchema must have type ''object'' and properties')
+				  signal ].
 	^ (self handler createElicitation: request) asDictionary
 ]
 

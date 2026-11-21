@@ -390,7 +390,13 @@ ACP2ClientConnectionTest >> agentReadMessage [
 { #category : 'helpers - elicitation' }
 ACP2ClientConnectionTest >> agentSendElicitationMode: aMode id: aRequestId [
 
-	agentTransport writeMessage: {
+	agentTransport writeMessage: (self elicitationMessageMode: aMode id: aRequestId)
+]
+
+{ #category : 'helpers - elicitation' }
+ACP2ClientConnectionTest >> elicitationMessageMode: aMode id: aRequestId [
+
+	^ {
 			('jsonrpc' -> '2.0').
 			('id' -> aRequestId).
 			('method' -> 'elicitation/create').
@@ -470,6 +476,25 @@ ACP2ClientConnectionTest >> testCreateElicitationWithUnadvertisedModeIsRejected 
 	response := self agentReadMessage.
 	self assert: (response at: 'id') equals: 9.
 	self assert: ((response at: 'error') at: 'code') equals: -32602.
+	self assert: handler elicitationRequest isNil
+]
+
+{ #category : 'tests - elicitation' }
+ACP2ClientConnectionTest >> testCreateElicitationWithInvalidSchemaIsRejected [
+	"A form request whose requestedSchema lacks type 'object' or properties is rejected with -32602."
+
+	| response |
+	self advertiseElicitationForm.
+	connection startReadLoop.
+	#( #( 'type' ) #( 'properties' ) ) withIndexDo: [ :keysToRemove :index |
+		| message |
+		message := self elicitationMessageMode: 'form' id: 20 + index.
+		keysToRemove do: [ :key |
+			((message at: 'params') at: 'requestedSchema') removeKey: key ].
+		agentTransport writeMessage: message.
+		response := self agentReadMessage.
+		self assert: (response at: 'id') equals: 20 + index.
+		self assert: ((response at: 'error') at: 'code') equals: -32602 ].
 	self assert: handler elicitationRequest isNil
 ]
 
