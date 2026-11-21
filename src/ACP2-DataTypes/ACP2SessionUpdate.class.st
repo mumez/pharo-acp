@@ -26,8 +26,14 @@ ACP2SessionUpdate >> state [
 { #category : 'accessing' }
 ACP2SessionUpdate >> stopReason [
 
-	self state = 'idle' ifFalse: [ ^ nil ].
-	^ self rawValues at: 'stopReason' ifAbsent: [ nil ]
+	^ self stateUpdate ifNotNil: [ :stateUpdate | stateUpdate stopReason ]
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> stateUpdate [
+
+	self isStateUpdate ifFalse: [ ^ nil ].
+	^ ACP2StateUpdate fromDictionary: self rawValues
 ]
 
 { #category : 'accessing' }

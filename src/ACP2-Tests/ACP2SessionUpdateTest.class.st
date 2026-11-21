@@ -317,3 +317,134 @@ ACP2SessionUpdateTest >> testToolCallUpdateCapabilitiesAbsent [
 	self deny: update toolCallUpdate hasCapabilities.
 	self deny: update toolCallUpdate isCancellable
 ]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateStates [
+
+	| stateOf |
+	stateOf := [ :name |
+	           (ACP2SessionUpdate fromDictionary: {
+			            ('sessionUpdate' -> 'state_update').
+			            ('state' -> name) } asDictionary) stateUpdate ].
+	self assert: (stateOf value: 'running') isRunning.
+	self assert: (stateOf value: 'idle') isIdle.
+	self assert: (stateOf value: 'requires_action') isRequiresAction.
+	self assert: (stateOf value: 'unknown') isUnknown.
+	self deny: (stateOf value: 'unknown') isIdle.
+	self assert: (stateOf value: 'unknown') state equals: 'unknown'
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateNilForOtherKinds [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary:
+		          { ('sessionUpdate' -> 'agent_message_chunk') } asDictionary.
+	self assert: update stateUpdate isNil
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateIdleStopReason [
+
+	| state |
+	state := (ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'state_update').
+		          ('state' -> 'idle').
+		          ('stopReason' -> 'end_turn') } asDictionary) stateUpdate.
+	self assert: state stopReason equals: 'end_turn'.
+	self deny: state isError.
+	self assert: state error isNil
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateStopReasonOnlyWhenIdle [
+
+	| state |
+	state := (ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'state_update').
+		          ('state' -> 'running').
+		          ('stopReason' -> 'end_turn') } asDictionary) stateUpdate.
+	self assert: state stopReason isNil
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateMalformedStopReasonIsNotReported [
+
+	| state |
+	state := (ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'state_update').
+		          ('state' -> 'idle').
+		          ('stopReason' -> 42) } asDictionary) stateUpdate.
+	self assert: state stopReason isNil
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateIdleWithErrorStopReason [
+
+	| state |
+	state := (ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'state_update').
+		          ('state' -> 'idle').
+		          ('stopReason' -> 'error').
+		          ('error' -> {
+			           ('code' -> -32603).
+			           ('message' -> 'Model backend failed') } asDictionary) }
+		          asDictionary) stateUpdate.
+	self assert: state stopReason equals: 'error'.
+	self assert: state isError.
+	self assert: state errorCode equals: -32603.
+	self assert: state errorMessage equals: 'Model backend failed'.
+	self assert: (state error at: 'code') equals: -32603
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateErrorStopReasonWithoutDetails [
+
+	| state |
+	state := (ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'state_update').
+		          ('state' -> 'idle').
+		          ('stopReason' -> 'error').
+		          ('error' -> nil) } asDictionary) stateUpdate.
+	self assert: state isError.
+	self assert: state error isNil.
+	self assert: state errorCode isNil.
+	self assert: state errorMessage isNil
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateBackground [
+
+	| background |
+	background := (ACP2SessionUpdate fromDictionary: {
+		               ('sessionUpdate' -> 'state_update').
+		               ('state' -> 'idle').
+		               ('background' -> {
+			                { ('type' -> 'terminal'). ('terminalId' -> 'term-1') } asDictionary.
+			                { ('type' -> 'tool_call'). ('toolCallId' -> 'call-1') } asDictionary.
+			                { ('type' -> 'subagent'). ('sessionId' -> 'sess-child') } asDictionary }) }
+		               asDictionary) stateUpdate background.
+	self assert: background size equals: 3.
+	self assert: (background allSatisfy: [ :each | each class = ACP2BackgroundWork ]).
+	self assert: background first isTerminal.
+	self assert: background first terminalId equals: 'term-1'.
+	self assert: background second isToolCall.
+	self assert: background second toolCallId equals: 'call-1'.
+	self assert: background third isSubagent.
+	self assert: background third sessionId equals: 'sess-child'
+]
+
+{ #category : 'tests - state update' }
+ACP2SessionUpdateTest >> testStateUpdateBackgroundAbsentOrNull [
+
+	| absent null |
+	absent := (ACP2SessionUpdate fromDictionary: {
+		           ('sessionUpdate' -> 'state_update').
+		           ('state' -> 'running') } asDictionary) stateUpdate.
+	null := (ACP2SessionUpdate fromDictionary: {
+		         ('sessionUpdate' -> 'state_update').
+		         ('state' -> 'running').
+		         ('background' -> nil) } asDictionary) stateUpdate.
+	self assert: absent background isEmpty.
+	self assert: null background isEmpty
+]
