@@ -105,6 +105,22 @@ ACP2RequestErrorTest >> testUnsupportedProtocolVersionDataFromRpcError [
 ]
 
 { #category : 'tests' }
+ACP2RequestErrorTest >> testUnsupportedProtocolVersionWithOtherDataHasNoTypedData [
+	"Like sessionNotFoundData, the typed view needs the data's required keys (requested and supported)."
+
+	#( #( 'reason' ) #( 'requested' ) #( 'supported' ) ) do: [ :keys |
+		| data error |
+		data := Dictionary new.
+		keys do: [ :key | data at: key put: 1 ].
+		error := self errorFromRpcError: {
+				         ('code' -> -32022).
+				         ('message' -> 'Unsupported protocol version').
+				         ('data' -> data) } asDictionary.
+		self assert: error isUnsupportedProtocolVersion.
+		self assert: error unsupportedProtocolVersionData isNil ]
+]
+
+{ #category : 'tests' }
 ACP2RequestErrorTest >> testUnsupportedProtocolVersionWithoutData [
 
 	| error |

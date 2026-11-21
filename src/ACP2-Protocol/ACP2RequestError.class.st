@@ -216,9 +216,12 @@ ACP2RequestError >> sessionNotFoundData [
 
 { #category : 'accessing' }
 ACP2RequestError >> unsupportedProtocolVersionData [
+	"Like sessionNotFoundData, answer nil unless the data has the required keys."
 
-	(self isUnsupportedProtocolVersion and: [ self data isDictionary ]) ifFalse: [
-		^ nil ].
+	(self isUnsupportedProtocolVersion and: [
+		 self data isDictionary and: [
+			 (self data includesKey: 'requested') and: [
+				 self data includesKey: 'supported' ] ] ]) ifFalse: [ ^ nil ].
 	^ ACP2UnsupportedProtocolVersionErrorData fromDictionary: self data
 ]
 
