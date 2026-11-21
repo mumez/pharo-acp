@@ -47,6 +47,7 @@ Implementation Points:
   so every running handler process can be found for cancellation or cleanup
 - Cancellation is cooperative: I only cancel the token; I never interrupt the handler process
 - An incoming request whose id is already running is rejected with -32600
+- An incoming request whose id is not a string or an integer (e.g. null) is rejected with -32600 and id null
 - On connection closed, all pending requests are rejected with code -32000
 "
 Class {
@@ -174,6 +175,11 @@ ACP2Connection >> handleIncomingRequest: message [
 
 	| requestId token process |
 	requestId := message at: 'id'.
+	(self isValidRequestId: requestId) ifFalse: [
+		^ self transport writeMessage: (self
+				   errorResponseForId: nil
+				   code: InvalidRequest
+				   message: 'ACP v2 request IDs must be strings or integers') ].
 	token := ACP2CancellationToken new.
 	process := [ self processIncomingRequest: message token: token ] newProcess.
 	process
@@ -194,6 +200,13 @@ ACP2Connection >> incomingRequestProcesses [
 
 	^ incomingRequestsMutex critical: [
 		  incomingRequests collect: [ :each | each process ] ]
+]
+
+{ #category : 'testing' }
+ACP2Connection >> isValidRequestId: anObject [
+	"ACP v2 request IDs are strings or integers; null and fractional numbers are not allowed."
+
+	^ anObject isString or: [ anObject isInteger ]
 ]
 
 { #category : 'private' }
