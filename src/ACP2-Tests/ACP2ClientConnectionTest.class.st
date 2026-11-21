@@ -505,3 +505,103 @@ ACP2ClientConnectionTest >> testInitializeRemembersClientCapabilities [
 	self assert: clientConnection clientCapabilities elicitation isFormSupported.
 	self deny: clientConnection clientCapabilities elicitation isUrlSupported
 ]
+
+{ #category : 'private' }
+ACP2ClientConnectionTest >> autoApproveConfigOptionsResult [
+
+	^ { ('configOptions' -> { {
+		     ('id' -> 'autoApprove').
+		     ('name' -> 'Auto Approve').
+		     ('type' -> 'boolean').
+		     ('currentValue' -> true) } asDictionary }) } asDictionary
+]
+
+{ #category : 'private' }
+ACP2ClientConnectionTest >> respondEmptyResultTo: aRequest [
+
+	self respondTo: aRequest withResult: Dictionary new
+]
+
+{ #category : 'private' }
+ACP2ClientConnectionTest >> respondTo: aRequest withResult: aDictionary [
+
+	agentTransport writeMessage: {
+			('jsonrpc' -> '2.0').
+			('id' -> (aRequest at: 'id')).
+			('result' -> aDictionary) } asDictionary
+]
+
+{ #category : 'tests' }
+ACP2ClientConnectionTest >> testLoginBySendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection loginBy: [ :p | p methodId: 'oauth' ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'auth/login'.
+	self assert: ((request at: 'params') at: 'methodId') equals: 'oauth'.
+	self respondEmptyResultTo: request.
+	sem wait
+]
+
+{ #category : 'tests' }
+ACP2ClientConnectionTest >> testSetConfigOptionByReturnsTypedResponse [
+
+	| request sem response |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	response := clientConnection setConfigOptionBy: [ :p |
+		            p sessionId: 'sess-001'; configId: 'autoApprove'; booleanValue: true ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'session/set_config_option'.
+	self assert: ((request at: 'params') at: 'type') equals: 'boolean'.
+	self respondTo: request withResult: self autoApproveConfigOptionsResult.
+	sem wait.
+	self assert: response class equals: ACP2SetSessionConfigOptionResponse.
+	self assert: response configOptions first currentValue equals: true
+]
+
+{ #category : 'tests' }
+ACP2ClientConnectionTest >> testCancelToolCallBySendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection cancelToolCallBy: [ :p |
+		p sessionId: 'sess-001'.
+		p toolCallId: 'call_001' ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'tool_call/cancel'.
+	self assert: ((request at: 'params') at: 'sessionId') equals: 'sess-001'.
+	self assert: ((request at: 'params') at: 'toolCallId') equals: 'call_001'.
+	self assert: (request includesKey: 'id').
+	self respondEmptyResultTo: request.
+	sem wait
+]
+
+{ #category : 'tests' }
+ACP2ClientConnectionTest >> testCancelTerminalBySendsCorrectRequest [
+
+	| request sem |
+	sem := Semaphore new.
+	connection startReadLoop.
+	[
+	clientConnection cancelTerminalBy: [ :p |
+		p sessionId: 'sess-001'.
+		p terminalId: 'dev' ].
+	sem signal ] forkAt: Processor userBackgroundPriority.
+	request := agentTransport readMessage.
+	self assert: (request at: 'method') equals: 'terminal/cancel'.
+	self assert: ((request at: 'params') at: 'sessionId') equals: 'sess-001'.
+	self assert: ((request at: 'params') at: 'terminalId') equals: 'dev'.
+	self assert: (request includesKey: 'id').
+	self respondEmptyResultTo: request.
+	sem wait
+]

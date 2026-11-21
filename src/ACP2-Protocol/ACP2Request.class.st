@@ -10,7 +10,7 @@ Collaborators:
 - ACP2ClientConnection: creates me and passes my method/params to ACP2Connection
 
 Public API and Key Messages:
-- #initialize: / #newSession: / #prompt: / #cancel: / #loadSession: / #authenticate: etc. - named constructors for each ACP operation
+- #initialize: / #newSession: / #prompt: / #cancel: / #setConfigOption: / #login: / #cancelToolCall: / #cancelTerminal: etc. - named constructors for each ACP operation
 - #method / #params - accessors for the constructed values
 "
 Class {
@@ -31,6 +31,18 @@ Class {
 ACP2Request class >> cancel: aParamsOrDictionary [
 
 	^ self method: ACP2MethodSessionCancel params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
+ACP2Request class >> cancelTerminal: aParamsOrDictionary [
+
+	^ self method: ACP2MethodTerminalCancel params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
+ACP2Request class >> cancelToolCall: aParamsOrDictionary [
+
+	^ self method: ACP2MethodToolCallCancel params: aParamsOrDictionary asDictionary
 ]
 
 { #category : 'instance creation' }
@@ -55,6 +67,12 @@ ACP2Request class >> initialize: aParamsOrDictionary [
 ACP2Request class >> listSessions: aParamsOrDictionary [
 
 	^ self method: ACP2MethodSessionList params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
+ACP2Request class >> login: aParamsOrDictionary [
+
+	^ self method: ACP2MethodAuthLogin params: aParamsOrDictionary asDictionary
 ]
 
 { #category : 'instance creation' }
@@ -88,6 +106,12 @@ ACP2Request class >> prompt: aParamsOrDictionary [
 ACP2Request class >> resumeSession: aParamsOrDictionary [
 
 	^ self method: ACP2MethodSessionResume params: aParamsOrDictionary asDictionary
+]
+
+{ #category : 'instance creation' }
+ACP2Request class >> setConfigOption: aParamsOrDictionary [
+
+	^ self method: ACP2MethodSessionSetConfigOption params: aParamsOrDictionary asDictionary
 ]
 
 { #category : 'accessing' }

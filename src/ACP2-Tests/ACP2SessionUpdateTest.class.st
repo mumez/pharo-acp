@@ -269,3 +269,51 @@ ACP2SessionUpdateTest >> testToolCallUpdateNameAbsent [
 		          ('toolCallId' -> 'call_001') } asDictionary.
 	self assert: update toolCallUpdate name isNil
 ]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallUpdateCancellable [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001').
+		          ('capabilities' -> { ('cancel' -> Dictionary new) } asDictionary) }
+		          asDictionary.
+	self assert: update toolCallUpdate hasCapabilities.
+	self assert: update toolCallUpdate isCancellable
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallUpdateCancelWithdrawn [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001').
+		          ('capabilities' -> { ('cancel' -> nil) } asDictionary) } asDictionary.
+	self assert: update toolCallUpdate hasCapabilities.
+	self deny: update toolCallUpdate isCancellable
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallUpdateCapabilitiesNull [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001').
+		          ('capabilities' -> nil) } asDictionary.
+	self assert: update toolCallUpdate hasCapabilities.
+	self deny: update toolCallUpdate isCancellable
+]
+
+{ #category : 'tests' }
+ACP2SessionUpdateTest >> testToolCallUpdateCapabilitiesAbsent [
+
+	| update |
+	update := ACP2SessionUpdate fromDictionary: {
+		          ('sessionUpdate' -> 'tool_call_update').
+		          ('toolCallId' -> 'call_001') } asDictionary.
+	self deny: update toolCallUpdate hasCapabilities.
+	self deny: update toolCallUpdate isCancellable
+]

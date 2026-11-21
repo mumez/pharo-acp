@@ -2,7 +2,7 @@
 I implement the ACP (Agent Client Protocol) v2 method layer on top of a bidirectional JSON-RPC connection.
 
 Responsibility:
-- I provide typed methods for every ACP v2 client-to-agent request: initialize, newSession, listSessions, resumeSession, closeSession, deleteSession, prompt, cancel, logout
+- I provide typed methods for every ACP v2 client-to-agent request: initialize, newSession, listSessions, resumeSession, closeSession, deleteSession, prompt, cancel, setConfigOption, login, logout, cancelToolCall, cancelTerminal
 - I register server-side callback handlers for agent-initiated requests: session updates, permission requests, and elicitation
 - I remember the client capabilities sent in #initialize:, and reject elicitation requests for modes they do not advertise
 - I reject a systemPrompt on session/new or session/resume that the agent did not advertise (session.systemPrompt and its mode), or whose content is empty or not text-only, before sending it
@@ -20,6 +20,10 @@ Public API and Key Messages:
 - #prompt: / #promptBy: - send a prompt; returns once the agent's request handler completes (the turn's outcome arrives asynchronously via a session/update state_update notification)
 - #cancel: / #cancelBy: - cancel the current prompt (notification, no response)
 - #resumeSession: / #listSessions: / #logout: - remaining v2 session/auth lifecycle operations
+- #login: / #loginBy: - authenticate with one of the agent's advertised authMethods
+- #setConfigOption: / #setConfigOptionBy: - change a session config option; returns the agent's complete updated option list
+- #cancelToolCall: / #cancelToolCallBy: - cancel one tool call (best-effort; no client-side check is made, and the agent may reject a call that does not advertise capabilities.cancel)
+- #cancelTerminal: / #cancelTerminalBy: - stop the process of one terminal (best-effort; no client-side check is made, and the agent may reject a terminal that does not advertise capabilities.cancel)
 - #closeSession: / #closeSessionBy: - cancel in-flight work and free a session's resources
 - #deleteSession: / #deleteSessionBy: - remove a session from the agent's history
 
@@ -84,6 +88,40 @@ ACP2ClientConnection >> cancel: aParamsOrDictionary [
 ACP2ClientConnection >> cancelBy: aBlock [
 
 	^ self cancel: (ACP2CancelParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACP2ClientConnection >> cancelTerminal: aParamsOrDictionary [
+	"Stop a terminal's process (terminal/cancel). The response only means the agent accepted the
+	cancellation; the terminal_update that sets exitStatus confirms it. No client-side check is made
+	that the terminal advertises capabilities.cancel."
+
+	| request |
+	request := ACP2Request cancelTerminal: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACP2ClientConnection >> cancelTerminalBy: aBlock [
+
+	^ self cancelTerminal: (ACP2CancelTerminalParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACP2ClientConnection >> cancelToolCall: aParamsOrDictionary [
+	"Cancel one tool call (tool_call/cancel). The response only means the agent accepted the
+	cancellation; a tool_call_update to a final status confirms it. No client-side check is made
+	that the tool call advertises capabilities.cancel (see ACP2ToolCallUpdate>>isCancellable)."
+
+	| request |
+	request := ACP2Request cancelToolCall: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACP2ClientConnection >> cancelToolCallBy: aBlock [
+
+	^ self cancelToolCall: (ACP2CancelToolCallParams buildBy: aBlock)
 ]
 
 { #category : 'api' }
@@ -184,6 +222,20 @@ ACP2ClientConnection >> listSessionsBy: aBlock [
 ]
 
 { #category : 'api' }
+ACP2ClientConnection >> login: aParamsOrDictionary [
+
+	| request |
+	request := ACP2Request login: aParamsOrDictionary.
+	^ self connection sendRequest: request method params: request params
+]
+
+{ #category : 'api - builder' }
+ACP2ClientConnection >> loginBy: aBlock [
+
+	^ self login: (ACP2AuthLoginParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
 ACP2ClientConnection >> logout: aParamsOrDictionary [
 
 	| request |
@@ -236,6 +288,21 @@ ACP2ClientConnection >> resumeSession: aParamsOrDictionary [
 ACP2ClientConnection >> resumeSessionBy: aBlock [
 
 	^ self resumeSession: (ACP2SessionResumeParams buildBy: aBlock)
+]
+
+{ #category : 'api' }
+ACP2ClientConnection >> setConfigOption: aParamsOrDictionary [
+
+	| request result |
+	request := ACP2Request setConfigOption: aParamsOrDictionary.
+	result := self connection sendRequest: request method params: request params.
+	^ ACP2SetSessionConfigOptionResponse fromDictionary: result
+]
+
+{ #category : 'api - builder' }
+ACP2ClientConnection >> setConfigOptionBy: aBlock [
+
+	^ self setConfigOption: (ACP2SetSessionConfigOptionParams buildBy: aBlock)
 ]
 
 { #category : 'private' }

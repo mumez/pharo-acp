@@ -280,3 +280,52 @@ ACP2NdJsonTransportTest >> writtenOutput [
 
 	^ writeStream contents
 ]
+
+{ #category : 'helpers' }
+ACP2NdJsonTransportTest >> readToolCallUpdateWithCapabilities: aJsonFragment [
+	"Feed a session/update tool_call_update notification as a JSON line through the real decoder.
+	aJsonFragment is spliced in after toolCallId, e.g. ',""capabilities"":null' (empty for absent)."
+
+	| message |
+	self feedLine:
+		'{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"s1","update":{"sessionUpdate":"tool_call_update","toolCallId":"call_001"'
+		, aJsonFragment , '}}}'.
+	message := transport readMessage.
+	^ (ACP2SessionUpdate fromDictionary: ((message at: 'params') at: 'update')) toolCallUpdate
+]
+
+{ #category : 'tests - reading' }
+ACP2NdJsonTransportTest >> testDecodedToolCallUpdateCapabilitiesAbsent [
+
+	| update |
+	update := self readToolCallUpdateWithCapabilities: ''.
+	self deny: update hasCapabilities.
+	self deny: update isCancellable
+]
+
+{ #category : 'tests - reading' }
+ACP2NdJsonTransportTest >> testDecodedToolCallUpdateCapabilitiesNull [
+
+	| update |
+	update := self readToolCallUpdateWithCapabilities: ',"capabilities":null'.
+	self assert: update hasCapabilities.
+	self deny: update isCancellable
+]
+
+{ #category : 'tests - reading' }
+ACP2NdJsonTransportTest >> testDecodedToolCallUpdateCancelNull [
+
+	| update |
+	update := self readToolCallUpdateWithCapabilities: ',"capabilities":{"cancel":null}'.
+	self assert: update hasCapabilities.
+	self deny: update isCancellable
+]
+
+{ #category : 'tests - reading' }
+ACP2NdJsonTransportTest >> testDecodedToolCallUpdateCancellable [
+
+	| update |
+	update := self readToolCallUpdateWithCapabilities: ',"capabilities":{"cancel":{}}'.
+	self assert: update hasCapabilities.
+	self assert: update isCancellable
+]
