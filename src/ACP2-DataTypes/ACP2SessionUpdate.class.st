@@ -1,3 +1,31 @@
+"
+I represent the update object of a v2 session/update notification: one event reported by the agent while a session exists.
+
+Responsibility:
+- I tell which kind of update this is (the sessionUpdate discriminator) through is* tests
+- I expose the fields shared by several kinds (content, messageId, compactionId, ...)
+- I hand out a typed object for kinds with their own structure
+
+Collaborators:
+- ACP2ClientConnection: creates me from the params of each session/update notification
+- ACP2ClientHandler: receives me in #sessionUpdate:
+- ACP2StateUpdate, ACP2ToolCall, ACP2ToolCallUpdate, ACP2TerminalUpdate, ACP2Notice, ACP2CompactionUpdate,
+  ACP2SubagentUpdate, ACP2SessionMessage: the typed views I return
+
+Public API:
+- sessionUpdate - the raw kind string
+- is* - kind tests (isAgentMessageChunk, isStateUpdate, isToolCallUpdate, isTerminalUpdate, isNotice,
+  isCompactionUpdate, isCompactionSummaryChunk, isReplayComplete, isSubagentUpdate, isSessionMessage,
+  isSessionMessageChunk, ...)
+- stateUpdate / toolCall / toolCallUpdate / terminalUpdate / notice / compactionUpdate / subagentUpdate /
+  sessionMessage - typed view for the matching kind, nil for any other kind
+- content / messageId / compactionId - shared fields of chunk kinds (e.g. session_message_chunk, compaction_summary_chunk)
+- state / stopReason - shortcuts into a state_update
+
+Implementation Points:
+- I keep the raw dictionary; typed views are built on demand from the same rawValues
+- Unknown kinds are kept as-is so that clients can ignore them
+"
 Class {
 	#name : 'ACP2SessionUpdate',
 	#superclass : 'ACP2Values',
@@ -26,8 +54,14 @@ ACP2SessionUpdate >> state [
 { #category : 'accessing' }
 ACP2SessionUpdate >> stopReason [
 
-	self state = 'idle' ifFalse: [ ^ nil ].
-	^ self rawValues at: 'stopReason' ifAbsent: [ nil ]
+	^ self stateUpdate ifNotNil: [ :stateUpdate | stateUpdate stopReason ]
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> stateUpdate [
+
+	self isStateUpdate ifFalse: [ ^ nil ].
+	^ ACP2StateUpdate fromDictionary: self rawValues
 ]
 
 { #category : 'accessing' }
@@ -189,4 +223,93 @@ ACP2SessionUpdate >> size [
 ACP2SessionUpdate >> used [
 
 	^ self rawValues at: 'used' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> compactionId [
+
+	^ self rawValues at: 'compactionId' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> compactionUpdate [
+
+	self isCompactionUpdate ifFalse: [ ^ nil ].
+	^ ACP2CompactionUpdate fromDictionary: self rawValues
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> notice [
+
+	self isNotice ifFalse: [ ^ nil ].
+	^ ACP2Notice fromDictionary: self rawValues
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> sessionMessage [
+
+	self isSessionMessage ifFalse: [ ^ nil ].
+	^ ACP2SessionMessage fromDictionary: self rawValues
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> subagentUpdate [
+
+	self isSubagentUpdate ifFalse: [ ^ nil ].
+	^ ACP2SubagentUpdate fromDictionary: self rawValues
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isCompactionSummaryChunk [
+
+	^ self sessionUpdate = 'compaction_summary_chunk'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isCompactionUpdate [
+
+	^ self sessionUpdate = 'compaction_update'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isNotice [
+
+	^ self sessionUpdate = 'notice'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isReplayComplete [
+
+	^ self sessionUpdate = 'replay_complete'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isSessionMessage [
+
+	^ self sessionUpdate = 'session_message'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isSessionMessageChunk [
+
+	^ self sessionUpdate = 'session_message_chunk'
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isSubagentUpdate [
+
+	^ self sessionUpdate = 'subagent_update'
+]
+
+{ #category : 'accessing' }
+ACP2SessionUpdate >> terminalUpdate [
+
+	self isTerminalUpdate ifFalse: [ ^ nil ].
+	^ ACP2TerminalUpdate fromDictionary: self rawValues
+]
+
+{ #category : 'testing' }
+ACP2SessionUpdate >> isTerminalUpdate [
+
+	^ self sessionUpdate = 'terminal_update'
 ]

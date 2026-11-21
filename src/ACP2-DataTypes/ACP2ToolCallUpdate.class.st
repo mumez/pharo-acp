@@ -58,8 +58,5 @@ ACP2ToolCallUpdate >> hasCapabilities [
 { #category : 'testing' }
 ACP2ToolCallUpdate >> isCancellable [
 
-	| capabilities |
-	capabilities := self rawValues at: 'capabilities' ifAbsent: [ nil ].
-	capabilities ifNil: [ ^ false ].
-	^ (capabilities at: 'cancel' ifAbsent: [ nil ]) notNil
+	^ self advertisesCapability: 'cancel'
 ]
