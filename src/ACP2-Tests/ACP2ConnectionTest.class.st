@@ -532,5 +532,125 @@ ACP2ConnectionTest >> testIncomingRequestErrorKeepsRequestErrorCode [
 	response := self agentReadMessage.
 	self assert: (response at: 'id') equals: 5.
 	self assert: ((response at: 'error') at: 'code') equals: -32602.
-	self assert: ((response at: 'error') at: 'message') equals: 'Bad mode'
+	self assert: ((response at: 'error') at: 'message') equals: 'Bad mode'.
+	self assert: ((response at: 'error') at: 'data') equals: 'form'
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithNullIdIsRejected [
+	"ACP v2 request IDs are strings or integers; a request without a usable id is answered with id null."
+
+	| called response |
+	called := false.
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/ping'
+		block: [ :params |
+			called := true.
+			Dictionary new ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: nil.
+	response := self agentReadMessage.
+	self assert: (response includesKey: 'id').
+	self assert: (response at: 'id') isNil.
+	self assert: ((response at: 'error') at: 'code') equals: -32600.
+	self deny: called.
+	self assert: clientConnection incomingRequestProcesses isEmpty
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithFractionalIdIsRejected [
+
+	| response |
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: 1.5.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') isNil.
+	self assert: ((response at: 'error') at: 'code') equals: -32600
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithIntegerValuedFloatIdIsAccepted [
+	"JSON 2.0 is an integer id (STONJSON decodes it as a Float); it is accepted and echoed back."
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/ping'
+		block: [ :params | { ('pong' -> true) } asDictionary ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: 2.0.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') equals: 2.0.
+	self assert: ((response at: 'result') at: 'pong')
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithNonFiniteIdIsRejected [
+
+	| response |
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: Float infinity.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') isNil.
+	self assert: ((response at: 'error') at: 'code') equals: -32600
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithStringIdIsAccepted [
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/ping'
+		block: [ :params | { ('pong' -> true) } asDictionary ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: 'req-1'.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') equals: 'req-1'.
+	self assert: ((response at: 'result') at: 'pong')
+]
+
+{ #category : 'tests - connection close' }
+ACP2ConnectionTest >> testNotificationsBeforeEndOfStreamAreDispatched [
+	"Notifications the agent wrote just before ending its stream reach their handler before the connection closes."
+
+	| received |
+	received := OrderedCollection new.
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/event'
+		block: [ :params | received add: (params at: 'n') ].
+	1 to: 3 do: [ :n |
+		agentTransport writeMessage: {
+				('jsonrpc' -> '2.0').
+				('method' -> 'test/event').
+				('params' -> { ('n' -> n) } asDictionary) } asDictionary ].
+	agentTransport close.
+	clientConnection startReadLoop.
+	self deny: (clientConnection closeSemaphore waitTimeoutSeconds: 2).
+	self assert: received asArray equals: #( 1 2 3 ).
+	self assert: clientConnection isClosed
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestErrorKeepsStructuredData [
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/session'
+		block: [ :params | (ACP2RequestError sessionNotFound: 'sess-404') signal ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/session' id: 6.
+	response := self agentReadMessage.
+	self assert: ((response at: 'error') at: 'code') equals: -32002.
+	self
+		assert: ((response at: 'error') at: 'data')
+		equals: { ('sessionId' -> 'sess-404') } asDictionary
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestErrorWithoutDataOmitsData [
+
+	| response |
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/unknown' id: 7.
+	response := self agentReadMessage.
+	self deny: ((response at: 'error') includesKey: 'data')
 ]

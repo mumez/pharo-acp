@@ -23,8 +23,7 @@ ACP2ElicitationTest >> formRequestDictionary [
 					     ('type' -> 'string').
 					     ('title' -> 'Name').
 					     ('minLength' -> 1).
-					     ('maxLength' -> 40).
-					     ('pattern' -> '^[a-z-]+$') } asDictionary).
+					     ('maxLength' -> 40) } asDictionary).
 				    ('email' -> {
 					     ('type' -> 'string').
 					     ('format' -> 'email') } asDictionary).
@@ -176,7 +175,6 @@ ACP2ElicitationTest >> testScalarProperties [
 	self assert: name title equals: 'Name'.
 	self assert: name minLength equals: 1.
 	self assert: name maxLength equals: 40.
-	self assert: name pattern equals: '^[a-z-]+$'.
 	self assert: name choices isEmpty.
 	self assert: (schema propertyNamed: 'email') format equals: 'email'.
 	ratio := schema propertyNamed: 'ratio'.
@@ -205,6 +203,38 @@ ACP2ElicitationTest >> testSchema [
 	self assert: (schema isRequired: 'name').
 	self deny: (schema isRequired: 'email').
 	self assert: (schema propertyNamed: 'missing') isNil
+]
+
+{ #category : 'tests - schema' }
+ACP2ElicitationTest >> testPropertyHasNoPattern [
+	"StringPropertySchema.pattern was removed from ACP v2."
+
+	self deny: (ACP2ElicitationProperty canUnderstand: #pattern)
+]
+
+{ #category : 'tests - schema' }
+ACP2ElicitationTest >> testSchemaIsValid [
+
+	self assert: (ACP2CreateElicitation fromDictionary: self formRequestDictionary)
+			requestedSchema isValid.
+	self assert: (ACP2ElicitationSchema fromDictionary: {
+				 ('type' -> 'object').
+				 ('properties' -> Dictionary new) } asDictionary) isValid
+]
+
+{ #category : 'tests - schema' }
+ACP2ElicitationTest >> testSchemaNeedsObjectTypeAndProperties [
+
+	self deny: (ACP2ElicitationSchema fromDictionary:
+			 { ('type' -> 'object') } asDictionary) isValid.
+	self deny: (ACP2ElicitationSchema fromDictionary:
+			 { ('properties' -> Dictionary new) } asDictionary) isValid.
+	self deny: (ACP2ElicitationSchema fromDictionary: {
+				 ('type' -> 'array').
+				 ('properties' -> Dictionary new) } asDictionary) isValid.
+	self deny: (ACP2ElicitationSchema fromDictionary: {
+				 ('type' -> 'object').
+				 ('properties' -> #(  )) } asDictionary) isValid
 ]
 
 { #category : 'tests - schema' }

@@ -3,7 +3,7 @@ I represent an MCP server configuration in session params.
 
 Transport type is determined by the 'type' field:
 - absent or 'stdio': command, args, env
-- 'http' or 'sse': url, headers
+- 'http': url, headers (ACP v2 has no 'sse' transport)
 "
 Class {
 	#name : 'ACP2McpServer',
@@ -105,7 +105,7 @@ ACP2McpServer >> ensureRequired [
 
 	super ensureRequired.
 	self rawValues at: 'name' ifAbsentPut: [ '' ].
-	(#( 'http' 'sse' ) includes: self type)
+	self type = 'http'
 		ifTrue: [
 			self rawValues at: 'url' ifAbsentPut: [ '' ].
 			self rawValues at: 'headers' ifAbsentPut: [ #() ] ].
