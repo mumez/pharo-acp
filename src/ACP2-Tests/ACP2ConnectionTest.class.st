@@ -532,5 +532,32 @@ ACP2ConnectionTest >> testIncomingRequestErrorKeepsRequestErrorCode [
 	response := self agentReadMessage.
 	self assert: (response at: 'id') equals: 5.
 	self assert: ((response at: 'error') at: 'code') equals: -32602.
-	self assert: ((response at: 'error') at: 'message') equals: 'Bad mode'
+	self assert: ((response at: 'error') at: 'message') equals: 'Bad mode'.
+	self assert: ((response at: 'error') at: 'data') equals: 'form'
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestErrorKeepsStructuredData [
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/session'
+		block: [ :params | (ACP2RequestError sessionNotFound: 'sess-404') signal ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/session' id: 6.
+	response := self agentReadMessage.
+	self assert: ((response at: 'error') at: 'code') equals: -32002.
+	self
+		assert: ((response at: 'error') at: 'data')
+		equals: { ('sessionId' -> 'sess-404') } asDictionary
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestErrorWithoutDataOmitsData [
+
+	| response |
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/unknown' id: 7.
+	response := self agentReadMessage.
+	self deny: ((response at: 'error') includesKey: 'data')
 ]

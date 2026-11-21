@@ -8,6 +8,7 @@ Responsibility:
 
 Collaborators:
 - JRPCConstantsSharedPool: I reference standard error codes (MethodNotFound, InvalidParams, InternalError)
+- ACP2SessionNotFoundErrorData, ACP2UnsupportedProtocolVersionErrorData: the data shapes ACP defines for -32002 and -32022
 - ACP2PendingRequest: signals me when a response contains an error
 
 Public API and Key Messages:
@@ -16,6 +17,10 @@ Public API and Key Messages:
 - #invalidParams: - factory for invalid parameter errors
 - #internalError: - factory for internal errors
 - #authRequired - factory for authentication-required errors
+- #sessionNotFound: - factory for -32002 with ACP2SessionNotFoundErrorData (unknown or inactive session)
+- #unsupportedProtocolVersion:supported: - factory for -32022 with ACP2UnsupportedProtocolVersionErrorData
+- #isMethodNotFound / #isSessionNotFound / #isUnsupportedProtocolVersion - test the kind of error
+- #sessionNotFoundData / #unsupportedProtocolVersionData - typed view of my data, or nil when it does not have that shape
 - #asRpcErrorDictionary - convert to a JSON-RPC error Dictionary for wire transmission
 - #asJRPCResponseWithId: - error response used when a request handler signals me (keeps my code, message, and data)
 
@@ -43,6 +48,40 @@ Class {
 ACP2RequestError class >> authRequired [
 
 	^ self code: -32000 message: 'Authentication required'
+]
+
+{ #category : 'constants' }
+ACP2RequestError class >> resourceNotFoundCode [
+
+	^ -32002
+]
+
+{ #category : 'factory' }
+ACP2RequestError class >> sessionNotFound: aSessionId [
+
+	^ self
+		  code: self resourceNotFoundCode
+		  message: 'Session not found: ' , aSessionId asString
+		  data: (ACP2SessionNotFoundErrorData buildBy: [ :data | data sessionId: aSessionId ])
+				  asDictionary
+]
+
+{ #category : 'factory' }
+ACP2RequestError class >> unsupportedProtocolVersion: aRequestedVersion supported: anArray [
+
+	^ self
+		  code: self unsupportedProtocolVersionCode
+		  message: 'Unsupported protocol version: ' , aRequestedVersion printString
+		  data: (ACP2UnsupportedProtocolVersionErrorData buildBy: [ :data |
+				   data
+					   requested: aRequestedVersion;
+					   supported: anArray ]) asDictionary
+]
+
+{ #category : 'constants' }
+ACP2RequestError class >> unsupportedProtocolVersionCode [
+
+	^ -32022
 ]
 
 { #category : 'instance creation' }
@@ -145,6 +184,40 @@ ACP2RequestError >> data [
 ACP2RequestError >> data: anObject [
 
 	data := anObject
+]
+
+{ #category : 'testing' }
+ACP2RequestError >> isMethodNotFound [
+
+	^ code = MethodNotFound
+]
+
+{ #category : 'testing' }
+ACP2RequestError >> isSessionNotFound [
+	"-32002 is also used for other missing resources; only data naming a session means a missing session."
+
+	^ self sessionNotFoundData notNil
+]
+
+{ #category : 'testing' }
+ACP2RequestError >> isUnsupportedProtocolVersion [
+
+	^ code = self class unsupportedProtocolVersionCode
+]
+
+{ #category : 'accessing' }
+ACP2RequestError >> sessionNotFoundData [
+
+	(code = self class resourceNotFoundCode and: [
+		 data isDictionary and: [ data includesKey: 'sessionId' ] ]) ifFalse: [ ^ nil ].
+	^ ACP2SessionNotFoundErrorData fromDictionary: data
+]
+
+{ #category : 'accessing' }
+ACP2RequestError >> unsupportedProtocolVersionData [
+
+	(self isUnsupportedProtocolVersion and: [ data isDictionary ]) ifFalse: [ ^ nil ].
+	^ ACP2UnsupportedProtocolVersionErrorData fromDictionary: data
 ]
 
 { #category : 'accessing' }

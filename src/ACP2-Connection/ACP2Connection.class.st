@@ -41,6 +41,7 @@ Internal Representation:
 Implementation Points:
 - The read loop runs at lowIOPriority to keep the Pharo IDE responsive
 - Error in message processing sends a JSON-RPC error response back to the agent (for requests only)
+- An ACP2RequestError signaled by a handler is answered with its code, message, and data
 - Incoming request processes run at userSchedulingPriority; notifications stay in the read loop to keep their order
 - A process is registered before it starts and unregisters itself before writing its response,
   so every running handler process can be found for cancellation or cleanup
@@ -124,14 +125,22 @@ ACP2Connection >> handleConnectionClosed [
 { #category : 'private' }
 ACP2Connection >> errorResponseForId: anId code: aCode message: aString [
 
+	^ self errorResponseForId: anId code: aCode message: aString data: nil
+]
+
+{ #category : 'private' }
+ACP2Connection >> errorResponseForId: anId code: aCode message: aString data: aData [
+	"The error's data is included only when present."
+
+	| error |
+	error := {
+		         ('code' -> aCode).
+		         ('message' -> aString) } asDictionary.
+	aData ifNotNil: [ error at: 'data' put: aData ].
 	^ {
-		'jsonrpc' -> '2.0'.
-		'id' -> anId.
-		'error' -> {
-			'code' -> aCode.
-			'message' -> aString
-		} asDictionary
-	} asDictionary
+		  ('jsonrpc' -> '2.0').
+		  ('id' -> anId).
+		  ('error' -> error) } asDictionary
 ]
 
 { #category : 'private' }
@@ -239,7 +248,8 @@ ACP2Connection >> responseForIncomingRequest: message [
 		^ self
 			  errorResponseForId: response id
 			  code: response error code
-			  message: response error message ].
+			  message: response error message
+			  data: response error data ].
 	^ {
 		'jsonrpc' -> '2.0'.
 		'id' -> response id.
