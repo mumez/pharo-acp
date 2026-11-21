@@ -6,10 +6,10 @@ Class {
 }
 
 { #category : 'tests - leaf options' }
-ACP2DataTypesTest >> testAuthenticateParamsAsDictionary [
+ACP2DataTypesTest >> testAuthLoginParamsAsDictionary [
 
 	| opts dict |
-	opts := ACP2AuthenticateParams new.
+	opts := ACP2AuthLoginParams new.
 	opts methodId: 'oauth'.
 	dict := opts asDictionary.
 	self assert: (dict at: 'methodId') equals: 'oauth'
@@ -934,3 +934,63 @@ ACP2DataTypesTest >> testInitializeParamsFromDictionaryReadsCapabilities [
 	self assert: params info class equals: ACP2Implementation
 ]
 
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testSetSessionConfigOptionParamsIdValue [
+
+	| dict |
+	dict := (ACP2SetSessionConfigOptionParams buildBy: [ :p |
+		         p sessionId: 's1'.
+		         p configId: 'model'.
+		         p idValue: 'fast' ]) asDictionary.
+	self assert: (dict at: 'type') equals: 'id'.
+	self assert: (dict at: 'value') equals: 'fast'
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testSetSessionConfigOptionParamsBooleanValue [
+
+	| params |
+	params := ACP2SetSessionConfigOptionParams buildBy: [ :p |
+		          p configId: 'autoApprove'.
+		          p booleanValue: false ].
+	self assert: params type equals: 'boolean'.
+	self assert: params value equals: false.
+	self assert: (params asDictionary at: 'value') equals: false
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testSetSessionConfigOptionResponseFromDictionary [
+
+	| resp |
+	resp := ACP2SetSessionConfigOptionResponse fromDictionary: { ('configOptions' -> {
+			         {
+				         ('id' -> 'model').
+				         ('name' -> 'Model').
+				         ('type' -> 'select').
+				         ('currentValue' -> 'fast') } asDictionary }) } asDictionary.
+	self assert: resp configOptions size equals: 1.
+	self assert: resp configOptions first id equals: 'model'
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testCancelToolCallParamsAsDictionary [
+
+	| dict |
+	dict := (ACP2CancelToolCallParams buildBy: [ :p |
+		         p sessionId: 's1'.
+		         p toolCallId: 'call_001' ]) asDictionary.
+	self assert: (dict at: 'sessionId') equals: 's1'.
+	self assert: (dict at: 'toolCallId') equals: 'call_001'
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testCancelTerminalParamsAsDictionary [
+
+	| dict |
+	dict := (ACP2CancelTerminalParams buildBy: [ :p |
+		         p sessionId: 's1'.
+		         p terminalId: 'dev' ]) asDictionary.
+	self assert: (dict at: 'sessionId') equals: 's1'.
+	self assert: (dict at: 'terminalId') equals: 'dev'
+]
