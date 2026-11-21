@@ -6,6 +6,20 @@ Class {
 }
 
 { #category : 'accessing' }
+ACP2PromptParams >> idempotencyKey [
+	"Key identifying this submission, so a retried prompt is not inserted twice (nil when unset)."
+
+	^ self rawValues at: 'idempotencyKey' ifAbsent: []
+]
+
+{ #category : 'accessing' }
+ACP2PromptParams >> idempotencyKey: aString [
+	"Send the same key (1 to 255 characters) on every attempt of the same submission."
+
+	self rawValues at: 'idempotencyKey' put: aString
+]
+
+{ #category : 'accessing' }
 ACP2PromptParams >> prompt [
 
 	^ self rawValues at: 'prompt' ifAbsentPut: [ #() ]

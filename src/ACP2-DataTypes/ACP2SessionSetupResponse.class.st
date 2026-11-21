@@ -18,6 +18,13 @@ ACP2SessionSetupResponse >> modes [
 ]
 
 { #category : 'accessing' }
+ACP2SessionSetupResponse >> availableCommands [
+	"Initial commands of the session; they replace any list from earlier available_commands_update notifications."
+
+	^ self valuesAt: 'availableCommands' typed: ACP2AvailableCommand in: self rawValues
+]
+
+{ #category : 'accessing' }
 ACP2SessionSetupResponse >> availableModels [
 
 	^ self

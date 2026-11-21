@@ -368,6 +368,46 @@ ACP2DataTypesTest >> testBaseSessionResponsePluralFieldsFallbackToEmptyCollectio
 	self assert: resp models isEmpty
 ]
 
+{ #category : 'tests - result' }
+ACP2DataTypesTest >> testSessionSetupResponseAvailableCommands [
+
+	| resp commands |
+	resp := ACP2SessionSetupResponse fromDictionary: {
+		        ('sessionId' -> 'sess-001').
+		        ('availableCommands' -> { {
+			         ('name' -> 'web').
+			         ('description' -> 'Search the web') } asDictionary }) }
+		        asDictionary.
+	commands := resp availableCommands.
+	self assert: commands size equals: 1.
+	self assert: commands first class equals: ACP2AvailableCommand.
+	self assert: commands first name equals: 'web'.
+	self assert: commands first description equals: 'Search the web'
+]
+
+{ #category : 'tests - result' }
+ACP2DataTypesTest >> testSessionSetupResponseAvailableCommandsDefaultToEmpty [
+
+	self assert: (ACP2SessionSetupResponse fromDictionary:
+			 { ('sessionId' -> 'sess-001') } asDictionary) availableCommands isEmpty.
+	self assert: (ACP2SessionSetupResponse fromDictionary: {
+				 ('sessionId' -> 'sess-001').
+				 ('availableCommands' -> nil) } asDictionary) availableCommands
+			isEmpty
+]
+
+{ #category : 'tests - leaf options' }
+ACP2DataTypesTest >> testPromptParamsIdempotencyKey [
+
+	| opts |
+	opts := ACP2PromptParams new.
+	self assert: opts idempotencyKey isNil.
+	self deny: (opts asDictionary includesKey: 'idempotencyKey').
+	opts idempotencyKey: 'submit-001'.
+	self assert: opts idempotencyKey equals: 'submit-001'.
+	self assert: (opts asDictionary at: 'idempotencyKey') equals: 'submit-001'
+]
+
 { #category : 'tests - leaf options' }
 ACP2DataTypesTest >> testPromptParamsAsDictionary [
 
