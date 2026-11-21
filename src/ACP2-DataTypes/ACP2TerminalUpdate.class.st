@@ -21,6 +21,8 @@ Public API:
 Implementation Points:
 - Every field except terminalId follows patch semantics: absent leaves the stored value unchanged and null clears it.
   Use rawValues includesKey: (or hasSize / hasCapabilities) to tell an absent field from a cleared one
+- hasExited answers true only for a concrete exitStatus object, so a cleared (null) exitStatus reads as not exited, like an absent one;
+  use rawValues includesKey: 'exitStatus' when the difference matters
 "
 Class {
 	#name : 'ACP2TerminalUpdate',
@@ -83,7 +85,7 @@ ACP2TerminalUpdate >> hasSize [
 { #category : 'testing' }
 ACP2TerminalUpdate >> isCancellable [
 
-	^ (self field: 'cancel' of: 'capabilities') notNil
+	^ self advertisesCapability: 'cancel'
 ]
 
 { #category : 'accessing' }

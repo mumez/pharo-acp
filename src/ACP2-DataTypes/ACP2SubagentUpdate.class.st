@@ -62,10 +62,7 @@ ACP2SubagentUpdate >> hasState [
 { #category : 'testing' }
 ACP2SubagentUpdate >> isCancellable [
 
-	| capabilities |
-	capabilities := self rawValues at: 'capabilities' ifAbsent: [ nil ].
-	capabilities isDictionary ifFalse: [ ^ false ].
-	^ (capabilities at: 'cancel' ifAbsent: [ nil ]) notNil
+	^ self advertisesCapability: 'cancel'
 ]
 
 { #category : 'accessing' }

@@ -32,6 +32,7 @@ Nested ACP2Values fields follow one of two patterns:
 - buildBy: - class-side constructor with a configuration block
 - asDictionary - serialize to a plain Dictionary suitable for JSON encoding
 - isEmpty - true when rawValues and extraProperties are both empty
+- advertisesCapability: - whether the capabilities field advertises a named capability (used by isCancellable)
 - rawValues / rawValues: - direct access to the value store
 - extraProperties / extraProperties: - lazy-initialized '_meta' extension dict
 "
@@ -61,6 +62,17 @@ ACP2Values class >> fromDictionary: aDictionary [
 	^ self new
 		  rawValues: aDictionary;
 		  yourself
+]
+
+{ #category : 'testing' }
+ACP2Values >> advertisesCapability: capabilityName [
+	"Answer whether the capabilities field (a v2 presence-based object) advertises capabilityName.
+	Absent, null, or malformed capabilities advertise nothing."
+
+	| capabilities |
+	capabilities := self rawValues at: 'capabilities' ifAbsent: [ nil ].
+	capabilities isDictionary ifFalse: [ ^ false ].
+	^ (capabilities at: capabilityName ifAbsent: [ nil ]) notNil
 ]
 
 { #category : 'converting' }

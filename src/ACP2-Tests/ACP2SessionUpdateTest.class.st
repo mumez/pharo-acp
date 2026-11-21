@@ -308,6 +308,22 @@ ACP2SessionUpdateTest >> testToolCallUpdateCapabilitiesNull [
 ]
 
 { #category : 'tests' }
+ACP2SessionUpdateTest >> testMalformedCapabilitiesAreNotCancellable [
+
+	| kinds |
+	kinds := {
+		         ('tool_call_update' -> #toolCallUpdate).
+		         ('subagent_update' -> #subagentUpdate).
+		         ('terminal_update' -> #terminalUpdate) }.
+	kinds do: [ :kind |
+		| update |
+		update := ACP2SessionUpdate fromDictionary: {
+			          ('sessionUpdate' -> kind key).
+			          ('capabilities' -> 'cancel') } asDictionary.
+		self deny: (update perform: kind value) isCancellable ]
+]
+
+{ #category : 'tests' }
 ACP2SessionUpdateTest >> testToolCallUpdateCapabilitiesAbsent [
 
 	| update |
@@ -737,6 +753,22 @@ ACP2SessionUpdateTest >> testTerminalUpdatePatchSemantics [
 	self assert: cleared columns isNil.
 	self assert: cleared hasCapabilities.
 	self deny: cleared isCancellable
+]
+
+{ #category : 'tests - terminal' }
+ACP2SessionUpdateTest >> testTerminalUpdateClearedExitStatus [
+	"Only a concrete exitStatus object marks the terminal as exited, so a cleared
+	(null) exitStatus reads as not exited; rawValues still shows that it was sent."
+
+	| cleared |
+	cleared := (ACP2SessionUpdate fromDictionary: {
+		            ('sessionUpdate' -> 'terminal_update').
+		            ('terminalId' -> 'term-1').
+		            ('exitStatus' -> nil) } asDictionary) terminalUpdate.
+	self assert: (cleared rawValues includesKey: 'exitStatus').
+	self deny: cleared hasExited.
+	self assert: cleared exitCode isNil.
+	self assert: cleared signal isNil
 ]
 
 { #category : 'tests - terminal' }
