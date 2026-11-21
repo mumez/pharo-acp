@@ -19,6 +19,9 @@ Public API and Key Messages:
 - #prompt: / #promptBy: - send a prompt to the agent (blocks caller; fork if used from UI)
 - #newSession: / #newSessionBy: - start a new session
 - #cancel: / #cancelBy: - cancel the current prompt
+- #setConfigOption: / #setConfigOptionBy: - change a session config option
+- #login: / #loginBy: - authenticate with an advertised auth method
+- #cancelToolCall: / #cancelToolCallBy: / #cancelTerminal: / #cancelTerminalBy: - cancel one tool call or terminal
 - #agentCommand:arguments: - configure the agent executable and its arguments
 - #workingDirectory: - set the agent working directory
 - #environmentAt:put: - add environment variables for the subprocess
@@ -59,6 +62,30 @@ ACP2Client >> cancel: aParamsOrDictionary [
 ACP2Client >> cancelBy: aBlock [
 
 	^ self clientConnection cancelBy: aBlock
+]
+
+{ #category : 'api' }
+ACP2Client >> cancelTerminal: aParamsOrDictionary [
+
+	^ self clientConnection cancelTerminal: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACP2Client >> cancelTerminalBy: aBlock [
+
+	^ self clientConnection cancelTerminalBy: aBlock
+]
+
+{ #category : 'api' }
+ACP2Client >> cancelToolCall: aParamsOrDictionary [
+
+	^ self clientConnection cancelToolCall: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACP2Client >> cancelToolCallBy: aBlock [
+
+	^ self clientConnection cancelToolCallBy: aBlock
 ]
 
 { #category : 'api' }
@@ -194,6 +221,18 @@ ACP2Client >> newSessionBy: aBlock [
 ]
 
 { #category : 'api' }
+ACP2Client >> login: aParamsOrDictionary [
+
+	^ self clientConnection login: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACP2Client >> loginBy: aBlock [
+
+	^ self clientConnection loginBy: aBlock
+]
+
+{ #category : 'api' }
 ACP2Client >> logout: aParamsOrDictionary [
 
 	^ self clientConnection logout: aParamsOrDictionary
@@ -233,6 +272,18 @@ ACP2Client >> prompt: aParamsOrDictionary [
 ACP2Client >> promptBy: aBlock [
 
 	^ self clientConnection promptBy: aBlock
+]
+
+{ #category : 'api' }
+ACP2Client >> setConfigOption: aParamsOrDictionary [
+
+	^ self clientConnection setConfigOption: aParamsOrDictionary
+]
+
+{ #category : 'api - builder' }
+ACP2Client >> setConfigOptionBy: aBlock [
+
+	^ self clientConnection setConfigOptionBy: aBlock
 ]
 
 { #category : 'accessing' }

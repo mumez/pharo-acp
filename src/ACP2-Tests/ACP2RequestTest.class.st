@@ -123,3 +123,52 @@ ACP2RequestTest >> testCloseSessionFactory [
 	self assert: request method equals: 'session/close'.
 	self assert: (request params at: 'sessionId') equals: 'abc'
 ]
+
+{ #category : 'tests' }
+ACP2RequestTest >> testLoginFactory [
+
+	| request |
+	request := ACP2Request login: (ACP2AuthLoginParams buildBy: [ :p |
+			           p methodId: 'oauth' ]).
+	self assert: request method equals: 'auth/login'.
+	self assert: (request params at: 'methodId') equals: 'oauth'
+]
+
+{ #category : 'tests' }
+ACP2RequestTest >> testSetConfigOptionFactory [
+
+	| request |
+	request := ACP2Request setConfigOption: (ACP2SetSessionConfigOptionParams buildBy: [ :p |
+			           p sessionId: 'abc'.
+			           p configId: 'model'.
+			           p idValue: 'fast' ]).
+	self assert: request method equals: 'session/set_config_option'.
+	self assert: (request params at: 'sessionId') equals: 'abc'.
+	self assert: (request params at: 'configId') equals: 'model'.
+	self assert: (request params at: 'type') equals: 'id'.
+	self assert: (request params at: 'value') equals: 'fast'
+]
+
+{ #category : 'tests' }
+ACP2RequestTest >> testCancelToolCallFactory [
+
+	| request |
+	request := ACP2Request cancelToolCall: (ACP2CancelToolCallParams buildBy: [ :p |
+			           p sessionId: 'abc'.
+			           p toolCallId: 'call_001' ]).
+	self assert: request method equals: 'tool_call/cancel'.
+	self assert: (request params at: 'sessionId') equals: 'abc'.
+	self assert: (request params at: 'toolCallId') equals: 'call_001'
+]
+
+{ #category : 'tests' }
+ACP2RequestTest >> testCancelTerminalFactory [
+
+	| request |
+	request := ACP2Request cancelTerminal: (ACP2CancelTerminalParams buildBy: [ :p |
+			           p sessionId: 'abc'.
+			           p terminalId: 'dev' ]).
+	self assert: request method equals: 'terminal/cancel'.
+	self assert: (request params at: 'sessionId') equals: 'abc'.
+	self assert: (request params at: 'terminalId') equals: 'dev'
+]

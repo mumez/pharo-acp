@@ -2,6 +2,7 @@ Class {
 	#name : 'ACP2Constants',
 	#superclass : 'SharedPool',
 	#classVars : [
+		'ACP2MethodAuthLogin',
 		'ACP2MethodAuthLogout',
 		'ACP2MethodElicitationComplete',
 		'ACP2MethodElicitationCreate',
@@ -14,7 +15,10 @@ Class {
 		'ACP2MethodSessionNew',
 		'ACP2MethodSessionPrompt',
 		'ACP2MethodSessionResume',
+		'ACP2MethodSessionSetConfigOption',
 		'ACP2MethodSessionUpdate',
+		'ACP2MethodTerminalCancel',
+		'ACP2MethodToolCallCancel',
 		'ACP2ProtocolVersion'
 	],
 	#category : 'ACP2-DataTypes',
@@ -49,6 +53,10 @@ ACP2Constants class >> initializeClientToAgentMethods [
 	ACP2MethodSessionDelete := 'session/delete'.
 	ACP2MethodSessionPrompt := 'session/prompt'.
 	ACP2MethodSessionCancel := 'session/cancel'.
+	ACP2MethodSessionSetConfigOption := 'session/set_config_option'.
+	ACP2MethodToolCallCancel := 'tool_call/cancel'.
+	ACP2MethodTerminalCancel := 'terminal/cancel'.
+	ACP2MethodAuthLogin := 'auth/login'.
 	ACP2MethodAuthLogout := 'auth/logout'
 ]
 

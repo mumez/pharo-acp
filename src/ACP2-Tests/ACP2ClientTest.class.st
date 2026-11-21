@@ -95,3 +95,11 @@ ACP2ClientTest >> testRespondsToCloseDeleteLogoutApi [
 	self assert: (client respondsTo: #deleteSessionBy:).
 	self assert: (client respondsTo: #logout:)
 ]
+
+{ #category : 'tests' }
+ACP2ClientTest >> testRespondsToLoginConfigOptionAndItemCancelApi [
+
+	#( #login: #loginBy: #setConfigOption: #setConfigOptionBy: #cancelToolCall:
+	   #cancelToolCallBy: #cancelTerminal: #cancelTerminalBy: ) do: [ :selector |
+		self assert: (client respondsTo: selector) description: selector ]
+]
