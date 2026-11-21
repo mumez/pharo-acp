@@ -47,7 +47,7 @@ Implementation Points:
   so every running handler process can be found for cancellation or cleanup
 - Cancellation is cooperative: I only cancel the token; I never interrupt the handler process
 - An incoming request whose id is already running is rejected with -32600
-- An incoming request whose id is not a string or an integer (e.g. null) is rejected with -32600 and id null
+- An incoming request whose id is not a string or an integer (e.g. null or 1.5) is rejected with -32600 and id null; an integer-valued Float such as 2.0 counts as an integer
 - On connection closed, all pending requests are rejected with code -32000
 "
 Class {
@@ -204,9 +204,13 @@ ACP2Connection >> incomingRequestProcesses [
 
 { #category : 'testing' }
 ACP2Connection >> isValidRequestId: anObject [
-	"ACP v2 request IDs are strings or integers; null and fractional numbers are not allowed."
+	"ACP v2 request IDs are strings or integers; null and fractional numbers are not allowed.
+	 STONJSON decodes JSON 2.0 as a Float, so finite integer-valued Floats are integers too
+	 (as with Number.isInteger in the TypeScript SDK)."
 
-	^ anObject isString or: [ anObject isInteger ]
+	anObject isString ifTrue: [ ^ true ].
+	anObject isInteger ifTrue: [ ^ true ].
+	^ anObject isFloat and: [ anObject isFinite and: [ anObject fractionPart isZero ] ]
 ]
 
 { #category : 'private' }

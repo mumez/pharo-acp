@@ -569,6 +569,32 @@ ACP2ConnectionTest >> testIncomingRequestWithFractionalIdIsRejected [
 ]
 
 { #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithIntegerValuedFloatIdIsAccepted [
+	"JSON 2.0 is an integer id (STONJSON decodes it as a Float); it is accepted and echoed back."
+
+	| response |
+	clientConnection messageProcessor
+		addHandlerNamed: 'test/ping'
+		block: [ :params | { ('pong' -> true) } asDictionary ].
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: 2.0.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') equals: 2.0.
+	self assert: ((response at: 'result') at: 'pong')
+]
+
+{ #category : 'tests - incoming' }
+ACP2ConnectionTest >> testIncomingRequestWithNonFiniteIdIsRejected [
+
+	| response |
+	clientConnection startReadLoop.
+	self agentSendRequest: 'test/ping' id: Float infinity.
+	response := self agentReadMessage.
+	self assert: (response at: 'id') isNil.
+	self assert: ((response at: 'error') at: 'code') equals: -32600
+]
+
+{ #category : 'tests - incoming' }
 ACP2ConnectionTest >> testIncomingRequestWithStringIdIsAccepted [
 
 	| response |
